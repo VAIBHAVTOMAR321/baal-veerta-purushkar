@@ -30,7 +30,7 @@ const StudentRegistration = () => {
         const next = { ...current, [name]: value };
         if (name === "category") {
           if (value === "स्वयं बालक / बालिका") {
-            next.relation = "";
+            next.relation = "स्वयं";
           } else if (value === "माता" || value === "पिता") {
             next.relation = value;
           } else {
@@ -68,8 +68,10 @@ const StudentRegistration = () => {
     ["category", "name", "mobile", "idType", "idNumber"].forEach((field) => {
       if (!form[field].trim()) nextErrors[field] = "यह फ़ील्ड आवश्यक है";
     });
-    if (!["स्वयं बालक / बालिका", "माता", "पिता"].includes(form.category)) {
-      if (!form.relation.trim()) nextErrors.relation = "यह फ़ील्ड आवश्यक है";
+    if (form.category === "माता" || form.category === "पिता") {
+      // relation is optional, auto-filled
+    } else if (!form.relation.trim()) {
+      nextErrors.relation = "यह फ़ील्ड आवश्यक है";
     }
     addressFields.forEach((field) => {
       if (!form.address[field].trim()) nextErrors[`address.${field}`] = "यह फ़ील्ड आवश्यक है";
@@ -116,9 +118,9 @@ const StudentRegistration = () => {
               const isParent = form.category === "माता" || form.category === "पिता";
               const relationOpts = {
                 disabled: isSelf || isParent,
-                placeholder: isSelf ? "" : "संबंध दर्ज करें",
+                placeholder: isSelf ? "स्वयं" : isParent ? "" : "संबंध दर्ज करें",
               };
-              if (!isSelf && !isParent) {
+              if (isSelf || !isParent) {
                 relationOpts.required = true;
               }
               return field("3. बच्चे से संबंध", "relation", relationOpts);
