@@ -76,8 +76,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 110px;
-  height: 110px;
+  width: 90px;
+  height: 90px;
   background: #ffffff;
   border-radius: 50%;
   padding: 10px;
@@ -92,7 +92,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 50%;
+  border-radius: 20%;
 }
 
 /* ---------- Department Text ---------- */
@@ -198,7 +198,7 @@
   border: none;
   background-color: transparent;
   width: 100%;
-  max-width: 480px;
+  max-width: 600px;
   animation: fadeIn 0.5s ease-in-out;
 }
 
