@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Button, Container } from "react-bootstrap";
 import { NavLink, Link } from "react-router-dom";
 import ulLogo from "../../assets/images/uk_logo.jpeg";
+import "../../assets/css/navbar.css";
 
 function NavBar() {
   const [scrolled, setScrolled] = useState(false);
@@ -34,7 +35,7 @@ function NavBar() {
             className="d-inline-block align-top me-2"
             alt="Child Development Logo"
           />
-         Women Empowerment & Child Development
+          Women Empowerment & Child Development
         </Navbar.Brand>
 
         {/* Mobile Toggle */}
@@ -52,8 +53,6 @@ function NavBar() {
             >
               Home
             </Nav.Link>
-
-         
           </Nav>
 
           {/* Login */}
