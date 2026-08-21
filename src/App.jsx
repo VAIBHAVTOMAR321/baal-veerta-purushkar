@@ -23,12 +23,13 @@ import StepC from "./components/child_regis/NominationForm/StepC";
 import StepB from "./components/child_regis/NominationForm/StepB";
 import NominationForm from "./components/child_regis/NominationForm/NominationForm";
 import StudentRegistration from "./components/child_regis/StudentRegistration/StudentRegistration";
+import UserDashBoard from "./components/all_dashbords/dis_admin/user_dashboard/UserDashBoard";
 
 
 // A wrapper component to conditionally render the NavBar
 const AppContent = () => {
   const location = useLocation();
-  const isDisRoute = ["/DisDashBoard"].some((route) =>
+  const isDisRoute = ["/UserDashBoard"].some((route) =>
     location.pathname.startsWith(route)
   );
 
@@ -47,6 +48,7 @@ const AppContent = () => {
           <Route path="/StepD" element={<StepD />} />
           <Route path="/StepE" element={<StepE />} />
           <Route path="/StepF" element={<StepF />} />
+          <Route path="/UserDashBoard" element={<UserDashBoard />} />
    
           
 
