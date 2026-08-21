@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
 import { FaUserShield, FaKey, FaClipboardList, FaAddressCard, FaPhone, FaMapMarkerAlt, FaEnvelope, FaFileAlt, FaCheckCircle, FaEdit, FaUpload, FaInfoCircle, FaFileSignature, FaChevronDown, FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../login/AuthContext";
 import "./Home.css";
 
@@ -13,9 +13,18 @@ function Home() {
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
+  const [success, setSuccess] = useState(null);
 
   const navigate = useNavigate();
   const { login } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.registrationSuccess) {
+      setSuccess("Registration successful! Please login.");
+      navigate("/", { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
 
   const stepsRef = useRef(null);
 
@@ -282,6 +291,12 @@ function Home() {
                       <div className="login-error" role="alert">
                         <span className="error-icon">⚠️</span>
                         <span>{error}</span>
+                      </div>
+                    )}
+
+                    {success && (
+                      <div className="login-success" role="alert" style={{ color: "green", textAlign: "center", marginBottom: "1rem" }}>
+                        ✅ {success}
                       </div>
                     )}
 

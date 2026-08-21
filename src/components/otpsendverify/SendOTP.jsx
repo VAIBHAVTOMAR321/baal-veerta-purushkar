@@ -42,17 +42,18 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
         <form onSubmit={handleSubmit}>
           <div className="otp-modal-body">
             <p className="otp-hint">अपने मोबाइल नंबर पर OTP प्राप्त करने के लिए नीचे दर्ज करें।</p>
-            <div className="otp-field">
-              <label htmlFor="otp-mobile">मोबाइल नंबर</label>
-              <input
-                id="otp-mobile"
-                type="tel"
-                maxLength={10}
-                placeholder="10 अंकों का मोबाइल नंबर"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-              />
-            </div>
+              <div className="otp-field">
+                <label htmlFor="otp-mobile">मोबाइल नंबर</label>
+                <input
+                  id="otp-mobile"
+                  type="tel"
+                  maxLength={10}
+                  placeholder="10 अंकों का मोबाइल नंबर"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+                  disabled={!!defaultMobile}
+                />
+              </div>
             {error && <div className="otp-error" role="alert">{error}</div>}
           </div>
           <div className="otp-modal-footer">

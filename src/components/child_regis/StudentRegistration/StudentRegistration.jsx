@@ -227,7 +227,7 @@ const StudentRegistration = () => {
       console.log("[StudentRegistration] Using token:", res?.access);
 
       await submitNominatorPart1(payload, res?.access);
-      navigate("/NominationForm", { state: { nominator: form } });
+      navigate("/", { state: { registrationSuccess: true } });
     } catch (err) {
       setError(err.message);
     } finally {
