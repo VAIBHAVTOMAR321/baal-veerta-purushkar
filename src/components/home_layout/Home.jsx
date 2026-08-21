@@ -94,7 +94,7 @@ function Home() {
       title: "अतिरिक्त जानकारी",
       subtitle: "Additional Information",
       icon: FaInfoCircle,
-      description: "पूर्व में किसी पुरस्कार से सम्मान, अन्य पुरस्कार और अतिरिक्ट टिप्पणी",
+      description: "पूर्व में किसी पुरस्कार से सम्मान, अन्य पुरस्कार और अतिरिक्त टिप्पणी",
       color: "#20c997"
     },
     {
@@ -109,24 +109,34 @@ function Home() {
 
   return (
     <div className="home-page">
-      <Container fluid className="home-container">
-        <div className="home-main-card">
-          <Row className="g-0 home-row">
-            {/* LEFT - LANDING & REGISTRATION STEPS */}
-            <Col lg={6} className="home-left-col d-none d-lg-flex">
-              <div className="home-left-content">
-               
-
-                <div className="scheme-title-block">
-                  <h2 className="scheme-title">ऑनलाइन नामांकन प्रपत्र</h2>
-                  <h3 className="scheme-name">
-                    मुख्यमंत्री राज्य बाल वीरता पुरस्कार
-                  </h3>
-                  <p className="scheme-name-en">
-                    Chief Minister State Child Bravery Award
-                  </p>
+      <div className="home-main-card">
+        <Row className="g-0 home-row">
+          {/* LEFT - LANDING & REGISTRATION STEPS */}
+          <Col lg={6} className="home-left-col d-none d-lg-flex">
+            <div className="home-left-content">
+              <div className="govt-header">
+                <img
+                  src="/assets/images/uk_logo.jpeg"
+                  alt="Uttarakhand Logo"
+                  className="uk-logo"
+                />
+                <div className="govt-text">
+                  <h4 className="govt-title">उत्तराखण्ड सरकार</h4>
+                  <p className="govt-subtitle">Government of Uttarakhand</p>
                 </div>
+              </div>
 
+              <div className="scheme-title-block">
+                <div className="scheme-badge">ऑनलाइन नामांकन प्रपत्र</div>
+                <h2 className="scheme-title">मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h2>
+                <p className="scheme-name-en">Chief Minister State Child Bravery Award</p>
+              </div>
+
+              <div className="steps-section">
+                <h3 className="steps-heading">
+                  <FaClipboardList className="steps-heading-icon" />
+                  नामांकन प्रक्रिया
+                </h3>
                 <div className="registration-steps">
                   {registrationSteps.map((step, index) => {
                     const IconComponent = step.icon;
@@ -153,27 +163,37 @@ function Home() {
                   })}
                 </div>
               </div>
-            </Col>
+            </div>
+          </Col>
 
-            {/* RIGHT - LOGIN */}
-            <Col lg={6} className="home-right-col d-flex align-items-center justify-content-center">
-              <div className="login-wrapper">
-                <div className="login-header">
-                  <div className="login-logo-circle">
-                    <FaUserShield size={32} />
-                  </div>
-                  <h3 className="login-title">लॉगिन</h3>
-                  <p className="login-subtitle">अपने खाते में लॉगिन करें</p>
+          {/* RIGHT - LOGIN */}
+          <Col lg={6} className="home-right-col d-flex align-items-center justify-content-center">
+            <div className="login-wrapper">
+              <div className="login-header">
+                <div className="login-logo-circle">
+                  <FaUserShield size={32} />
                 </div>
+                <h2 className="login-title">लॉगिन</h2>
+                <p className="login-subtitle">अपने खाते में सुरक्षित लॉगिन करें</p>
+              </div>
 
-                <Card className="login-card">
-                  <Card.Body className="login-card-body">
-                    <Form className="login-form" onSubmit={handleLogin}>
-                      <Form.Group className="mb-3" controlId="formUsername">
-                        <Form.Label className="login-label">
-                          <FaUserShield className="login-label-icon" />
-                          उपयोगकर्ता नाम
-                        </Form.Label>
+              <Card className="login-card">
+                <Card.Body className="login-card-body">
+                  <div className="login-card-header">
+                    <FaUserShield className="login-card-icon" />
+                    <div>
+                      <h3 className="login-card-title">स्वागत है</h3>
+                      <p className="login-card-subtitle">कृपया अपनी जानकारी दर्ज करें</p>
+                    </div>
+                  </div>
+
+                  <Form className="login-form" onSubmit={handleLogin}>
+                    <Form.Group className="mb-3" controlId="formUsername">
+                      <Form.Label className="login-label">
+                        <FaUserShield className="login-label-icon" />
+                        उपयोगकर्ता नाम
+                      </Form.Label>
+                      <div className="input-group-wrapper">
                         <Form.Control
                           type="text"
                           placeholder="उपयोगकर्ता नाम दर्ज करें"
@@ -183,70 +203,77 @@ function Home() {
                           className="login-input"
                           autoComplete="username"
                         />
-                      </Form.Group>
-
-                      <Form.Group className="mb-4" controlId="formPassword">
-                        <Form.Label className="login-label">
-                          <FaKey className="login-label-icon" />
-                          पासवर्ड
-                        </Form.Label>
-                        <div className="password-wrapper">
-                          <Form.Control
-                            type={showPassword ? "text" : "password"}
-                            placeholder="पासवर्ड दर्ज करें"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="login-input"
-                            autoComplete="current-password"
-                          />
-                          <button
-                            type="button"
-                            className="password-toggle"
-                            onClick={() => setShowPassword(!showPassword)}
-                            aria-label={showPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"}
-                          >
-                            {showPassword ? "🙈" : "👁️"}
-                          </button>
-                        </div>
-                      </Form.Group>
-
-                      {error && (
-                        <div className="login-error" role="alert">
-                          <span className="error-icon">⚠️</span>
-                          {error}
-                        </div>
-                      )}
-
-                      <Button
-                        variant="primary"
-                        type="submit"
-                        className="login-submit-btn w-100"
-                      >
-                        <FaUserShield className="btn-icon" />
-                        लॉगिन
-                      </Button>
-
-                      <div className="login-footer">
-                        <span className="login-footer-text">
-                          खाता नहीं है?{" "}
-                          <Link to="/StudentRegistration" className="register-link">
-                            पंजीकरण करें
-                          </Link>
-                        </span>
                       </div>
-                    </Form>
-                  </Card.Body>
-                </Card>
+                    </Form.Group>
 
-                <div className="login-footer-info">
-                  <p>सुरक्षित लॉगिन | Secure Login</p>
+                    <Form.Group className="mb-4" controlId="formPassword">
+                      <Form.Label className="login-label">
+                        <FaKey className="login-label-icon" />
+                        पासवर्ड
+                      </Form.Label>
+                      <div className="input-group-wrapper">
+                        <Form.Control
+                          type={showPassword ? "text" : "password"}
+                          placeholder="पासवर्ड दर्ज करें"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          className="login-input"
+                          autoComplete="current-password"
+                        />
+                        <button
+                          type="button"
+                          className="password-toggle"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"}
+                        >
+                          {showPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
+                    </Form.Group>
+
+                    {error && (
+                      <div className="login-error" role="alert">
+                        <span className="error-icon">⚠️</span>
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      className="login-submit-btn"
+                    >
+                      <FaUserShield className="btn-icon" />
+                      लॉगिन करें
+                    </Button>
+
+                    <div className="login-footer">
+                      <div className="divider">
+                        <span>या</span>
+                      </div>
+                      <p className="login-footer-text">
+                        नया खाता बनाएं{" "}
+                        <Link to="/StudentRegistration" className="register-link">
+                          पंजीकरण करें →
+                        </Link>
+                      </p>
+                    </div>
+                  </Form>
+                </Card.Body>
+              </Card>
+
+              <div className="login-footer-info">
+                <div className="security-badges">
+                  <span className="badge">🔒 सुरक्षित</span>
+                  <span className="badge">✓ सत्यापित</span>
                 </div>
+                <p className="copyright">© 2024 उत्तराखण्ड सरकार</p>
               </div>
-            </Col>
-          </Row>
-        </div>
-      </Container>
+            </div>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 }
