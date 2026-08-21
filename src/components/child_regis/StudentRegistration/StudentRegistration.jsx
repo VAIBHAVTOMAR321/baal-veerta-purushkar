@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentRegistration.css";
+import { SendOTP } from "../../otpsendverify/SendOTP";
+import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
 const idTypes = ["आधार कार्ड", "मतदाता पहचान पत्र", "अन्य सरकारी पहचान पत्र"];
@@ -25,6 +27,9 @@ const StudentRegistration = () => {
   });
   const [errors, setErrors] = useState({});
   const [idTypeCustom, setIdTypeCustom] = useState(false);
+  const [showSendOtp, setShowSendOtp] = useState(false);
+  const [showVerifyOtp, setShowVerifyOtp] = useState(false);
+  const [otpMobile, setOtpMobile] = useState("");
   const [districts, setDistricts] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -115,6 +120,9 @@ const StudentRegistration = () => {
 
     setErrors((current) => {
       const next = { ...current, [name]: "" };
+      if (name === "category") {
+        next.relation = "";
+      }
       if (name === "mobile" || name === "address.mobile") {
         if (!/^[0-9]{10}$/.test(value)) {
           next.mobile = value.length > 0 ? "मोबाइल नंबर 10 अंकों का होना चाहिए" : "";
@@ -147,7 +155,13 @@ const StudentRegistration = () => {
       nextErrors["address.पिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
     }
     setErrors(nextErrors);
-    if (!Object.keys(nextErrors).length) navigate("/NominationForm", { state: { nominator: form } });
+    if (!Object.keys(nextErrors).length) {
+      setShowSendOtp(true);
+    }
+  };
+
+  const handleOtpSuccess = () => {
+    navigate("/NominationForm", { state: { nominator: form } });
   };
 
   const field = (label, name, options = {}) => {
@@ -308,6 +322,22 @@ const StudentRegistration = () => {
         <div className="sr-actions">
           <button className="sr-primary" type="submit">रजिस्टर करें</button>
         </div>
+
+        <SendOTP
+          show={showSendOtp}
+          onClose={() => setShowSendOtp(false)}
+          onSuccess={(mobile) => {
+            setOtpMobile(mobile);
+            setShowSendOtp(false);
+            setShowVerifyOtp(true);
+          }}
+        />
+        <VerifyOTP
+          show={showVerifyOtp}
+          onClose={() => setShowVerifyOtp(false)}
+          mobile={otpMobile}
+          onSuccess={handleOtpSuccess}
+        />
       </form>
     </main>
   );
