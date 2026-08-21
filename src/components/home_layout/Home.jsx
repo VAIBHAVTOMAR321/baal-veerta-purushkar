@@ -114,17 +114,7 @@ function Home() {
           {/* LEFT - LANDING & REGISTRATION STEPS */}
           <Col lg={6} className="home-left-col d-none d-lg-flex">
             <div className="home-left-content">
-              <div className="govt-header">
-                <img
-                  src="/assets/images/uk_logo.jpeg"
-                  alt="Uttarakhand Logo"
-                  className="uk-logo"
-                />
-                <div className="govt-text">
-                  <h4 className="govt-title">उत्तराखण्ड सरकार</h4>
-                  <p className="govt-subtitle">Government of Uttarakhand</p>
-                </div>
-              </div>
+            
 
               <div className="scheme-title-block">
                 <div className="scheme-badge">ऑनलाइन नामांकन प्रपत्र</div>
