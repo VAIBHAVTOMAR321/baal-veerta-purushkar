@@ -405,8 +405,8 @@ const StudentRegistration = () => {
           show={showSendOtp}
           onClose={() => setShowSendOtp(false)}
           defaultMobile={form.mobile}
-          onSuccess={() => {
-            setOtpMobile(form.mobile);
+          onSuccess={(mobile) => {
+            setOtpMobile(mobile);
             setShowSendOtp(false);
             setShowVerifyOtp(true);
           }}
