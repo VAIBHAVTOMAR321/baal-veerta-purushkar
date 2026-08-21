@@ -128,8 +128,8 @@
 .sr-input-wrap input { padding-right: 2rem; }
 .sr-password-toggle {
   position: absolute;
-  right: .5rem;
-  top: 50%;
+  right: 2.5rem;
+  top: 93%;
   transform: translateY(-50%);
   background: none;
   border: 0;
