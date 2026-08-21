@@ -36,8 +36,10 @@ const StudentRegistration = () => {
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [showEligibility, setShowEligibility] = useState(false);
   const [childDob, setChildDob] = useState("");
+  const [eventDate, setEventDate] = useState("");
   const [eligibilityMessage, setEligibilityMessage] = useState("");
   const [eligibilityStatus, setEligibilityStatus] = useState("");
+  const today = new Date().toISOString().split("T")[0];
 
   /* ---------- जनपद (District) list from API ---------- */
   useEffect(() => {
@@ -183,20 +185,22 @@ const StudentRegistration = () => {
       setEligibilityStatus("error");
       return;
     }
-
-    const dob = new Date(childDob);
-    const today = new Date("2026-08-21");
-    let age = today.getFullYear() - dob.getFullYear();
-    const monthDiff = today.getMonth() - dob.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-      age--;
+    if (!eventDate) {
+      setEligibilityMessage("कृपया वीरता की घटना की तारीख दर्ज करें।");
+      setEligibilityStatus("error");
+      return;
     }
 
-    if (age < 18) {
-      setEligibilityMessage("बच्चा पात्र है। उम्र 18 वर्ष से कम है।");
+    const dob = new Date(childDob);
+    const event = new Date(eventDate);
+    const eighteenthBirthday = new Date(dob);
+    eighteenthBirthday.setFullYear(dob.getFullYear() + 18);
+
+    if (event < eighteenthBirthday) {
+      setEligibilityMessage("बच्चा पात्र है। घटना के समय उम्र 18 वर्ष से कम थी।");
       setEligibilityStatus("success");
     } else {
-      setEligibilityMessage("बच्चा पात्र नहीं है। उम्र 18 वर्ष से अधिक है।");
+      setEligibilityMessage("बच्चा पात्र नहीं है। घटना के समय उम्र 18 वर्ष या उससे अधिक थी।");
       setEligibilityStatus("error");
     }
   };
@@ -291,6 +295,17 @@ const StudentRegistration = () => {
                   type="date"
                   value={childDob}
                   onChange={(e) => setChildDob(e.target.value)}
+                  max={today}
+                />
+              </div>
+              <div className="sr-field">
+                <label htmlFor="event-date">वीरता की घटना की तारीख</label>
+                <input
+                  id="event-date"
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  max={today}
                 />
               </div>
               <button type="button" className="sr-eligibility-check-btn" onClick={checkEligibility}>
