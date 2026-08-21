@@ -226,9 +226,7 @@ function Home() {
               <Card className="login-card">
                 <Card.Body className="login-card-body">
                   <div className="login-header">
-                    <div className="login-logo-circle">
-                      <FaUserShield size={28} />
-                    </div>
+                   
                     <h2 className="login-title">लॉगिन</h2>
                     <p className="login-subtitle">अपने खाते में सुरक्षित लॉगिन करें</p>
                   </div>
