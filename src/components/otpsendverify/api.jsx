@@ -32,10 +32,14 @@ export const verifyOtpApi = async (mobile, otp) => {
   return data;
 };
 
-export const submitNominatorPart1 = async (data) => {
+export const submitNominatorPart1 = async (data, token) => {
+  const headers = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   const res = await fetch(`${API_BASE}/bravery/nominator-part1/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(data),
   });
   const responseData = await res.json().catch(() => ({}));

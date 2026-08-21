@@ -178,7 +178,7 @@ const StudentRegistration = () => {
     }
   };
 
-  const handleOtpSuccess = async () => {
+  const handleOtpSuccess = async (res) => {
     setLoading(true);
     try {
       const categoryMap = {
@@ -210,7 +210,7 @@ const StudentRegistration = () => {
         id_proof_type_other: idTypeCustom ? form.idType : null,
       };
 
-      await submitNominatorPart1(payload);
+      await submitNominatorPart1(payload, res?.access);
       navigate("/NominationForm", { state: { nominator: form } });
     } catch (err) {
       setError(err.message);
