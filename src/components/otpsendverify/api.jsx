@@ -31,3 +31,19 @@ export const verifyOtpApi = async (mobile, otp) => {
   }
   return data;
 };
+
+export const submitNominatorPart1 = async (data) => {
+  const res = await fetch(`${API_BASE}/bravery/nominator-part1/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const responseData = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(responseData.detail || responseData.message || "नामांकनकर्ता पंजीकरण विफल।");
+  }
+  if (responseData.success === false) {
+    throw new Error(responseData.detail || responseData.message || "नामांकनकर्ता पंजीकरण विफल।");
+  }
+  return responseData;
+};

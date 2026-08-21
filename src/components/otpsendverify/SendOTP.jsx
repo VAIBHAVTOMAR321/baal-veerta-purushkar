@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { sendOtpApi } from "./api";
 import "./otp.css";
 
@@ -6,6 +6,10 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
   const [mobile, setMobile] = useState(defaultMobile || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setMobile(defaultMobile || "");
+  }, [defaultMobile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./StudentRegistration.css";
 import { SendOTP } from "../../otpsendverify/SendOTP";
 import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
+import { submitNominatorPart1 } from "../../otpsendverify/api";
 
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
 const idTypes = ["आधार कार्ड", "मतदाता पहचान पत्र", "अन्य सरकारी पहचान पत्र"];
@@ -39,6 +40,8 @@ const StudentRegistration = () => {
   const [eventDate, setEventDate] = useState("");
   const [eligibilityMessage, setEligibilityMessage] = useState("");
   const [eligibilityStatus, setEligibilityStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const today = new Date().toISOString().split("T")[0];
 
   /* ---------- जनपद (District) list from API ---------- */
@@ -175,8 +178,45 @@ const StudentRegistration = () => {
     }
   };
 
-  const handleOtpSuccess = () => {
-    navigate("/NominationForm", { state: { nominator: form } });
+  const handleOtpSuccess = async () => {
+    setLoading(true);
+    try {
+      const categoryMap = {
+        "स्वयं बालक / बालिका": "self",
+        "माता": "mother",
+        "पिता": "father",
+        "विधिक अभिभावक": "legal_guardian",
+        "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक": "school_principal",
+        "जिलाधिकारी": "district_magistrate",
+      };
+      const idTypeMap = {
+        "आधार कार्ड": "aadhaar",
+        "मतदाता पहचान पत्र": "voter_id",
+      };
+
+      const payload = {
+        nominator_category: categoryMap[form.category] || form.category,
+        full_name: form.name,
+        relat_with_child: form.relation,
+        email: form.email,
+        id_proof_type: idTypeCustom ? null : (idTypeMap[form.idType] || form.idType),
+        id_proof_no: form.idNumber,
+        village: form.address["ग्राम/मोहल्ला"],
+        post_office: form.address["डाकघर"],
+        project: form.address["विकासखण्ड/नगर निकाय"],
+        district: form.address["जनपद"],
+        pincode: form.address["पिन कोड"],
+        password: null,
+        id_proof_type_other: idTypeCustom ? form.idType : null,
+      };
+
+      await submitNominatorPart1(payload);
+      navigate("/NominationForm", { state: { nominator: form } });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const checkEligibility = () => {
@@ -397,8 +437,16 @@ const StudentRegistration = () => {
           </fieldset>
         </section>
 
+        {error && (
+          <div className="sr-error" role="alert" style={{ textAlign: "center", marginBottom: "1rem" }}>
+            {error}
+          </div>
+        )}
+
         <div className="sr-actions">
-          <button className="sr-primary" type="submit">रजिस्टर करें</button>
+          <button className="sr-primary" type="submit" disabled={loading}>
+            {loading ? "पंजीकरण हो रहा है..." : "रजिस्टर करें"}
+          </button>
         </div>
 
       </form>
