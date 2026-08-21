@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
@@ -11,6 +11,59 @@ export const AuthProvider = ({ children }) => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const navigate = useNavigate();
+  const refreshTimerRef = useRef(null);
+  const isRefreshingRef = useRef(false);
+
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return null;
+
+    if (isRefreshingRef.current) return null;
+    isRefreshingRef.current = true;
+
+    try {
+      const refreshResponse = await fetch('http://127.0.0.1:8000/api/refresh-token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (!refreshResponse.ok) {
+        throw new Error('Failed to refresh token.');
+      }
+
+      const { access } = await refreshResponse.json();
+      localStorage.setItem('accessToken', access);
+      return access;
+    } catch (error) {
+      logout();
+      return null;
+    } finally {
+      isRefreshingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    const storedRefreshToken = localStorage.getItem('refreshToken');
+    if (storedRefreshToken) {
+      refreshAccessToken();
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshTimerRef.current = setInterval(() => {
+      const storedRefreshToken = localStorage.getItem('refreshToken');
+      if (storedRefreshToken && !isRefreshingRef.current) {
+        refreshAccessToken();
+      }
+    }, 60000);
+
+    return () => {
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+      }
+    };
+  }, []);
 
   const login = (userData) => {
     localStorage.setItem('user', JSON.stringify(userData));
@@ -24,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     setUser(null);
-    navigate('/login');
+    navigate('/StudentRegistration');
   };
 
   const authFetch = async (url, options = {}) => {
@@ -35,12 +88,10 @@ export const AuthProvider = ({ children }) => {
       Authorization: `Bearer ${accessToken}`,
     };
 
-    // Let the browser set Content-Type for FormData
     if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
 
-    // Add authorization header
     const authOptions = {
       ...options,
       headers,
@@ -48,36 +99,14 @@ export const AuthProvider = ({ children }) => {
 
     let response = await fetch(url, authOptions);
 
-    // If token is expired (401) and it's not a refresh token request itself
     if (response.status === 401 && !url.includes('/api/refresh-token/')) {
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      if (!refreshToken) {
-        logout();
+      const newAccessToken = await refreshAccessToken();
+      if (!newAccessToken) {
         throw new Error('Session expired. Please log in again.');
       }
 
-      try {
-          const refreshResponse = await fetch('http://127.0.0.1:8000/api/refresh-token/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh: refreshToken }),
-        });
-
-        if (!refreshResponse.ok) {
-          throw new Error('Failed to refresh token.');
-        }
-
-        const { access: newAccessToken } = await refreshResponse.json();
-        localStorage.setItem('accessToken', newAccessToken);
-
-        // Retry the original request with the new token
-        authOptions.headers.Authorization = `Bearer ${newAccessToken}`;
-        response = await fetch(url, authOptions);
-      } catch (error) {
-        logout();
-        throw new Error('Session expired. Please log in again.');
-      }
+      authOptions.headers.Authorization = `Bearer ${newAccessToken}`;
+      response = await fetch(url, authOptions);
     }
 
     return response;
@@ -98,4 +127,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export default AuthProvider;
+export default AuthContext;
