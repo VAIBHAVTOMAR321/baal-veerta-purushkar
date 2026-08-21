@@ -112,7 +112,7 @@ function Home() {
       <div className="home-main-card">
         <Row className="g-0 home-row">
           {/* LEFT - LANDING & REGISTRATION STEPS */}
-          <Col lg={6} className="home-left-col d-none d-lg-flex">
+          <Col lg={6} className="home-left-col d-flex">
             <div className="home-left-content">
             
 
@@ -157,24 +157,16 @@ function Home() {
           </Col>
 
           {/* RIGHT - LOGIN */}
-          <Col lg={6} className="home-right-col d-flex align-items-center justify-content-center">
+          <Col lg={6} className="home-right-col d-flex align-items-start justify-content-center">
             <div className="login-wrapper">
-              <div className="login-header">
-                <div className="login-logo-circle">
-                  <FaUserShield size={32} />
-                </div>
-                <h2 className="login-title">लॉगिन</h2>
-                <p className="login-subtitle">अपने खाते में सुरक्षित लॉगिन करें</p>
-              </div>
-
               <Card className="login-card">
                 <Card.Body className="login-card-body">
-                  <div className="login-card-header">
-                    <FaUserShield className="login-card-icon" />
-                    <div>
-                      <h3 className="login-card-title">स्वागत है</h3>
-                      <p className="login-card-subtitle">कृपया अपनी जानकारी दर्ज करें</p>
+                  <div className="login-header">
+                    <div className="login-logo-circle">
+                      <FaUserShield size={28} />
                     </div>
+                    <h2 className="login-title">लॉगिन</h2>
+                    <p className="login-subtitle">अपने खाते में सुरक्षित लॉगिन करें</p>
                   </div>
 
                   <Form className="login-form" onSubmit={handleLogin}>
@@ -238,6 +230,12 @@ function Home() {
                       लॉगिन करें
                     </Button>
 
+                    <div className="login-forgot">
+                      <Link to="/forgot-password" className="forgot-link">
+                        पासवर्ड भूल गए?
+                      </Link>
+                    </div>
+
                     <div className="login-footer">
                       <div className="divider">
                         <span>या</span>
@@ -258,7 +256,7 @@ function Home() {
                   <span className="badge">🔒 सुरक्षित</span>
                   <span className="badge">✓ सत्यापित</span>
                 </div>
-                <p className="copyright">© 2024 उत्तराखण्ड सरकार</p>
+                <p className="copyright">© 2026 उत्तराखण्ड सरकार</p>
               </div>
             </div>
           </Col>

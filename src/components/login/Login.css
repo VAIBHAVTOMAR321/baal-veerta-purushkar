@@ -89,7 +89,7 @@
     background-color: transparent;
     border-bottom: none;
     color: var(--drc-text, #172033);
-    padding: 2rem 2rem 1rem;
+    /* padding: 2rem 2rem 1rem; */
     text-align: center;
 }
 
