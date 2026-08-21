@@ -16,6 +16,8 @@ const StudentRegistration = () => {
     relation: "",
     mobile: "",
     email: "",
+    password: "",
+    confirmPassword: "",
     idType: "",
     idNumber: "",
     address: {
@@ -42,6 +44,8 @@ const StudentRegistration = () => {
   const [eligibilityStatus, setEligibilityStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
   /* ---------- जनपद (District) list from API ---------- */
@@ -151,6 +155,9 @@ const StudentRegistration = () => {
           next.email = "कृपया मान्य ई-मेल आईडी दर्ज करें";
         }
       }
+      if (name === "confirmPassword" && value && form.password && value !== form.password) {
+        next.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होने चाहिए";
+      }
       return next;
     });
   };
@@ -158,7 +165,7 @@ const StudentRegistration = () => {
   const submit = (event) => {
     event.preventDefault();
     const nextErrors = {};
-    ["category", "name", "mobile", "idType", "idNumber"].forEach((fieldName) => {
+    ["category", "name", "mobile", "password", "confirmPassword", "idType", "idNumber"].forEach((fieldName) => {
       if (!form[fieldName].trim()) nextErrors[fieldName] = "यह फ़ील्ड आवश्यक है";
     });
     if (form.category !== "माता" && form.category !== "पिता" && !form.relation.trim()) {
@@ -172,6 +179,9 @@ const StudentRegistration = () => {
     if (form.address["पिन कोड"] && !/^[0-9]{6}$/.test(form.address["पिन कोड"])) {
       nextErrors["address.पिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
     }
+    if (form.password && form.password !== form.confirmPassword) {
+      nextErrors.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होने चाहिए";
+    }
     setErrors(nextErrors);
     if (!Object.keys(nextErrors).length) {
       setShowSendOtp(true);
@@ -181,6 +191,9 @@ const StudentRegistration = () => {
   const handleOtpSuccess = async (res) => {
     setLoading(true);
     try {
+      if (!res?.access) {
+        throw new Error("OTP सत्यापन से access token प्राप्त नहीं हुआ।");
+      }
       const categoryMap = {
         "स्वयं बालक / बालिका": "self",
         "माता": "mother",
@@ -199,6 +212,7 @@ const StudentRegistration = () => {
         full_name: form.name,
         relat_with_child: form.relation,
         email: form.email,
+        password: form.password,
         id_proof_type: idTypeCustom ? null : (idTypeMap[form.idType] || form.idType),
         id_proof_no: form.idNumber,
         village: form.address["ग्राम/मोहल्ला"],
@@ -206,7 +220,6 @@ const StudentRegistration = () => {
         project: form.address["विकासखण्ड/नगर निकाय"],
         district: form.address["जनपद"],
         pincode: form.address["पिन कोड"],
-        password: null,
         id_proof_type_other: idTypeCustom ? form.idType : null,
       };
 
@@ -435,6 +448,63 @@ const StudentRegistration = () => {
               {field("पिन कोड", "address.पिन कोड", { required: true, type: "tel", maxLength: 6, placeholder: "6 अंकों का पिन कोड" })}
             </div>
           </fieldset>
+
+          <div className="sr-grid">
+            <div className="sr-field">
+              <label htmlFor="sr-password">9. पासवर्ड <span aria-hidden="true"> *</span></label>
+              <div className="sr-input-wrap">
+                <input
+                  id="sr-password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="पासवर्ड दर्ज करें"
+                  value={form.password}
+                  onChange={update}
+                  aria-invalid={Boolean(errors.password)}
+                />
+                <button
+                  type="button"
+                  className="sr-password-toggle"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
+                </button>
+              </div>
+              {errors.password && <span className="sr-error" role="alert">{errors.password}</span>}
+            </div>
+            <div className="sr-field">
+              <label htmlFor="sr-confirmPassword">10. पासवर्ड की पुष्टि करें <span aria-hidden="true"> *</span></label>
+              <div className="sr-input-wrap">
+                <input
+                  id="sr-confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="पासवर्ड दोबारा दर्ज करें"
+                  value={form.confirmPassword}
+                  onChange={update}
+                  aria-invalid={Boolean(errors.confirmPassword)}
+                />
+                <button
+                  type="button"
+                  className="sr-password-toggle"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  aria-label={showConfirmPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"}
+                >
+                  {showConfirmPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && <span className="sr-error" role="alert">{errors.confirmPassword}</span>}
+            </div>
+          </div>
         </section>
 
         {error && (

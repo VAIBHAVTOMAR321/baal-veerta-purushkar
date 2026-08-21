@@ -33,10 +33,13 @@ export const verifyOtpApi = async (mobile, otp) => {
 };
 
 export const submitNominatorPart1 = async (data, token) => {
-  const headers = { "Content-Type": "application/json" };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  if (!token) {
+    throw new Error("OTP token उपलब्ध नहीं है। कृपया OTP फिर से सत्यापित करें।");
   }
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
   const res = await fetch(`${API_BASE}/bravery/nominator-part1/`, {
     method: "POST",
     headers,
