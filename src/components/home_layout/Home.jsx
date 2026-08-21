@@ -1,18 +1,62 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
-import { FaUserShield, FaKey, FaClipboardList, FaAddressCard, FaPhone, FaMapMarkerAlt, FaEnvelope, FaFileAlt, FaCheckCircle, FaEdit, FaUpload, FaInfoCircle, FaFileSignature } from "react-icons/fa";
+import { FaUserShield, FaKey, FaClipboardList, FaAddressCard, FaPhone, FaMapMarkerAlt, FaEnvelope, FaFileAlt, FaCheckCircle, FaEdit, FaUpload, FaInfoCircle, FaFileSignature, FaChevronDown, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../login/AuthContext";
 import "./Home.css";
+
+const VISIBLE_STEPS = 4; // डिफ़ॉल्ट रूप से दिखने वाले चरणों की संख्या
 
 function Home() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(true);
 
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const stepsRef = useRef(null);
+
+  /* ---------- सिर्फ 4 steps दिखाओ, बाकी के लिए scroll ---------- */
+  useEffect(() => {
+    const el = stepsRef.current;
+    if (!el) return;
+
+    const setHeight = () => {
+      const steps = el.querySelectorAll(".step-item");
+      if (steps.length >= VISIBLE_STEPS) {
+        let total = 0;
+        for (let i = 0; i < VISIBLE_STEPS; i++) {
+          total += steps[i].offsetHeight;
+        }
+        const style = window.getComputedStyle(el);
+        const gap = parseFloat(style.rowGap || style.gap || "0") || 0;
+        total += gap * (VISIBLE_STEPS - 1);
+        el.style.maxHeight = `${total + 2}px`;
+      }
+      setShowScrollHint(el.scrollHeight > el.clientHeight + 5);
+    };
+
+    const timer = setTimeout(setHeight, 100);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(setHeight).catch(() => {});
+    }
+    window.addEventListener("resize", setHeight);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", setHeight);
+    };
+  }, []);
+
+  const handleStepsScroll = () => {
+    const el = stepsRef.current;
+    if (!el) return;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
+    setShowScrollHint(!atBottom);
+  };
 
   const handleLogin = useCallback(
     async (e) => {
@@ -83,7 +127,7 @@ function Home() {
     },
     {
       step: "D",
-      title: "आवश्यक अभिलेख अपलोड",
+      title: "आवेयक अभिलेख अपलोड",
       subtitle: "Document Upload",
       icon: FaUpload,
       description: "आधार कार्ड, जन्म प्रमाण पत्र, FIR/पुलिस रिपोर्ट आदि अपलोड करें",
@@ -111,52 +155,72 @@ function Home() {
     <div className="home-page">
       <div className="home-main-card">
         <Row className="g-0 home-row">
-          {/* LEFT - LANDING & REGISTRATION STEPS */}
-          <Col lg={6} className="home-left-col d-flex">
-            <div className="home-left-content">
-            
-
-              <div className="scheme-title-block">
-                <div className="scheme-badge">ऑनलाइन नामांकन प्रपत्र</div>
+          <div className="scheme-title-block">
+                <div className="scheme-badge">ऑनलाइन नामांकन प्रपत्र 2026-27</div>
                 <h2 className="scheme-title">मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h2>
                 <p className="scheme-name-en">Chief Minister State Child Bravery Award</p>
               </div>
+          {/* LEFT - LANDING & REGISTRATION STEPS (6 col) */}
+          <Col lg={6} className="home-left-col d-flex">
+            <div className="home-left-content">
+
+              {/* ---------- CENTERED HEADING ---------- */}
+              
 
               <div className="steps-section">
                 <h3 className="steps-heading">
                   <FaClipboardList className="steps-heading-icon" />
                   नामांकन प्रक्रिया
                 </h3>
-                <div className="registration-steps">
-                  {registrationSteps.map((step, index) => {
-                    const IconComponent = step.icon;
-                    return (
-                      <div
-                        key={step.step}
-                        className="step-item"
-                        style={{ "--step-color": step.color }}
-                      >
-                        <div className="step-number">{step.step}</div>
-                        <div className="step-icon-wrapper">
-                          <IconComponent className="step-icon" />
+
+                <div className="steps-scroll-wrap">
+                  <div
+                    className="registration-steps"
+                    ref={stepsRef}
+                    onScroll={handleStepsScroll}
+                  >
+                    {registrationSteps.map((step, index) => {
+                      const IconComponent = step.icon;
+                      return (
+                        <div
+                          key={step.step}
+                          className="step-item"
+                          style={{ "--step-color": step.color }}
+                        >
+                          <div className="step-number">{step.step}</div>
+                          <div className="step-icon-wrapper">
+                            <IconComponent className="step-icon" />
+                          </div>
+                          <div className="step-content">
+                            <h5 className="step-title">{step.title}</h5>
+                            <p className="step-subtitle">{step.subtitle}</p>
+                            <p className="step-description">{step.description}</p>
+                          </div>
+                          {index < registrationSteps.length - 1 && (
+                            <div className="step-connector" />
+                          )}
                         </div>
-                        <div className="step-content">
-                          <h5 className="step-title">{step.title}</h5>
-                          <p className="step-subtitle">{step.subtitle}</p>
-                          <p className="step-description">{step.description}</p>
-                        </div>
-                        {index < registrationSteps.length - 1 && (
-                          <div className="step-connector" />
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    className={`steps-fade ${showScrollHint ? "" : "steps-fade-hidden"}`}
+                  />
                 </div>
+
+                {showScrollHint && (
+                  <div className="scroll-hint">
+                    <FaChevronDown className="scroll-hint-icon" />
+                    और चरण देखने के लिए नीचे स्क्रॉल करें
+                  </div>
+                )}
               </div>
+
             </div>
           </Col>
 
-          {/* RIGHT - LOGIN */}
+          {/* RIGHT - LOGIN (6 col) */}
           <Col lg={6} className="home-right-col d-flex align-items-start justify-content-center">
             <div className="login-wrapper">
               <Card className="login-card">
@@ -203,13 +267,15 @@ function Home() {
                           className="login-input"
                           autoComplete="current-password"
                         />
+                        {/* ---------- NEW EYE ICON (Show/Hide) ---------- */}
                         <button
                           type="button"
                           className="password-toggle"
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"}
+                          title={showPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"}
                         >
-                          {showPassword ? "🙈" : "👁️"}
+                          {showPassword ? <FaEyeSlash className="pw-icon" /> : <FaEye className="pw-icon" />}
                         </button>
                       </div>
                     </Form.Group>
@@ -251,13 +317,7 @@ function Home() {
                 </Card.Body>
               </Card>
 
-              <div className="login-footer-info">
-                <div className="security-badges">
-                  <span className="badge">🔒 सुरक्षित</span>
-                  <span className="badge">✓ सत्यापित</span>
-                </div>
-                <p className="copyright">© 2026 उत्तराखण्ड सरकार</p>
-              </div>
+             
             </div>
           </Col>
         </Row>
