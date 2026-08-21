@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const refreshResponse = await fetch('https://mahadevaaya.com/srcproject/srcproject_backend/api/refresh-token/', {
+          const refreshResponse = await fetch('http://127.0.0.1:8000/api/refresh-token/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh: refreshToken }),

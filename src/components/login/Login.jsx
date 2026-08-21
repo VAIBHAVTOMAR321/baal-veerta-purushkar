@@ -14,12 +14,6 @@ import "./Login.css";
 
 /* ---------- Role के अनुसार heading config ---------- */
 const roleConfig = {
-  user: {
-    title: "User Login",
-    hindi: "प्रयोगकर्ता लॉगिन",
-    subtitle: "नामांकनकर्ता के रूप में लॉगिन करें",
-    path: "/UserDashBoard",
-  },
   director: {
     title: "Director Login",
     hindi: "निदेशक लॉगिन",
@@ -47,24 +41,24 @@ const roleConfig = {
 };
 
 function Login() {
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [loginType, setLoginType] = useState("director");
-  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const currentRole = roleConfig[loginType] || roleConfig.user;
+  const currentRole = roleConfig[loginType] || roleConfig.director;
 
   const handleLogin = useCallback(
     async (e) => {
       e.preventDefault();
       setError(null);
 
-      if (!username) {
-        setError("Please enter your username.");
+      if (!phone) {
+        setError("Please enter your phone number.");
         return;
       }
 
@@ -75,16 +69,16 @@ function Login() {
 
       try {
         const response = await fetch(
-          "https://mahadevaaya.com/srcproject/srcproject_backend/api/login/",
+          "http://127.0.0.1:8000/api/login/",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              username,
-              password,
+              phone,
               role: loginType,
+              password,
             }),
           }
         );
@@ -107,7 +101,7 @@ function Login() {
         setError(err.message);
       }
     },
-    [username, password, loginType, navigate, login]
+    [phone, password, loginType, navigate, login]
   );
 
   return (
@@ -180,18 +174,6 @@ function Login() {
 
                     <div className="d-flex flex-wrap login-role-radios">
 
-                      {/* USER */}
-                      <Form.Check
-                        className="me-3 mb-2"
-                        label="User"
-                        name="loginType"
-                        type="radio"
-                        id="user-radio"
-                        value="user"
-                        checked={loginType === "user"}
-                        onChange={(e) => setLoginType(e.target.value)}
-                      />
-
                       {/* DIRECTOR */}
                       <Form.Check
                         className="me-3 mb-2"
@@ -242,18 +224,18 @@ function Login() {
                     </div>
                   </Form.Group>
 
-                  {/* USERNAME */}
-                  <Form.Group className="mb-3" controlId="formUsername">
+                  {/* PHONE */}
+                  <Form.Group className="mb-3" controlId="formPhone">
                     <Form.Label>
                       <FaUserShield className="me-2" />
-                      Username
+                      Phone
                     </Form.Label>
 
                     <Form.Control
                       type="text"
-                      placeholder="Enter username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter phone number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       required
                     />
                   </Form.Group>
@@ -302,20 +284,6 @@ function Login() {
                       Login
                     </Button>
                   </div>
-
-                  {/* REGISTRATION SECTION — सिर्फ user के लिए */}
-                  {loginType === "user" && (
-                    <div className="registration-section text-center mt-4">
-                      <div className="registration-divider">
-                        <span>
-                          Don't have an account?{" "}
-                          <Link to="/StudentRegistration" className="register-link">
-                            Register
-                          </Link>
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
                 </Form>
               </div>

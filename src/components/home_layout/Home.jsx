@@ -8,8 +8,8 @@ import "./Home.css";
 const VISIBLE_STEPS = 4; // डिफ़ॉल्ट रूप से दिखने वाले चरणों की संख्या
 
 function Home() {
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
@@ -63,8 +63,8 @@ function Home() {
       e.preventDefault();
       setError(null);
 
-      if (!username.trim()) {
-        setError("कृपया उपयोगकर्ता नाम दर्ज करें।");
+      if (!phone.trim()) {
+        setError("कृपया फ़ोन नंबर दर्ज करें।");
         return;
       }
 
@@ -75,11 +75,11 @@ function Home() {
 
       try {
         const response = await fetch(
-          "https://mahadevaaya.com/srcproject/srcproject_backend/api/login/",
+          "http://127.0.0.1:8000/api/login/",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password, role: "user" }),
+            body: JSON.stringify({ phone, password, role: "user" }),
           }
         );
 
@@ -87,7 +87,7 @@ function Home() {
 
         if (!response.ok) {
           throw new Error(
-            data.detail || "लॉगिन विफल। कृपया क्रेडेंशियल जांचें।"
+            data.detail || data.message || "लॉगिन विफल। कृपया क्रेडेंशियल जांचें।"
           );
         }
 
@@ -97,7 +97,7 @@ function Home() {
         setError(err.message);
       }
     },
-    [username, password, navigate, login]
+    [phone, password, navigate, login]
   );
 
   const registrationSteps = [
@@ -232,22 +232,22 @@ function Home() {
                   </div>
 
                   <Form className="login-form" onSubmit={handleLogin}>
-                    <Form.Group className="mb-3" controlId="formUsername">
-                      <Form.Label className="login-label">
-                        <FaUserShield className="login-label-icon" />
-                        उपयोगकर्ता नाम
-                      </Form.Label>
-                      <div className="input-group-wrapper">
-                        <Form.Control
-                          type="text"
-                          placeholder="उपयोगकर्ता नाम दर्ज करें"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          required
-                          className="login-input"
-                          autoComplete="username"
-                        />
-                      </div>
+                     <Form.Group className="mb-3" controlId="formPhone">
+                       <Form.Label className="login-label">
+                         <FaUserShield className="login-label-icon" />
+                         फ़ोन नंबर
+                       </Form.Label>
+                       <div className="input-group-wrapper">
+                         <Form.Control
+                           type="text"
+                           placeholder="फ़ोन नंबर दर्ज करें"
+                           value={phone}
+                           onChange={(e) => setPhone(e.target.value)}
+                           required
+                           className="login-input"
+                           autoComplete="username"
+                         />
+                       </div>
                     </Form.Group>
 
                     <Form.Group className="mb-4" controlId="formPassword">
