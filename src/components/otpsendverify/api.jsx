@@ -6,11 +6,14 @@ export const sendOtpApi = async (mobile) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone: mobile, role: "user" }),
   });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || err.message || "OTP भेजने में विफल।");
+    throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
   }
-  return res.json();
+  if (data.success === false) {
+    throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+  }
+  return data;
 };
 
 export const verifyOtpApi = async (mobile, otp) => {
@@ -19,9 +22,12 @@ export const verifyOtpApi = async (mobile, otp) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone: mobile, otp, role: "user" }),
   });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || err.message || "OTP सत्यापन विफल।");
+    throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
   }
-  return res.json();
+  if (data.success === false) {
+    throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+  }
+  return data;
 };

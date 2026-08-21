@@ -18,8 +18,8 @@ export const VerifyOTP = ({ show, onClose, mobile, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!/^[0-9]{4,8}$/.test(otp)) {
-      setError("कृपया वैध OTP दर्ज करें।");
+    if (!/^[0-9]{6}$/.test(otp)) {
+      setError("कृपया 6 अंकों का OTP दर्ज करें।");
       return;
     }
     setLoading(true);
@@ -67,7 +67,7 @@ export const VerifyOTP = ({ show, onClose, mobile, onSuccess }) => {
               <input
                 id="otp-code"
                 type="text"
-                maxLength={8}
+                maxLength={6}
                 placeholder="OTP दर्ज करें"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}

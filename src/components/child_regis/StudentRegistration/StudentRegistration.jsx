@@ -401,23 +401,24 @@ const StudentRegistration = () => {
           <button className="sr-primary" type="submit">रजिस्टर करें</button>
         </div>
 
-        <SendOTP
-          show={showSendOtp}
-          onClose={() => setShowSendOtp(false)}
-          defaultMobile={form.mobile}
-          onSuccess={(mobile) => {
-            setOtpMobile(mobile);
-            setShowSendOtp(false);
-            setShowVerifyOtp(true);
-          }}
-        />
-        <VerifyOTP
-          show={showVerifyOtp}
-          onClose={() => setShowVerifyOtp(false)}
-          mobile={otpMobile}
-          onSuccess={handleOtpSuccess}
-        />
       </form>
+
+      <SendOTP
+        show={showSendOtp}
+        onClose={() => setShowSendOtp(false)}
+        defaultMobile={form.mobile}
+        onSuccess={(mobile) => {
+          setOtpMobile(mobile);
+          setShowSendOtp(false);
+          setShowVerifyOtp(true);
+        }}
+      />
+      <VerifyOTP
+        show={showVerifyOtp}
+        onClose={() => setShowVerifyOtp(false)}
+        mobile={otpMobile}
+        onSuccess={handleOtpSuccess}
+      />
     </main>
   );
 };
