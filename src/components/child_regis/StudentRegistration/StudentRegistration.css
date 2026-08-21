@@ -42,25 +42,15 @@
 }
 .sr-card { padding: clamp(.9rem, 2vw, 1.25rem); }
 .sr-section-title {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: center;
   gap: 1rem;
   border-bottom: 1px solid #e1e8ed;
   padding-bottom: .75rem;
   margin-bottom: 1rem;
-  position: relative;
-}
-.sr-section-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: .4rem;
 }
 .sr-badge-year {
-  position: absolute;
-  left: 0;
   background: #123b5d;
   color: #fff;
   font-weight: 700;
@@ -76,6 +66,13 @@
   padding: .3rem .5rem;
   border-radius: 3px;
   font-size: .85rem;
+}
+.sr-section-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .4rem;
 }
 .sr-section-title h2 { margin: 0; font-size: 1.1rem; }
 .sr-section-title p { margin: .15rem 0 0; color: #617486; font-size: .8rem; }
@@ -161,6 +158,59 @@
   font-size: .9rem;
 }
 .sr-primary:hover { background: #145c4b; }
+.sr-eligibility-btn {
+  background: #e7b858;
+  color: #17324d;
+  border: none;
+  border-radius: 4px;
+  padding: .4rem .8rem;
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sr-eligibility-btn:hover { background: #d4a843; }
+.sr-eligibility-box {
+  background: #f8fafc;
+  border: 1px solid #e5eaf2;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.sr-eligibility-box h4 {
+  margin: 0 0 .75rem;
+  font-size: .95rem;
+  color: #172033;
+}
+.sr-eligibility-check-btn {
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: .5rem 1rem;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: .5rem;
+}
+.sr-eligibility-check-btn:hover { background: #0b5ed7; }
+.sr-eligibility-message {
+  margin-top: .75rem;
+  padding: .6rem .85rem;
+  border-radius: 6px;
+  font-size: .85rem;
+  font-weight: 600;
+}
+.sr-eligibility-message.success {
+  background: #e6f9f0;
+  color: #087f5b;
+  border: 1px solid #b7e1c8;
+}
+.sr-eligibility-message.error {
+  background: #fff5f5;
+  color: #b42318;
+  border: 1px solid #ffc9c9;
+}
 @media (max-width: 700px) {
   .sr-header { align-items: flex-start; }
   .sr-meta, .sr-grid { grid-template-columns: 1fr; }

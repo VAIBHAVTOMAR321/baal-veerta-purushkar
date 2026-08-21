@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { sendOtpApi } from "./api";
 import "./otp.css";
 
-export const SendOTP = ({ show, onClose, onSuccess }) => {
-  const [mobile, setMobile] = useState("");
+export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
+  const [mobile, setMobile] = useState(defaultMobile || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

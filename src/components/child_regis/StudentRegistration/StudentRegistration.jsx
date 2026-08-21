@@ -34,6 +34,10 @@ const StudentRegistration = () => {
   const [projects, setProjects] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [showEligibility, setShowEligibility] = useState(false);
+  const [childDob, setChildDob] = useState("");
+  const [eligibilityMessage, setEligibilityMessage] = useState("");
+  const [eligibilityStatus, setEligibilityStatus] = useState("");
 
   /* ---------- जनपद (District) list from API ---------- */
   useEffect(() => {
@@ -81,7 +85,13 @@ const StudentRegistration = () => {
   };
 
   const update = (event) => {
-    const { name, value } = event.target;
+    let { name, value } = event.target;
+    let hadNumbers = false;
+
+    if ((name === "name" || name === "relation") && /[0-9]/.test(value)) {
+      hadNumbers = true;
+      value = value.replace(/[0-9]/g, "");
+    }
 
     if (name.startsWith("address.")) {
       const fieldName = name.slice(8);
@@ -123,6 +133,9 @@ const StudentRegistration = () => {
       if (name === "category") {
         next.relation = "";
       }
+      if (hadNumbers) {
+        next[name] = "केवल अक्षर दर्ज करें, नंबर नहीं।";
+      }
       if (name === "mobile" || name === "address.mobile") {
         if (!/^[0-9]{10}$/.test(value)) {
           next.mobile = value.length > 0 ? "मोबाइल नंबर 10 अंकों का होना चाहिए" : "";
@@ -162,6 +175,30 @@ const StudentRegistration = () => {
 
   const handleOtpSuccess = () => {
     navigate("/NominationForm", { state: { nominator: form } });
+  };
+
+  const checkEligibility = () => {
+    if (!childDob) {
+      setEligibilityMessage("कृपया बच्चे की जन्म तिथि दर्ज करें।");
+      setEligibilityStatus("error");
+      return;
+    }
+
+    const dob = new Date(childDob);
+    const today = new Date("2026-08-21");
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+
+    if (age < 18) {
+      setEligibilityMessage("बच्चा पात्र है। उम्र 18 वर्ष से कम है।");
+      setEligibilityStatus("success");
+    } else {
+      setEligibilityMessage("बच्चा पात्र नहीं है। उम्र 18 वर्ष से अधिक है।");
+      setEligibilityStatus("error");
+    }
   };
 
   const field = (label, name, options = {}) => {
@@ -239,7 +276,33 @@ const StudentRegistration = () => {
                 <p>कृपया सभी आवश्यक जानकारी दर्ज करें</p>
               </div>
             </div>
+            <button type="button" className="sr-eligibility-btn" onClick={() => setShowEligibility(!showEligibility)}>
+              पात्रता जांचें
+            </button>
           </div>
+
+          {showEligibility && (
+            <div className="sr-eligibility-box">
+              <h4>बच्चे की पात्रता जांच</h4>
+              <div className="sr-field">
+                <label htmlFor="child-dob">बच्चे की जन्म तिथि</label>
+                <input
+                  id="child-dob"
+                  type="date"
+                  value={childDob}
+                  onChange={(e) => setChildDob(e.target.value)}
+                />
+              </div>
+              <button type="button" className="sr-eligibility-check-btn" onClick={checkEligibility}>
+                जांचें
+              </button>
+              {eligibilityMessage && (
+                <div className={`sr-eligibility-message ${eligibilityStatus}`}>
+                  {eligibilityMessage}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="sr-grid">
             {field("1. नामांकनकर्ता की श्रेणी", "category", { required: true, options: nominatorCategories })}
@@ -326,8 +389,9 @@ const StudentRegistration = () => {
         <SendOTP
           show={showSendOtp}
           onClose={() => setShowSendOtp(false)}
-          onSuccess={(mobile) => {
-            setOtpMobile(mobile);
+          defaultMobile={form.mobile}
+          onSuccess={() => {
+            setOtpMobile(form.mobile);
             setShowSendOtp(false);
             setShowVerifyOtp(true);
           }}
