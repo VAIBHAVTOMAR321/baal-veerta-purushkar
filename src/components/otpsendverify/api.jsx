@@ -47,9 +47,12 @@ export const submitNominatorPart1 = async (data, token) => {
   });
   const responseData = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(responseData.detail || responseData.message || "नामांकनकर्ता पंजीकरण विफल।");
+    const msg = responseData.detail || responseData.message || JSON.stringify(responseData) || `HTTP ${res.status} ${res.statusText}`;
+    console.error("[submitNominatorPart1] Bad Request:", responseData);
+    throw new Error(msg);
   }
   if (responseData.success === false) {
+    console.error("[submitNominatorPart1] API returned success=false:", responseData);
     throw new Error(responseData.detail || responseData.message || "नामांकनकर्ता पंजीकरण विफल।");
   }
   return responseData;

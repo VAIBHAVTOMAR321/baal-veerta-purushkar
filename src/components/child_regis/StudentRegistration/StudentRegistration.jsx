@@ -223,6 +223,9 @@ const StudentRegistration = () => {
         id_proof_type_other: idTypeCustom ? form.idType : null,
       };
 
+      console.log("[StudentRegistration] Submitting payload:", payload);
+      console.log("[StudentRegistration] Using token:", res?.access);
+
       await submitNominatorPart1(payload, res?.access);
       navigate("/NominationForm", { state: { nominator: form } });
     } catch (err) {
