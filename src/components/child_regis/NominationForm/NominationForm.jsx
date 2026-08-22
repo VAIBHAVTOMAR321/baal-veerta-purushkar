@@ -7,7 +7,7 @@ import StepE from "./StepE.jsx";
 import StepF from "./StepF.jsx";
 import "./NominationForm.css";
 
-const steps = ["भाग–B", "भाग–C", "भाग–D", "भाग–E", "भाग–F"];
+const steps = ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"];
 const requiredByStep = {
   0: ["childName", "fatherName", "motherName", "birthDate", "ageYears", "ageMonths", "gender", "resident", "permanentग्राम/मोहल्ला", "permanentडाकघर", "permanentविकासखण्ड/नगर निकाय", "permanentजनपद", "permanentपिन कोड"],
   1: ["actTitle", "actDate", "actPlace", "actDistrict", "actNature", "shortDescription", "detailedDescription", "firRegistered"],
