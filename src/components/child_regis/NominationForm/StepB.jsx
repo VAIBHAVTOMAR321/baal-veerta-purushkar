@@ -92,14 +92,8 @@ const StepB = ({ data, update, error }) => {
         {input("2. पिता का नाम", "fatherName", { required: true, placeholder: "पिता का पूरा नाम", disabled: isFather })}
         {input("3. माता का नाम", "motherName", { required: true, placeholder: "माता का पूरा नाम", disabled: isMother })}
         {input("4. अभिभावक का नाम (यदि लागू हो)", "guardianName", { placeholder: "अभिभावक का पूरा नाम", disabled: isLegalGuardian })}
-        {input("5. जन्म तिथि", "birthDate", { required: true, type: "date" })}
-        <div className="nf-field">
-          <label>6. घटना के समय आयु <span>*</span></label>
-          <div className="nf-inline">
-            {input("वर्ष", "ageYears", { required: true, type: "number", placeholder: "वर्ष" })}
-            {input("माह", "ageMonths", { required: true, type: "number", placeholder: "माह" })}
-          </div>
-        </div>
+        {input("5. बच्चे/अभिभावक का मोबाइल नंबर", "childMobile", { type: "tel", placeholder: "10 अंकों का मोबाइल नंबर" })}
+        {input("6. जन्म तिथि", "birthDate", { required: true, type: "date" })}
         {input("7. लिंग", "gender", { required: true, options: ["बालक", "बालिका", "अन्य"], placeholder: "लिंग चुनें" })}
         {input("8. उत्तराखण्ड का स्थायी निवासी", "resident", { required: true, options: ["हाँ", "नहीं"], placeholder: "चुनें" })}
       </div>
@@ -114,7 +108,6 @@ const StepB = ({ data, update, error }) => {
         {input("11. विद्यालय का नाम", "schoolName", { placeholder: "विद्यालय का नाम" })}
         {input("12. विद्यालय का पता", "schoolAddress", { placeholder: "विद्यालय का पता" })}
         {input("13. वर्तमान कक्षा", "currentClass", { placeholder: "कक्षा दर्ज करें" })}
-        {input("14. बच्चे/अभिभावक का मोबाइल नंबर", "childMobile", { type: "tel", placeholder: "10 अंकों का मोबाइल नंबर" })}
       </div>
     </section>
   );
