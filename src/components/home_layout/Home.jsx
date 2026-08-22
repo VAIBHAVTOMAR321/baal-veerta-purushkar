@@ -5,19 +5,31 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../login/AuthContext";
 import "./Home.css";
 
-const VISIBLE_STEPS = 4; // डिफ़ॉल्ट रूप से दिखने वाले चरणों की संख्या
+const VISIBLE_STEPS = 4;
 
 function Home() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showScrollHint, setShowScrollHint] = useState(true);
   const [success, setSuccess] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Forgot password modal states
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: send OTP, 2: verify OTP, 3: change password
+  const [forgotPhone, setForgotPhone] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [forgotError, setForgotError] = useState(null);
+  const [forgotSuccess, setForgotSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
   const location = useLocation();
+  const stepsRef = useRef(null);
+  const [showScrollHint, setShowScrollHint] = useState(true);
 
   useEffect(() => {
     if (location.state?.registrationSuccess) {
@@ -26,9 +38,6 @@ function Home() {
     }
   }, [location.state, navigate]);
 
-  const stepsRef = useRef(null);
-
-  /* ---------- सिर्फ 4 steps दिखाओ, बाकी के लिए scroll ---------- */
   useEffect(() => {
     const el = stepsRef.current;
     if (!el) return;
@@ -109,6 +118,142 @@ function Home() {
     [phone, password, navigate, login]
   );
 
+  // Forgot password handlers
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSuccess(null);
+
+    if (!forgotPhone.trim() || forgotPhone.length !== 10) {
+      setForgotError("कृपया मान्य 10 अंकों का फ़ोन नंबर दर्ज करें।");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/send-otp-password-change/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: forgotPhone, role: "user" }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+      }
+
+      setForgotSuccess("OTP सफलतापूर्वक भेजा गया है।");
+      setForgotStep(2);
+    } catch (err) {
+      setForgotError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSuccess(null);
+
+    if (!forgotOtp.trim()) {
+      setForgotError("कृपया OTP दर्ज करें।");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/verify-otp-password-change/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: forgotPhone, otp: forgotOtp, role: "user" }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+      }
+
+      setForgotSuccess("OTP सत्यापित हो गया है।");
+      setForgotStep(3);
+    } catch (err) {
+      setForgotError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSuccess(null);
+
+    if (!newPassword.trim() || newPassword.length < 6) {
+      setForgotError("पासवर्ड कम से कम 6 अंकों का होना चाहिए।");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setForgotError("पासवर्ड मेल नहीं खा रहे।");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/change-password/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: forgotPhone, role: "user", new_password: newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || "पासवर्ड बदलने में विफल।");
+      }
+
+      setForgotSuccess("पासवर्ड सफलतापूर्वक बदल दिया गया है।");
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setForgotStep(1);
+        setForgotPhone("");
+        setForgotOtp("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setForgotError(null);
+        setForgotSuccess(null);
+      }, 1500);
+    } catch (err) {
+      setForgotError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openForgotModal = () => {
+    setShowForgotModal(true);
+    setForgotStep(1);
+    setForgotPhone("");
+    setForgotOtp("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setForgotError(null);
+    setForgotSuccess(null);
+  };
+
+  const closeForgotModal = () => {
+    setShowForgotModal(false);
+    setForgotStep(1);
+    setForgotPhone("");
+    setForgotOtp("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setForgotError(null);
+    setForgotSuccess(null);
+  };
+
   const registrationSteps = [
     {
       step: "A",
@@ -136,7 +281,7 @@ function Home() {
     },
     {
       step: "D",
-      title: "आवेयक अभिलेख अपलोड",
+      title: "आवश्यक अभिलेख अपलोड",
       subtitle: "Document Upload",
       icon: FaUpload,
       description: "आधार कार्ड, जन्म प्रमाण पत्र, FIR/पुलिस रिपोर्ट आदि अपलोड करें",
@@ -165,16 +310,14 @@ function Home() {
       <div className="home-main-card">
         <Row className="g-0 home-row">
           <div className="scheme-title-block">
-                <div className="scheme-badge">ऑनलाइन नामांकन प्रपत्र 2026-27</div>
-                <h2 className="scheme-title">मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h2>
-                <p className="scheme-name-en">Chief Minister State Child Bravery Award</p>
-              </div>
+            <div className="scheme-badge">ऑनलाइन नामांकन प्रपत्र 2026-27</div>
+            <h2 className="scheme-title">मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h2>
+            <p className="scheme-name-en">Chief Minister State Child Bravery Award</p>
+          </div>
+
           {/* LEFT - LANDING & REGISTRATION STEPS (6 col) */}
           <Col lg={6} className="home-left-col d-flex">
             <div className="home-left-content">
-
-              {/* ---------- CENTERED HEADING ---------- */}
-              
 
               <div className="steps-section">
                 <h3 className="steps-heading">
@@ -235,7 +378,7 @@ function Home() {
               <Card className="login-card">
                 <Card.Body className="login-card-body">
                   <div className="login-header">
-                   
+
                     <h2 className="login-title">लॉगिन</h2>
                     <p className="login-subtitle">अपने खाते में सुरक्षित लॉगिन करें</p>
                   </div>
@@ -274,7 +417,6 @@ function Home() {
                           className="login-input"
                           autoComplete="current-password"
                         />
-                        {/* ---------- NEW EYE ICON (Show/Hide) ---------- */}
                         <button
                           type="button"
                           className="password-toggle"
@@ -310,9 +452,9 @@ function Home() {
                     </Button>
 
                     <div className="login-forgot">
-                      <Link to="/forgot-password" className="forgot-link">
+                      <button type="button" className="forgot-link" onClick={openForgotModal}>
                         पासवर्ड भूल गए?
-                      </Link>
+                      </button>
                     </div>
 
                     <div className="login-footer">
@@ -330,11 +472,141 @@ function Home() {
                 </Card.Body>
               </Card>
 
-             
+              
             </div>
           </Col>
         </Row>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="modal-overlay" onClick={closeForgotModal}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>पासवर्ड बदलें</h3>
+              <button type="button" className="modal-close" onClick={closeForgotModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              {/* Step indicator */}
+              <div className="modal-steps">
+                <div className={`modal-step ${forgotStep >= 1 ? "active" : ""}`}>
+                  <span className="modal-step-num">1</span>
+                  <span>OTP भेजें</span>
+                </div>
+                <div className={`modal-step ${forgotStep >= 2 ? "active" : ""}`}>
+                  <span className="modal-step-num">2</span>
+                  <span>OTP सत्यापित करें</span>
+                </div>
+                <div className={`modal-step ${forgotStep >= 3 ? "active" : ""}`}>
+                  <span className="modal-step-num">3</span>
+                  <span>नया पासवर्ड</span>
+                </div>
+              </div>
+
+              {forgotError && (
+                <div className="modal-error" role="alert">
+                  ⚠️ {forgotError}
+                </div>
+              )}
+
+              {forgotSuccess && (
+                <div className="modal-success" role="alert">
+                  ✅ {forgotSuccess}
+                </div>
+              )}
+
+              {/* Step 1: Send OTP */}
+              {forgotStep === 1 && (
+                <Form onSubmit={handleSendOtp} noValidate>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="modal-label">फ़ोन नंबर</Form.Label>
+                    <Form.Control
+                      type="tel"
+                      placeholder="10 अंकों का फ़ोन नंबर दर्ज करें"
+                      value={forgotPhone}
+                      onChange={(e) => setForgotPhone(e.target.value)}
+                      maxLength={10}
+                      className="modal-input"
+                      required
+                    />
+                  </Form.Group>
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    className="modal-submit-btn"
+                    disabled={loading}
+                  >
+                    {loading ? "भेज रहे हैं..." : "OTP भेजें"}
+                  </Button>
+                </Form>
+              )}
+
+              {/* Step 2: Verify OTP */}
+              {forgotStep === 2 && (
+                <Form onSubmit={handleVerifyOtp} noValidate>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="modal-label">OTP</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="OTP दर्ज करें"
+                      value={forgotOtp}
+                      onChange={(e) => setForgotOtp(e.target.value)}
+                      maxLength={6}
+                      className="modal-input"
+                      required
+                    />
+                  </Form.Group>
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    className="modal-submit-btn"
+                    disabled={loading}
+                  >
+                    {loading ? "सत्यापित कर रहे हैं..." : "OTP सत्यापित करें"}
+                  </Button>
+                </Form>
+              )}
+
+              {/* Step 3: Change Password */}
+              {forgotStep === 3 && (
+                <Form onSubmit={handleChangePassword} noValidate>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="modal-label">नया पासवर्ड</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="नया पासवर्ड दर्ज करें"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="modal-input"
+                      required
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-4">
+                    <Form.Label className="modal-label">पासवर्ड पुनः दर्ज करें</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="पासवर्ड पुनः दर्ज करें"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="modal-input"
+                      required
+                    />
+                  </Form.Group>
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    className="modal-submit-btn"
+                    disabled={loading}
+                  >
+                    {loading ? "बदल रहे हैं..." : "पासवर्ड बदलें"}
+                  </Button>
+                </Form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
