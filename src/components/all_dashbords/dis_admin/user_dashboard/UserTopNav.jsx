@@ -59,70 +59,107 @@ function UserTopNav({ toggleSidebar }) {
     <header className="dashboard-header">
       <Container fluid>
         <Row className="align-items-center">
-          <Col xs="auto">
-            <Button
-              variant="light"
-              className="sidebar-toggle"
-              onClick={toggleSidebar}
-            >
-              <FaBars />
-            </Button>
-          </Col>
 
-          <Col>
-            {error && (
-              <Alert variant="warning" className="mb-0 py-1">
-                <small>{error}</small>
-              </Alert>
-            )}
-          </Col>
-          
-          <Col xs="auto">
-             <div className="header-actions d-flex align-items-center">
-                
-              
+  {/* LEFT: Sidebar Toggle + Government Branding */}
+  <Col>
+    <div className="d-flex align-items-center gap-3">
 
-                {/* User Profile Dropdown */}
-                <Dropdown align="end">
-                  <Dropdown.Toggle
-                    variant="light"
-                    className="user-profile-btn d-flex align-items-center"
-                    style={{
-                      gap: "4px",
-                      border: "1px solid #e5e7eb",
-                      padding: "2px 6px",
-                    }}
-                  >
-                    {getUserPhotoUrl() ? (
-                      <Image
-                        src={getUserPhotoUrl()}
-                        roundedCircle
-                        className="user-avatar"
-                        onError={handleImageError}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          objectFit: "cover",
-                        }}
-                        alt="User"
-                      />
-                    ) : (
-                      <FaUserCircle style={{ fontSize: 24, color: "rgb(250 93 77)" }} />
-                    )}
-                    {/* Name hidden on mobile to save space for other buttons, but Avatar remains visible */}
-                    <span style={{ fontWeight: 500, fontSize: "0.85rem" }} className="">
-                      {getDisplayName()}
-                    </span>
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    <Dropdown.Item onClick={handleLogout}>
-                      <FaSignOutAlt className="me-2" /> Logout
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
-              </div>
-            </Col>
-          </Row>
+      {/* Sidebar Toggle */}
+      <Button
+        variant="light"
+        className="sidebar-toggle"
+        onClick={toggleSidebar}
+      >
+        <FaBars />
+      </Button>
+
+      {/* Uttarakhand Government Branding */}
+      <div className="scheme-brand-mark">
+        उत्तराखण्ड
+        <br />
+        <small>सरकार</small>
+      </div>
+
+      {/* Scheme Title */}
+      <div className="scheme-header-text">
+        <h2 className="scheme-title mb-0">
+          मुख्यमंत्री राज्य बाल वीरता पुरस्कार
+        </h2>
+      </div>
+
+    </div>
+  </Col>
+
+  {/* CENTER: Error */}
+  <Col>
+    {error && (
+      <Alert variant="warning" className="mb-0 py-1">
+        <small>{error}</small>
+      </Alert>
+    )}
+  </Col>
+
+  {/* RIGHT: User Profile */}
+  <Col xs="auto">
+    <div className="header-actions d-flex align-items-center">
+
+      {/* User Profile Dropdown */}
+      <Dropdown align="end">
+
+        <Dropdown.Toggle
+          variant="light"
+          className="user-profile-btn d-flex align-items-center"
+          style={{
+            gap: "4px",
+            border: "1px solid #e5e7eb",
+           
+          }}
+        >
+          {getUserPhotoUrl() ? (
+            <Image
+              src={getUserPhotoUrl()}
+              roundedCircle
+              className="user-avatar"
+              onError={handleImageError}
+             
+              alt="User"
+            />
+          ) : (
+            <FaUserCircle
+              style={{
+                fontSize: 24,
+                color: "rgb(250 93 77)",
+              }}
+            />
+          )}
+
+          <span
+            style={{
+              fontWeight: 500,
+              fontSize: "0.85rem",
+            }}
+          >
+            {getDisplayName()}
+          </span>
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu>
+
+          <Dropdown.Item onClick={handleLogout}>
+            <FaSignOutAlt className="me-2" />
+            Logout
+          </Dropdown.Item>
+
+        </Dropdown.Menu>
+
+      </Dropdown>
+
+    </div>
+  </Col>
+
+</Row>
+
+        
         </Container>
       </header>
     );

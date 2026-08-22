@@ -452,10 +452,15 @@ function Home() {
                     </Button>
 
                     <div className="login-forgot">
-                      <button type="button" className="forgot-link" onClick={openForgotModal}>
-                        पासवर्ड भूल गए?
-                      </button>
-                    </div>
+  <div
+    className="forgot-link"
+    onClick={openForgotModal}
+    role="button"
+    tabIndex={0}
+  >
+    पासवर्ड भूल गए?
+  </div>
+</div>
 
                     <div className="login-footer">
                       <div className="divider">
