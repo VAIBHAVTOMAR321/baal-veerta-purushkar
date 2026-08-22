@@ -1,15 +1,55 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const addressFields = ["ग्राम/मोहल्ला", "डाकघर", "विकासखण्ड/नगर निकाय", "जनपद", "पिन कोड"];
 
 const StepB = ({ data, update, error }) => {
-  const nominatorCategory = data?.nominator_category || "";
-  const nominatorName = data?.full_name || "";
+  const [nominator, setNominator] = useState(null);
+  const fetchStarted = useRef(false);
 
-  const isSelf = nominatorCategory === "स्वयं बालक / बालिका";
-  const isMother = nominatorCategory === "माता";
-  const isFather = nominatorCategory === "पिता";
-  const isLegalGuardian = nominatorCategory === "विधिक अभिभावक";
+  useEffect(() => {
+    if (fetchStarted.current) return;
+    fetchStarted.current = true;
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    const fetchNominator = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/bravery/nominator-part1/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return;
+
+        const result = await response.json();
+        const record = Array.isArray(result.data) ? result.data[0] : null;
+        if (record) {
+          setNominator(record);
+          const category = String(record.nominator_category || "").toLowerCase();
+          const fieldName = {
+            self: "childName",
+            mother: "motherName",
+            father: "fatherName",
+            legal_guardian: "guardianName",
+          }[category];
+          if (fieldName && record.full_name) {
+            update({ target: { name: fieldName, value: record.full_name, type: "text" } });
+          }
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch nominator details:", fetchError);
+      }
+    };
+
+    fetchNominator();
+  }, [update]);
+
+  const nominatorCategory = data?.nominator_category || "";
+  const registeredCategory = String(nominator?.nominator_category || nominatorCategory).toLowerCase();
+  const nominatorName = nominator?.full_name || data?.full_name || "";
+
+  const isSelf = ["self", "स्वयं", "स्वयं बालक / बालिका"].includes(registeredCategory);
+  const isMother = ["mother", "माता"].includes(registeredCategory);
+  const isFather = ["father", "पिता"].includes(registeredCategory);
+  const isLegalGuardian = ["legal_guardian", "विधिक अभिभावक"].includes(registeredCategory);
 
   const input = (label, name, options = {}) => {
     const isSelect = options.options && options.options.length > 0;
