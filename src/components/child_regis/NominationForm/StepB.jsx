@@ -55,6 +55,21 @@ const StepB = ({ data, update, error }) => {
   const isFather = ["father", "पिता"].includes(registeredCategory);
   const isLegalGuardian = ["legal_guardian", "विधिक अभिभावक"].includes(registeredCategory);
 
+  const today = new Date().toISOString().split("T")[0];
+
+  const nameFields = ["childName", "fatherName", "motherName", "guardianName"];
+  const numericPattern = /[0-9]/g;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (nameFields.includes(name)) {
+      const sanitized = value.replace(numericPattern, "");
+      update({ target: { name, value: sanitized, type: "text" } });
+    } else {
+      update(e);
+    }
+  };
+
   const input = (label, name, options = {}) => {
     const isSelect = options.options && options.options.length > 0;
     const disabled = options.disabled || false;
@@ -65,6 +80,11 @@ const StepB = ({ data, update, error }) => {
     if (name === "motherName" && isMother) value = nominatorName;
     if (name === "guardianName" && isLegalGuardian) value = nominatorName;
 
+    const extraProps = {};
+    if (name === "birthDate") {
+      extraProps.max = today;
+    }
+
     return (
       <div className="nf-field">
         <label htmlFor={`nf-${name}`}>{label}{options.required && <span> *</span>}</label>
@@ -74,7 +94,7 @@ const StepB = ({ data, update, error }) => {
             {options.options.map((option) => <option key={option}>{option}</option>)}
           </select>
         ) : (
-          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} placeholder={options.placeholder} onChange={update} disabled={disabled} />
+          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} placeholder={options.placeholder} onChange={handleChange} disabled={disabled} {...extraProps} />
         )}
         {error[name] && <small className="nf-error">{error[name]}</small>}
       </div>
