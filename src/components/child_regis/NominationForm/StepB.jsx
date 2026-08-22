@@ -6,10 +6,10 @@ const StepB = ({ data, update, error }) => {
   const nominatorCategory = data?.nominator_category || "";
   const nominatorName = data?.full_name || "";
 
-  const isSelf = nominatorCategory === "self";
-  const isMother = nominatorCategory === "mother";
-  const isFather = nominatorCategory === "father";
-  const isLegalGuardian = nominatorCategory === "legal_guardian";
+  const isSelf = nominatorCategory === "स्वयं बालक / बालिका";
+  const isMother = nominatorCategory === "माता";
+  const isFather = nominatorCategory === "पिता";
+  const isLegalGuardian = nominatorCategory === "विधिक अभिभावक";
 
   const input = (label, name, options = {}) => {
     const isSelect = options.options && options.options.length > 0;

@@ -194,21 +194,13 @@ const StudentRegistration = () => {
       if (!res?.access) {
         throw new Error("OTP सत्यापन से access token प्राप्त नहीं हुआ।");
       }
-      const categoryMap = {
-        "स्वयं बालक / बालिका": "self",
-        "माता": "mother",
-        "पिता": "father",
-        "विधिक अभिभावक": "legal_guardian",
-        "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक": "school_principal",
-        "जिलाधिकारी": "district_magistrate",
-      };
       const idTypeMap = {
         "आधार कार्ड": "aadhaar",
         "मतदाता पहचान पत्र": "voter_id",
       };
 
       const payload = {
-        nominator_category: categoryMap[form.category] || form.category,
+        nominator_category: form.category,
         full_name: form.name,
         relat_with_child: form.relation,
         email: form.email,
