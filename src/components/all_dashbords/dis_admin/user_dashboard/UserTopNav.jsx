@@ -74,18 +74,9 @@ function UserTopNav({ toggleSidebar }) {
       </Button>
 
       {/* Uttarakhand Government Branding */}
-      <div className="scheme-brand-mark">
-        उत्तराखण्ड
-        <br />
-        <small>सरकार</small>
-      </div>
+     
 
-      {/* Scheme Title */}
-      <div className="scheme-header-text">
-        <h2 className="scheme-title mb-0">
-          मुख्यमंत्री राज्य बाल वीरता पुरस्कार
-        </h2>
-      </div>
+     
 
     </div>
   </Col>
