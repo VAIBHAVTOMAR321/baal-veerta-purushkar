@@ -73,11 +73,7 @@ function UserTopNav({ toggleSidebar }) {
         <FaBars />
       </Button>
 
-      {/* Uttarakhand Government Branding */}
      
-
-     
-
     </div>
   </Col>
 
