@@ -8,9 +8,11 @@ const StepB = ({ data, update, error }) => {
   const [nominator, setNominator] = useState(null);
   const [districts, setDistricts] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [currentProjects, setCurrentProjects] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(data?.permanentजनपद || "");
+  const [currentSelectedDistrict, setCurrentSelectedDistrict] = useState(data?.currentजनपद || "");
   const fetchStarted = useRef(false);
 
   useEffect(() => {
@@ -99,6 +101,33 @@ const StepB = ({ data, update, error }) => {
     fetchProjectsForDistrict();
   }, [selectedDistrict]);
 
+  useEffect(() => {
+    const fetchCurrentProjects = async () => {
+      if (!currentSelectedDistrict) {
+        setCurrentProjects([]);
+        return;
+      }
+      setLoadingProjects(true);
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/cdpo-dropdown/?district=${encodeURIComponent(currentSelectedDistrict)}`
+        );
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setCurrentProjects([...new Set(result.data.map((item) => item.project_name).filter(Boolean))]);
+        } else {
+          setCurrentProjects([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch current projects:", error);
+        setCurrentProjects([]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+    fetchCurrentProjects();
+  }, [currentSelectedDistrict]);
+
   const nominatorCategory = data?.nominator_category || "";
   const registeredCategory = String(nominator?.nominator_category || nominatorCategory).toLowerCase();
   const nominatorName = nominator?.full_name || data?.full_name || "";
@@ -122,6 +151,10 @@ const StepB = ({ data, update, error }) => {
       setSelectedDistrict(value);
       update({ target: { name: "permanentविकासखण्ड/नगर निकाय", value: "", type: "text" } });
     }
+    if (name === "currentजनपद") {
+      setCurrentSelectedDistrict(value);
+      update({ target: { name: "currentविकासखण्ड/नगर निकाय", value: "", type: "text" } });
+    }
     if (nameFields.includes(name)) {
       const sanitized = value.replace(numericPattern, "");
       update({ target: { name, value: sanitized, type: "text" } });
@@ -142,11 +175,17 @@ const StepB = ({ data, update, error }) => {
         const permanentValue = data[`permanent${field}`] || "";
         currentAddressParts.push(permanentValue);
         update({ target: { name: `current${field}`, value: permanentValue, type: "text" } });
+        if (field === "जनपद") {
+          setCurrentSelectedDistrict(permanentValue);
+        }
       });
       update({ target: { name: "currentAddress", value: currentAddressParts.join(", "), type: "text" } });
     } else {
       addressFields.forEach((field) => {
         update({ target: { name: `current${field}`, value: "", type: "text" } });
+        if (field === "जनपद") {
+          setCurrentSelectedDistrict("");
+        }
       });
       update({ target: { name: "currentAddress", value: "", type: "text" } });
     }
@@ -227,7 +266,15 @@ const StepB = ({ data, update, error }) => {
       <fieldset className="nf-subsection nf-subsection-left">
         <legend>10. वर्तमान पता (यदि स्थायी पते से भिन्न हो)</legend>
         <div className="nf-grid nf-address-grid">
-          {addressFields.map((field) => input(field, `current${field}`, { placeholder: `${field} दर्ज करें` }))}
+          {addressFields.map((field) => {
+            if (field === "जनपद") {
+              return input("जनपद", `current${field}`, { required: true, options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts });
+            }
+            if (field === "विकासखण्ड/नगर निकाय") {
+              return input("विकासखण्ड/नगर निकाय", `current${field}`, { required: true, options: currentProjects, placeholder: !currentSelectedDistrict ? "पहले जनपद चुनें" : loadingProjects ? "लोड हो रहा है..." : currentProjects.length === 0 ? "कोई विकासखण्ड उपलब्ध नहीं" : "विकासखण्ड/नगर निकाय चुनें", disabled: loadingProjects || !currentSelectedDistrict || currentProjects.length === 0 });
+            }
+            return input(field, `current${field}`, { placeholder: `${field} दर्ज करें` });
+          })}
         </div>
       </fieldset>
       <div className="nf-grid">
