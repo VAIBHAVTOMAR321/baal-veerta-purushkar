@@ -10,7 +10,7 @@ import StepE from "../../../child_regis/NominationForm/StepE";
 import StepD from "../../../child_regis/NominationForm/StepD";
 import StepC from "../../../child_regis/NominationForm/StepC";
 
-const steps = ["भाग–B", "भाग–C", "भाग–D", "भाग–E", "भाग–F"];
+const steps = ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"];
 const requiredByStep = {
   0: [
     "childName", "fatherName", "motherName", "birthDate",
