@@ -26,9 +26,13 @@ const StepB = ({ data, update, error }) => {
           const category = String(record.nominator_category || "").toLowerCase();
           const fieldName = {
             self: "childName",
+            "स्वयं बालक / बालिका": "childName",
             mother: "motherName",
+            "माता": "motherName",
             father: "fatherName",
+            "पिता": "fatherName",
             legal_guardian: "guardianName",
+            "विधिक अभिभावक": "guardianName",
           }[category];
           if (fieldName && record.full_name) {
             update({ target: { name: fieldName, value: record.full_name, type: "text" } });
