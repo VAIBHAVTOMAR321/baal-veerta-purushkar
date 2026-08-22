@@ -5,6 +5,7 @@ const addressFields = ["ग्राम/मोहल्ला", "डाकघर
 const StepB = ({ data, update, error }) => {
   const [resident, setResident] = useState(data?.resident || "");
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
+  const [childMobileError, setChildMobileError] = useState("");
   const [nominator, setNominator] = useState(null);
   const [districts, setDistricts] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -147,6 +148,16 @@ const StepB = ({ data, update, error }) => {
     if (name === "resident") {
       setResident(value);
     }
+    if (name === "childMobile") {
+      const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 10);
+      update({ target: { name, value: numericOnly, type: "text" } });
+      if (numericOnly.length > 0 && numericOnly.length < 10) {
+        setChildMobileError("मोबाइल नंबर 10 अंकों का होना चाहिए");
+      } else {
+        setChildMobileError("");
+      }
+      return;
+    }
     if (name === "permanentजनपद") {
       setSelectedDistrict(value);
       update({ target: { name: "permanentविकासखण्ड/नगर निकाय", value: "", type: "text" } });
@@ -220,6 +231,7 @@ const StepB = ({ data, update, error }) => {
           <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} placeholder={options.placeholder} onChange={handleChange} disabled={disabled} {...extraProps} />
         )}
         {error[name] && <small className="nf-error">{error[name]}</small>}
+        {name === "childMobile" && childMobileError && <small className="nf-error">{childMobileError}</small>}
       </div>
     );
   };
