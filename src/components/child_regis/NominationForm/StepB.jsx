@@ -1,9 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 
-const addressFields = ["ग्राम/मोहल्ला", "डाकघर", "विकासखण्ड/नगर निकाय", "जनपद", "पिन कोड"];
+const addressFields = ["ग्राम/मोहल्ला", "डाकघर", "जनपद", "विकासखण्ड/नगर निकाय", "पिन कोड"];
 
 const StepB = ({ data, update, error }) => {
+  const [resident, setResident] = useState(data?.resident || "");
+  const [sameAsPermanent, setSameAsPermanent] = useState(false);
   const [nominator, setNominator] = useState(null);
+  const [districts, setDistricts] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState(data?.permanentजनपद || "");
   const fetchStarted = useRef(false);
 
   useEffect(() => {
@@ -46,6 +53,52 @@ const StepB = ({ data, update, error }) => {
     fetchNominator();
   }, [update]);
 
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      setLoadingDistricts(true);
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/cdpo-dropdown/");
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setDistricts([...new Set(result.data.map((item) => item.district).filter(Boolean))]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch districts:", error);
+      } finally {
+        setLoadingDistricts(false);
+      }
+    };
+    fetchDistricts();
+  }, []);
+
+  useEffect(() => {
+    const fetchProjectsForDistrict = async () => {
+      if (!selectedDistrict) {
+        setProjects([]);
+        return;
+      }
+      setLoadingProjects(true);
+      setProjects([]);
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/cdpo-dropdown/?district=${encodeURIComponent(selectedDistrict)}`
+        );
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setProjects([...new Set(result.data.map((item) => item.project_name).filter(Boolean))]);
+        } else {
+          setProjects([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+        setProjects([]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+    fetchProjectsForDistrict();
+  }, [selectedDistrict]);
+
   const nominatorCategory = data?.nominator_category || "";
   const registeredCategory = String(nominator?.nominator_category || nominatorCategory).toLowerCase();
   const nominatorName = nominator?.full_name || data?.full_name || "";
@@ -62,17 +115,48 @@ const StepB = ({ data, update, error }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "resident") {
+      setResident(value);
+    }
+    if (name === "permanentजनपद") {
+      setSelectedDistrict(value);
+      update({ target: { name: "permanentविकासखण्ड/नगर निकाय", value: "", type: "text" } });
+    }
     if (nameFields.includes(name)) {
       const sanitized = value.replace(numericPattern, "");
       update({ target: { name, value: sanitized, type: "text" } });
+    } else if (name && addressFields.some((field) => name === `current${field}`)) {
+      setSameAsPermanent(false);
+      update(e);
     } else {
       update(e);
     }
   };
 
+  const handleSameAsPermanent = (e) => {
+    const checked = e.target.checked;
+    setSameAsPermanent(checked);
+    if (checked) {
+      const currentAddressParts = [];
+      addressFields.forEach((field) => {
+        const permanentValue = data[`permanent${field}`] || "";
+        currentAddressParts.push(permanentValue);
+        update({ target: { name: `current${field}`, value: permanentValue, type: "text" } });
+      });
+      update({ target: { name: "currentAddress", value: currentAddressParts.join(", "), type: "text" } });
+    } else {
+      addressFields.forEach((field) => {
+        update({ target: { name: `current${field}`, value: "", type: "text" } });
+      });
+      update({ target: { name: "currentAddress", value: "", type: "text" } });
+    }
+  };
+
+  const isNotUttarakhand = resident === "नहीं";
+
   const input = (label, name, options = {}) => {
-    const isSelect = options.options && options.options.length > 0;
-    const disabled = options.disabled || false;
+    const isSelect = Array.isArray(options.options);
+    const disabled = isNotUttarakhand && name !== "resident" ? true : (options.disabled || false);
     let value = data[name] || "";
 
     if (name === "childName" && isSelf) value = nominatorName;
@@ -89,9 +173,9 @@ const StepB = ({ data, update, error }) => {
       <div className="nf-field">
         <label htmlFor={`nf-${name}`}>{label}{options.required && <span> *</span>}</label>
         {isSelect ? (
-          <select id={`nf-${name}`} name={name} value={value} onChange={update} disabled={disabled}>
+          <select id={`nf-${name}`} name={name} value={value} onChange={handleChange} disabled={disabled}>
             <option value="">{options.placeholder || "चयन करें"}</option>
-            {options.options.map((option) => <option key={option}>{option}</option>)}
+            {options.options.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         ) : (
           <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} placeholder={options.placeholder} onChange={handleChange} disabled={disabled} {...extraProps} />
@@ -107,6 +191,9 @@ const StepB = ({ data, update, error }) => {
         <span>Step 1</span>
         <h2>नामांकित बच्चे का व्यक्तिगत विवरण (Nominee Details)</h2>
       </div>
+      {isNotUttarakhand && (
+        <div className="nf-ineligible-message">आप इस लिए eligible नहीं हो</div>
+      )}
       <div className="nf-grid">
         {input("1. बच्चे का पूरा नाम", "childName", { required: true, placeholder: "बच्चे का पूरा नाम", disabled: isSelf })}
         {input("2. पिता का नाम", "fatherName", { required: true, placeholder: "पिता का पूरा नाम", disabled: isFather })}
@@ -117,14 +204,33 @@ const StepB = ({ data, update, error }) => {
         {input("7. लिंग", "gender", { required: true, options: ["बालक", "बालिका", "अन्य"], placeholder: "लिंग चुनें" })}
         {input("8. उत्तराखण्ड का स्थायी निवासी", "resident", { required: true, options: ["हाँ", "नहीं"], placeholder: "चुनें" })}
       </div>
-      <fieldset className="nf-subsection">
+      <fieldset className="nf-subsection nf-subsection-left">
         <legend>9. स्थायी निवास का पता <span>*</span></legend>
         <div className="nf-grid nf-address-grid">
-          {addressFields.map((field) => input(field, `permanent${field}`, { required: true, placeholder: `${field} दर्ज करें` }))}
+          {addressFields.map((field) => {
+            if (field === "जनपद") {
+              return input("जनपद", `permanent${field}`, { required: true, options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts });
+            }
+            if (field === "विकासखण्ड/नगर निकाय") {
+              return input("विकासखण्ड/नगर निकाय", `permanent${field}`, { required: true, options: projects, placeholder: !selectedDistrict ? "पहले जनपद चुनें" : loadingProjects ? "लोड हो रहा है..." : projects.length === 0 ? "कोई विकासखण्ड उपलब्ध नहीं" : "विकासखण्ड/नगर निकाय चुनें", disabled: loadingProjects || !selectedDistrict || projects.length === 0 });
+            }
+            return input(field, `permanent${field}`, { required: true, placeholder: `${field} दर्ज करें` });
+          })}
+        </div>
+      </fieldset>
+      <div className="nf-field nf-checkbox-field">
+        <label>
+          <input type="checkbox" checked={sameAsPermanent} onChange={handleSameAsPermanent} disabled={isNotUttarakhand} />
+          स्थायी पते के समान
+        </label>
+      </div>
+      <fieldset className="nf-subsection nf-subsection-left">
+        <legend>10. वर्तमान पता (यदि स्थायी पते से भिन्न हो)</legend>
+        <div className="nf-grid nf-address-grid">
+          {addressFields.map((field) => input(field, `current${field}`, { placeholder: `${field} दर्ज करें` }))}
         </div>
       </fieldset>
       <div className="nf-grid">
-        {input("10. वर्तमान पता (यदि स्थायी पते से भिन्न हो)", "currentAddress", { placeholder: "वर्तमान पता दर्ज करें" })}
         {input("11. विद्यालय का नाम", "schoolName", { placeholder: "विद्यालय का नाम" })}
         {input("12. विद्यालय का पता", "schoolAddress", { placeholder: "विद्यालय का पता" })}
         {input("13. वर्तमान कक्षा", "currentClass", { placeholder: "कक्षा दर्ज करें" })}

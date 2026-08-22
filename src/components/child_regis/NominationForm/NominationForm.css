@@ -31,6 +31,29 @@
 	font-size: .8rem;
 }
 
+.nf-step-b .nf-field input:disabled,
+.nf-step-b .nf-field select:disabled {
+	background: #e9ecef;
+	color: #6c757d;
+	cursor: not-allowed;
+	opacity: 1;
+}
+
+.nf-step-b .nf-subsection {
+	text-align: left;
+}
+
+.nf-checkbox-field {
+	margin-bottom: .5rem;
+}
+
+.nf-checkbox-field label {
+	display: inline-flex;
+	align-items: center;
+	gap: .5rem;
+	font-size: .8rem;
+}
+
 .nf-step-b .nf-inline {
 	gap: .45rem;
 }
