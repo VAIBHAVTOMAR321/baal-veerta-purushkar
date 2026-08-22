@@ -675,6 +675,7 @@
 .modal-container {
   background: #fff;
   border-radius: 16px;
+  padding: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 480px;
