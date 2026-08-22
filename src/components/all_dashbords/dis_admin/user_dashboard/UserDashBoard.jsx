@@ -14,7 +14,7 @@ const steps = ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"];
 const requiredByStep = {
   0: [
     "childName", "fatherName", "motherName", "birthDate",
-    "ageYears", "ageMonths", "gender", "resident",
+    "gender", "resident",
     "permanentग्राम/मोहल्ला", "permanentडाकघर",
     "permanentविकासखण्ड/नगर निकाय", "permanentजनपद", "permanentपिन कोड",
   ],
