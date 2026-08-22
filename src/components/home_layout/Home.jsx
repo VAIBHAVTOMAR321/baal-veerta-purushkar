@@ -93,7 +93,7 @@ function Home() {
 
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/api/login/",
+          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/login/",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -131,7 +131,7 @@ function Home() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/send-otp-password-change/", {
+      const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/send-otp-password-change/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: forgotPhone, role: "user" }),
@@ -164,7 +164,7 @@ function Home() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/verify-otp-password-change/", {
+      const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/verify-otp-password-change/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: forgotPhone, otp: forgotOtp, role: "user" }),
@@ -202,7 +202,7 @@ function Home() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/change-password/", {
+      const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/change-password/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: forgotPhone, role: "user", new_password: newPassword }),

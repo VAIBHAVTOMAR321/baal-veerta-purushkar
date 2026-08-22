@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api";
 
 export const sendOtpApi = async (mobile) => {
   const res = await fetch(`${API_BASE}/send-otp/`, {

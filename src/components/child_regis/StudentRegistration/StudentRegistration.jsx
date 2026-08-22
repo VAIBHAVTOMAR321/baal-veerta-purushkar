@@ -53,7 +53,7 @@ const StudentRegistration = () => {
     const fetchDistricts = async () => {
       setLoadingDistricts(true);
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/cdpo-dropdown/");
+        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/");
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
           setDistricts([...new Set(result.data.map((item) => item.district).filter(Boolean))]);
@@ -77,7 +77,7 @@ const StudentRegistration = () => {
     setProjects([]); // old list clear
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/cdpo-dropdown/?district=${encodeURIComponent(district)}`
+        `https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(district)}`
       );
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {

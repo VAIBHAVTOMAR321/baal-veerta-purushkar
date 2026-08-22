@@ -24,7 +24,7 @@ const StepB = ({ data, update, error }) => {
 
     const fetchNominator = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/bravery/nominator-part1/", {
+        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) return;
@@ -60,7 +60,7 @@ const StepB = ({ data, update, error }) => {
     const fetchDistricts = async () => {
       setLoadingDistricts(true);
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/cdpo-dropdown/");
+        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/");
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
           setDistricts([...new Set(result.data.map((item) => item.district).filter(Boolean))]);
@@ -84,7 +84,7 @@ const StepB = ({ data, update, error }) => {
       setProjects([]);
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/cdpo-dropdown/?district=${encodeURIComponent(selectedDistrict)}`
+          `https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(selectedDistrict)}`
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
@@ -111,7 +111,7 @@ const StepB = ({ data, update, error }) => {
       setLoadingProjects(true);
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/cdpo-dropdown/?district=${encodeURIComponent(currentSelectedDistrict)}`
+          `https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(currentSelectedDistrict)}`
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
@@ -280,10 +280,10 @@ const StepB = ({ data, update, error }) => {
         <div className="nf-grid nf-address-grid">
           {addressFields.map((field) => {
             if (field === "जनपद") {
-              return input("जनपद", `current${field}`, { required: true, options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts });
+              return input("जनपद", `current${field}`, { options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts });
             }
             if (field === "विकासखण्ड/नगर निकाय") {
-              return input("विकासखण्ड/नगर निकाय", `current${field}`, { required: true, options: currentProjects, placeholder: !currentSelectedDistrict ? "पहले जनपद चुनें" : loadingProjects ? "लोड हो रहा है..." : currentProjects.length === 0 ? "कोई विकासखण्ड उपलब्ध नहीं" : "विकासखण्ड/नगर निकाय चुनें", disabled: loadingProjects || !currentSelectedDistrict || currentProjects.length === 0 });
+              return input("विकासखण्ड/नगर निकाय", `current${field}`, { options: currentProjects, placeholder: !currentSelectedDistrict ? "पहले जनपद चुनें" : loadingProjects ? "लोड हो रहा है..." : currentProjects.length === 0 ? "कोई विकासखण्ड उपलब्ध नहीं" : "विकासखण्ड/नगर निकाय चुनें", disabled: loadingProjects || !currentSelectedDistrict || currentProjects.length === 0 });
             }
             return input(field, `current${field}`, { placeholder: `${field} दर्ज करें` });
           })}
