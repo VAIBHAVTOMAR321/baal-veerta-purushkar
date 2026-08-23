@@ -30,7 +30,7 @@ const NominationForm = () => {
   const validate = (targetStep) => {
     const nextErrors = {};
     (requiredByStep[targetStep] || []).forEach((field) => { if (!String(data[field] || "").trim()) nextErrors[field] = "यह फ़ील्ड आवश्यक है"; });
-    if (targetStep === 2) ["document0", "document1", "document2", "document3"].forEach((field) => { if (!data[field]) nextErrors[field] = "यह दस्तावेज़ अनिवार्य है"; });
+    if (targetStep === 3) ["document0", "document1", "document2", "document3"].forEach((field) => { if (!data[field]) nextErrors[field] = "यह दस्तावेज़ अनिवार्य है"; });
     setErrors(nextErrors);
     return !Object.keys(nextErrors).length;
   };
@@ -41,7 +41,7 @@ const NominationForm = () => {
   const preview = () => setNotice("Preview Application तैयार है।");
   const finalSubmit = () => { if (data.declarationAccepted && data.otpVerified) setNotice("आवेदन सफलतापूर्वक प्रस्तुत किया गया है।"); };
   const canSubmit = Boolean(data.declarationAccepted && data.otpVerified && data["finalनाम"] && data["finalस्थान"] && data["finalदिनांक"] && data["finalमोबाइल नंबर"]);
-  const component = [<StepB data={data} update={update} error={errors} />, <StepC data={data} update={update} error={errors} />, <StepD data={data} update={update} error={errors} />, <StepE data={data} update={update} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} />][step];
+  const component = [<StepB data={data} update={update} error={errors} />, <StepC data={data} update={update} error={errors} />, <StepE data={data} update={update} error={errors} />, <StepD data={data} update={update} error={errors} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} />][step];
 
   return <main className="nf-page"><header className="nf-header"><div className="nf-brand-mark">उत्तराखण्ड<br /><small>सरकार</small></div><div><p>ऑनलाइन नामांकन प्रपत्र</p><h1>मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h1></div><button type="button" className="nf-back" onClick={() => navigate("/StudentRegistration")}>भाग–A</button></header><div className="nf-shell"><nav className="nf-stepper" aria-label="Application steps">{steps.map((label, index) => <div className={`nf-step ${index === step ? "current" : ""} ${index < step ? "complete" : ""}`} key={label}><span>{index < step ? "✓" : index + 1}</span><strong>Step {index + 1}</strong><small>{label}</small></div>)}</nav>{notice && <div className="nf-notice" role="status">{notice}</div>}<form onSubmit={(event) => { event.preventDefault(); if (step < 4) next(); }} noValidate>{component}<div className="nf-navigation">{step > 0 && <button type="button" className="nf-secondary" onClick={previous}>← Previous / पिछला</button>}{step < 4 && <button type="submit" className="nf-primary">Next / आगे बढ़ें →</button>}</div></form></div></main>;
 };

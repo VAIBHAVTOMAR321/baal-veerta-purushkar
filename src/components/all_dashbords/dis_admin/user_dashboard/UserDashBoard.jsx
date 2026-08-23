@@ -69,7 +69,7 @@ const UserDashBoard = () => {
       if (!String(data[field] || "").trim())
         nextErrors[field] = "यह फ़ील्ड आवश्यक है";
     });
-    if (targetStep === 2)
+    if (targetStep === 3)
       ["document0", "document1", "document2", "document3"].forEach((field) => {
         if (!data[field]) nextErrors[field] = "यह दस्तावेज़ अनिवार्य है";
       });
@@ -116,8 +116,8 @@ const UserDashBoard = () => {
   const component = [
     <StepB data={data} update={update} error={errors} />,
     <StepC data={data} update={update} error={errors} />,
+    <StepE data={data} update={update} error={errors} />,
     <StepD data={data} update={update} error={errors} />,
-    <StepE data={data} update={update} />,
     <StepF
       data={data}
       update={update}
