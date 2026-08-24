@@ -28,7 +28,11 @@
 }
 .sr-emblem small { font-size: .55rem; font-weight: 500; }
 .sr-kicker { margin: 0 0 .2rem; color: #d8b56a; font-size: .7rem; letter-spacing: .06em; }
-.sr-header h1 { margin: 0; font-size: clamp(1.1rem, 2.4vw, 1.6rem); }
+
+.sr-header h1 {
+  
+  margin: 0; font-size: clamp(1.1rem, 2.4vw, 1.6rem); color: #fff;
+ }
 .sr-header p:last-child { margin: .2rem 0 0; color: #dbe7ef; font-size: .85rem; }
 .sr-shell {
   width: 100%;
