@@ -3,7 +3,12 @@ import { useAuth } from "../../login/AuthContext";
 
 const addressFields = ["ग्राम/मोहल्ला", "डाकघर", "जनपद", "विकासखण्ड/नगर निकाय", "पिन कोड"];
 
-const StepB = ({ data, update, error, onNext, onCompleted }) => {
+const isPart2Submitted = (record) => {
+  const status = String(record?.status || record?.submission_status || "").toLowerCase();
+  return ["completed", "submitted"].includes(status) || record?.submitted === true || record?.is_submitted === true;
+};
+
+const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => {
   const { authFetch } = useAuth();
   const [resident, setResident] = useState(data?.resident || "");
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
@@ -20,6 +25,9 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
   const [currentSelectedDistrict, setCurrentSelectedDistrict] = useState(data?.currentजनपद || "");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editSnapshot, setEditSnapshot] = useState(null);
   const fetchStarted = useRef(false);
   const dataFetchStarted = useRef(false); // ✅ Separate ref for data fetch
 
@@ -47,9 +55,11 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
         if (result.success && Array.isArray(result.data) && result.data.length > 0) {
           const record = result.data[0];
 
-          // ✅ Check if status is "completed"
-          if (record.status === "completed") {
-            console.log("Step B already completed, skipping to Step C");
+          // A submitted Part 2 record should open the next step immediately.
+          if (isPart2Submitted(record)) {
+            console.log("Step B already submitted, skipping to Step C");
+            setIsCompleted(true);
+            setIsEditing(false);
 
             // Auto-fill all data from the response
             const fieldMapping = {
@@ -98,12 +108,14 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
               setCurrentSelectedDistrict(record.current_district);
             }
 
-            // ✅ Call onCompleted to skip to Step C
-            setTimeout(() => {
-              if (onCompleted) {
-                onCompleted(record);
-              }
-            }, 500);
+            // ✅ Call onCompleted to skip to Step C (only on initial load/login/refresh)
+            if (!isStepBChecked) {
+              setTimeout(() => {
+                if (onCompleted) {
+                  onCompleted(record);
+                }
+              }, 500);
+            }
           } else {
             // Data exists but not completed, pre-fill the form
             const fieldMapping = {
@@ -408,8 +420,35 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
     return errors;
   };
 
-  // Submit handler for Next button
-  const handleSubmit = async () => {
+  const editableFields = [
+    "childName", "fatherName", "motherName", "guardianName", "childMobile", "birthDate", "gender", "resident",
+    "permanentग्राम/मोहल्ला", "permanentडाकघर", "permanentजनपद", "permanentविकासखण्ड/नगर निकाय", "permanentपिन कोड",
+    "currentग्राम/मोहल्ला", "currentडाकघर", "currentजनपद", "currentविकासखण्ड/नगर निकाय", "currentपिन कोड",
+    "schoolName", "schoolAddress", "currentClass",
+  ];
+
+  const handleEdit = () => {
+    setEditSnapshot(Object.fromEntries(editableFields.map((field) => [field, data[field] || ""])));
+    setIsEditing(true);
+    setSubmitError("");
+  };
+
+  const handleCancelEdit = () => {
+    if (editSnapshot) {
+      Object.entries(editSnapshot).forEach(([name, value]) => {
+        update({ target: { name, value, type: "text" } });
+      });
+      setResident(editSnapshot.resident || "");
+      setSelectedDistrict(editSnapshot["permanentजनपद"] || "");
+      setCurrentSelectedDistrict(editSnapshot["currentजनपद"] || "");
+    }
+    setIsEditing(false);
+    setEditSnapshot(null);
+    setSubmitError("");
+  };
+
+  // Submit handler for Next and Update buttons.
+  const handleSubmit = async (moveToNext = true) => {
     setSubmitError("");
 
     const currentApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id;
@@ -463,7 +502,7 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
       console.log("Submit response:", result);
 
       if (result.success) {
-        if (onNext) {
+        if (moveToNext && onNext) {
           onNext(result);
         }
         return true;
@@ -483,8 +522,9 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
 
   const input = (label, name, options = {}) => {
     const isSelect = Array.isArray(options.options);
+    const isFormLocked = isCompleted && !isEditing;
     const disabled =
-      isNotUttarakhand && name !== "resident"
+      isFormLocked || (isNotUttarakhand && name !== "resident")
         ? true
         : options.disabled || false;
     let value = data[name] || "";
@@ -580,6 +620,24 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
       <div className="nf-card-heading">
         <span>Step 1</span>
         <h2>नामांकित बच्चे का व्यक्तिगत विवरण (Nominee Details)</h2>
+        {isCompleted && (
+          <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+            {!isEditing ? (
+              <button type="button" className="nf-secondary" onClick={handleEdit}>
+                Edit / संपादित करें
+              </button>
+            ) : (
+              <>
+                <button type="button" className="nf-secondary" onClick={handleCancelEdit} disabled={submitting}>
+                  Cancel / रद्द करें
+                </button>
+                <button type="button" className="nf-primary" onClick={() => handleSubmit(false)} disabled={submitting}>
+                  {submitting ? "अपडेट हो रहा है..." : "Update / अपडेट करें"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {(applicantId || data?.applicant_id || nominator?.applicant_id) && (
@@ -680,7 +738,7 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
             type="checkbox"
             checked={sameAsPermanent}
             onChange={handleSameAsPermanent}
-            disabled={isNotUttarakhand}
+            disabled={isCompleted && !isEditing || isNotUttarakhand}
           />
           स्थायी पते के समान
         </label>
@@ -750,7 +808,7 @@ const StepB = ({ data, update, error, onNext, onCompleted }) => {
           type="button"
           className="nf-btn nf-btn-next"
           onClick={handleSubmit}
-          disabled={submitting || isNotUttarakhand}
+          disabled={submitting || isCompleted && !isEditing || isNotUttarakhand}
           style={{
             padding: "12px 32px",
             backgroundColor: isNotUttarakhand ? "#ccc" : submitting ? "#6c757d" : "#28a745",

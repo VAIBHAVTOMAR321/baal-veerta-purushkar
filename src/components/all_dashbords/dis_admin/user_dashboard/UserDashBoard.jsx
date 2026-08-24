@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import UserTopNav from "./UserTopNav";
@@ -55,6 +55,7 @@ const UserDashBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const stepBCheckedRef = useRef(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -153,7 +154,7 @@ const UserDashBoard = () => {
 
   // ✅ Handle Step B completion (after POST success)
   const handleStepBNext = (result) => {
-    console.log("Step B completed:", result);
+    stepBCheckedRef.current = true;
     setNotice("Step 1 सफलतापूर्वक सबमिट हो गया!");
     setStep(1); // Move to Step C
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -162,6 +163,7 @@ const UserDashBoard = () => {
   // ✅ Handle Step B already completed (auto-skip to Step C)
   const handleStepBAlreadyCompleted = (record) => {
     console.log("Step B already completed, auto-skipping to Step C:", record);
+    stepBCheckedRef.current = true;
     setNotice("Step 1 पहले ही पूरा हो चुका है, Step 2 पर जा रहे हैं...");
     setStep(1); // Move to Step C
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -175,6 +177,7 @@ const UserDashBoard = () => {
       error={errors}
       onNext={handleStepBNext}
       onCompleted={handleStepBAlreadyCompleted}
+      isStepBChecked={stepBCheckedRef.current}
     />,
     <StepC key="step-c" data={data} update={update} error={errors} />,
     <StepE key="step-e" data={data} update={update} error={errors} />,

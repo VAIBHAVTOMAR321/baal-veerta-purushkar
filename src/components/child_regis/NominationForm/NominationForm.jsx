@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import StepB from "./StepB.jsx";
 import StepC from "./StepC.jsx";
@@ -36,6 +36,14 @@ const NominationForm = () => {
   const [data, setData] = useState({ ...(state?.nominator || {}), applicationNumber: "System Generated", submissionDate: "System Generated", district: state?.nominator?.address?.जनपद || "" });
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState("");
+  const stepBCheckedRef = useRef(false);
+
+  const handleStepBComplete = (record) => {
+    if (!stepBCheckedRef.current) {
+      stepBCheckedRef.current = true;
+      setStep(1);
+    }
+  };
 
   const update = (event) => {
     const { name, value, type, checked, files } = event.target;
@@ -78,7 +86,7 @@ const NominationForm = () => {
   const preview = () => setNotice("Preview Application तैयार है।");
   const finalSubmit = () => { if (data.declarationAccepted && data.otpVerified) setNotice("आवेदन सफलतापूर्वक प्रस्तुत किया गया है।"); };
   const canSubmit = Boolean(data.declarationAccepted && data.otpVerified && data["finalनाम"] && data["finalस्थान"] && data["finalदिनांक"] && data["finalमोबाइल नंबर"]);
-  const component = [<StepB data={data} update={update} error={errors} />, <StepC data={data} update={update} error={errors} />, <StepE data={data} update={update} error={errors} />, <StepD data={data} update={update} error={errors} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} />][step];
+  const component = [<StepB data={data} update={update} error={errors} onCompleted={handleStepBComplete} isStepBChecked={stepBCheckedRef.current} />, <StepC data={data} update={update} error={errors} />, <StepE data={data} update={update} error={errors} />, <StepD data={data} update={update} error={errors} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} />][step];
 
   return <main className="nf-page"><header className="nf-header"><div className="nf-brand-mark">उत्तराखण्ड<br /><small>सरकार</small></div><div><p>ऑनलाइन नामांकन प्रपत्र</p><h1>मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h1></div><button type="button" className="nf-back" onClick={() => navigate("/StudentRegistration")}>भाग–A</button></header><div className="nf-shell"><nav className="nf-stepper" aria-label="Application steps">{steps.map((label, index) => <div className={`nf-step ${index === step ? "current" : ""} ${index < step ? "complete" : ""}`} key={label}><span>{index < step ? "✓" : index + 1}</span><strong>Step {index + 1}</strong><small>{label}</small></div>)}</nav>{notice && <div className="nf-notice" role="status">{notice}</div>}<form onSubmit={(event) => { event.preventDefault(); if (step < 4) next(); }} noValidate>{component}<div className="nf-navigation">{step > 0 && <button type="button" className="nf-secondary" onClick={previous}>← Previous / पिछला</button>}{step < 4 && <button type="submit" className="nf-primary">Next / आगे बढ़ें →</button>}</div></form></div></main>;
 };
