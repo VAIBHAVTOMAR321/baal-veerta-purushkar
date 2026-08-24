@@ -63,7 +63,7 @@ const StepC = ({ data, update, error }) => {
     const showWordCount = wordValidation && value.trim().length > 0;
 
     return (
-      <div className={`nf-field ${options.wide ? "nf-wide" : ""}`}>
+      <div className={`nf-field ${options.wide ? "nf-wide" : ""} ${options.fieldClassName || ""}`}>
         <label htmlFor={`nf-${name}`}>{label}{options.required && <span> *</span>}</label>
         {options.options ? (
           <select id={`nf-${name}`} name={name} value={value} onChange={update} disabled={options.alwaysEnabled ? false : (isOverAge || options.disabled)}>
@@ -86,6 +86,9 @@ const StepC = ({ data, update, error }) => {
   };
 
   const witnessFields = ["नाम", "मोबाइल नंबर", "पता", "बच्चे से संबंध"];
+  const rescuedPeopleFields = ["name", "age", "relation"];
+  const witnessRowFields = ["name", "mobile", "address", "relation"];
+  const rowError = (group, index, field) => error[`${group}.${index}.${field}`];
 
   const showCustomTitle = customTitleActive;
 
@@ -151,9 +154,10 @@ const StepC = ({ data, update, error }) => {
   const witnessRows = witnesses.map((row, index) => (
     <tr key={index}>
       <td>{index + 1}</td>
-      {witnessFields.map((field) => (
+      {witnessFields.map((field, fieldIndex) => (
         <td key={field}>
-          <input type="text" value={row[field] || ""} onChange={(e) => updateWitness(index, field, e.target.value)} disabled={isOverAge} />
+          <input type="text" value={row[witnessRowFields[fieldIndex]] || ""} onChange={(e) => updateWitness(index, witnessRowFields[fieldIndex], e.target.value)} disabled={isOverAge} />
+          {rowError("witnesses", index, witnessRowFields[fieldIndex]) && <small className="nf-error">{rowError("witnesses", index, witnessRowFields[fieldIndex])}</small>}
         </td>
       ))}
       <td><button type="button" className="nf-remove" onClick={() => removeWitness(index)} disabled={isOverAge}>हटाएं</button></td>
@@ -163,9 +167,12 @@ const StepC = ({ data, update, error }) => {
   const rescuedPeopleRows = rescuedPeople.map((person, index) => (
     <tr key={index}>
       <td>{index + 1}</td>
-      <td><input type="text" value={person.name} onChange={(e) => updatePerson(index, "name", e.target.value)} disabled={isOverAge} /></td>
-      <td><input type="text" value={person.age} onChange={(e) => updatePerson(index, "age", e.target.value)} disabled={isOverAge} /></td>
-      <td><input type="text" value={person.relation} onChange={(e) => updatePerson(index, "relation", e.target.value)} disabled={isOverAge} /></td>
+      {rescuedPeopleFields.map((field) => (
+        <td key={field}>
+          <input type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isOverAge} />
+          {rowError("rescuedPeople", index, field) && <small className="nf-error">{rowError("rescuedPeople", index, field)}</small>}
+        </td>
+      ))}
       <td><button type="button" className="nf-remove" onClick={() => removePerson(index)} disabled={isOverAge}>हटाएं</button></td>
     </tr>
   ));
@@ -275,7 +282,7 @@ const StepC = ({ data, update, error }) => {
       <div className="nf-block">
         <div className="nf-grid">
           {input("11. घटना के संबंध में पुलिस रिपोर्ट/FIR दर्ज है?", "firRegistered", { required: true, options: ["हाँ", "नहीं", "लागू नहीं"] })}
-          {input("12. क्या घटना के संबंध में कोई समाचार/मीडिया रिपोर्ट प्रकाशित हुई है?", "mediaPublished", { required: true, options: ["हाँ, प्रकाशित हुई है।", "नहीं, प्रकाशित नहीं हुई है।", "प्रकाशित हुई है किंतु आवेदन हेतु उपलब्ध नहीं है।"] })}
+          {input("12. क्या घटना के संबंध में कोई समाचार/मीडिया रिपोर्ट प्रकाशित हुई है?", "mediaPublished", { required: true, options: ["हाँ, प्रकाशित हुई है।", "नहीं, प्रकाशित नहीं हुई है।", "प्रकाशित हुई है किंतु आवेदन हेतु उपलब्ध नहीं है।"], fieldClassName: "nf-media-field" })}
         </div>
         {data.firRegistered === "हाँ" && <div className="nf-grid nf-conditional">{input("थाना", "policeStation", { required: true })}{input("FIR संख्या", "firNumber", { required: true })}{input("FIR दिनांक", "firDate", { required: true, type: "date" })}</div>}
       </div>

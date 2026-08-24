@@ -30,6 +30,19 @@ const NominationForm = () => {
   const validate = (targetStep) => {
     const nextErrors = {};
     (requiredByStep[targetStep] || []).forEach((field) => { if (!String(data[field] || "").trim()) nextErrors[field] = "यह फ़ील्ड आवश्यक है"; });
+    if (targetStep === 1) {
+      const validateRows = (rows, group, fields) => {
+        (rows || []).forEach((row, index) => {
+          if (fields.some((field) => String(row?.[field] || "").trim())) {
+            fields.forEach((field) => {
+              if (!String(row?.[field] || "").trim()) nextErrors[`${group}.${index}.${field}`] = "यह फ़ील्ड आवश्यक है";
+            });
+          }
+        });
+      };
+      validateRows(data.rescuedDetails?.people, "rescuedPeople", ["name", "age", "relation"]);
+      validateRows(data.witnesses, "witnesses", ["name", "mobile", "address", "relation"]);
+    }
     if (targetStep === 3) ["document0", "document1", "document2", "document3"].forEach((field) => { if (!data[field]) nextErrors[field] = "यह दस्तावेज़ अनिवार्य है"; });
     setErrors(nextErrors);
     return !Object.keys(nextErrors).length;
