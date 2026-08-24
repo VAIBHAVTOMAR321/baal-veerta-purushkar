@@ -14,7 +14,20 @@ const incidentTypeMap = {
   "अन्य असाधारण साहसिक कार्य": "other",
 };
 
-const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) => {
+const isPart3Submitted = (record) => {
+  const status = String(record?.status || record?.submission_status || "").toLowerCase();
+  return ["completed", "submitted"].includes(status) || record?.submitted === true || record?.is_submitted === true;
+};
+
+const firstValue = (record, ...keys) => keys.map((key) => record?.[key]).find((value) => value !== undefined && value !== null);
+const normalizePerson = (person) => Array.isArray(person)
+  ? { name: person[0] || "", age: person[1] ?? "", relation: person[2] || "" }
+  : { name: person?.name || "", age: person?.age ?? "", relation: person?.relation || "" };
+const normalizeWitness = (witness) => Array.isArray(witness)
+  ? { name: witness[0] || "", mobile: witness[1] || "", address: witness[2] || "", relation: witness[3] || "" }
+  : { name: witness?.name || "", mobile: witness?.mobile || "", address: witness?.address || "", relation: witness?.relation || "" };
+
+const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCChecked, externalSubmitTrigger }) => {
   const { authFetch } = useAuth();
   const [customTitleActive, setCustomTitleActive] = useState(false);
   const [rescuedPeople, setRescuedPeople] = useState(data.rescuedDetails?.people?.length ? data.rescuedDetails.people : [{ name: "", age: "", relation: "" }]);
@@ -24,8 +37,68 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
   const [isOverAge, setIsOverAge] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [alertInfo, setAlertInfo] = useState(null);
+  const [loadingData, setLoadingData] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editSnapshot, setEditSnapshot] = useState(null);
   const customTitleRef = useRef(null);
   const fetchDistrictsRef = useRef(false);
+  const dataFetchStarted = useRef(false);
+
+  useEffect(() => {
+    if (dataFetchStarted.current) return;
+    dataFetchStarted.current = true;
+    const fetchPart3Data = async () => {
+      try {
+        const response = await authFetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part3/");
+        if (!response.ok) return;
+        const result = await response.json();
+        const record = result.success && (Array.isArray(result.data) ? result.data[0] : result.data);
+        if (!record) return;
+
+        const fieldMapping = {
+          actTitle: firstValue(record, "incident_title", "act_title", "bravery_act_title", "title"),
+          actDate: firstValue(record, "incident_date", "act_date"),
+          incidentAge: firstValue(record, "age_at_incident", "incident_age"),
+          actTime: firstValue(record, "incident_time", "act_time"),
+          actPlace: firstValue(record, "incident_location", "act_place"),
+          actDistrict: firstValue(record, "incident_district", "act_district"),
+          shortDescription: firstValue(record, "incident_description", "short_description"),
+          rescuedCount: firstValue(record, "rescued_persons_description", "rescued_count"),
+          firRegistered: firstValue(record, "fir_status", "fir_registered"),
+          policeStation: firstValue(record, "police_station", "policeStation"),
+          firNumber: firstValue(record, "fir_number", "firNumber"),
+          firDate: firstValue(record, "fir_date", "firDate"),
+          mediaPublished: firstValue(record, "media_report_available", "media_published"),
+        };
+        Object.entries(fieldMapping).forEach(([name, value]) => {
+          if (value !== undefined && value !== null) update({ target: { name, value, type: "text" } });
+        });
+        const fetchedTitle = fieldMapping.actTitle || "";
+        setCustomTitleActive(fetchedTitle !== "" && !natureOptions.includes(fetchedTitle));
+        const people = Array.isArray(record.rescued_persons) && record.rescued_persons.length
+          ? record.rescued_persons.map(normalizePerson)
+          : [{ name: "", age: "", relation: "" }];
+        const witnessRows = Array.isArray(record.eyewitnesses) && record.eyewitnesses.length
+          ? record.eyewitnesses.map(normalizeWitness)
+          : [{ name: "", mobile: "", address: "", relation: "" }];
+        setRescuedPeople(people);
+        setWitnesses(witnessRows);
+        update({ target: { name: "rescuedDetails", value: { ...(data.rescuedDetails || {}), people } } });
+        update({ target: { name: "witnesses", value: witnessRows } });
+
+        if (isPart3Submitted(record)) {
+          setIsCompleted(true);
+          if (!isStepCChecked && onCompleted) onCompleted(record);
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch Step 2 data:", fetchError);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchPart3Data();
+  }, [authFetch, data.rescuedDetails, isStepCChecked, onCompleted, update]);
 
   useEffect(() => {
     if (fetchDistrictsRef.current) return;
@@ -80,12 +153,13 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
 
   useEffect(() => {
     if (externalSubmitTrigger) {
-      handleSubmit();
+      handleSubmit(true);
     }
   }, [externalSubmitTrigger]);
 
   const input = (label, name, options = {}) => {
     const value = data[name] || "";
+    const isFormLocked = isCompleted && !isEditing;
     const wordCount = options.textarea ? value.trim().split(/\s+/).filter(Boolean).length : 0;
     const wordValidation = options.words || null;
     const isWordValid = wordValidation ? wordCount >= wordValidation.min && wordCount <= wordValidation.max : true;
@@ -95,14 +169,14 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
       <div className={`nf-field ${options.wide ? "nf-wide" : ""} ${options.fieldClassName || ""}`}>
         <label htmlFor={`nf-${name}`}>{label}{options.required && <span> *</span>}</label>
         {options.options ? (
-          <select id={`nf-${name}`} name={name} value={value} onChange={update} disabled={options.alwaysEnabled ? false : (isOverAge || options.disabled)}>
+          <select id={`nf-${name}`} name={name} value={value} onChange={update} disabled={isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled))}>
             <option value="">{options.placeholder || "चयन करें"}</option>
             {options.options.map((option) => <option key={option}>{option}</option>)}
           </select>
         ) : options.textarea ? (
-          <textarea id={`nf-${name}`} name={name} value={value} onChange={update} rows={options.rows || 4} disabled={isOverAge} />
+          <textarea id={`nf-${name}`} name={name} value={value} onChange={update} rows={options.rows || 4} disabled={isFormLocked || isOverAge} />
         ) : (
-          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} onChange={update} disabled={options.alwaysEnabled ? false : (isOverAge || options.disabled)} />
+          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} onChange={update} disabled={isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled))} />
         )}
         {showWordCount && (
           <small className={`nf-word-count ${!isWordValid ? "nf-invalid" : ""}`}>
@@ -118,6 +192,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
   const rescuedPeopleFields = ["name", "age", "relation"];
   const witnessRowFields = ["name", "mobile", "address", "relation"];
   const rowError = (group, index, field) => error[`${group}.${index}.${field}`];
+  const isFormLocked = isCompleted && !isEditing;
 
   const showCustomTitle = customTitleActive;
 
@@ -189,12 +264,12 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
       : (incidentTypeMap[actTitle] || "");
 
     const rescuedPersons = rescuedPeople
-      .filter((p) => p.name.trim() !== "")
-      .map((p) => ({ name: p.name, age: Number(p.age) || 0, relation: p.relation }));
+      .filter((person) => String(person.name || "").trim() !== "")
+      .map((person) => [person.name, Number(person.age) || 0, person.relation || ""]);
 
     const eyewitnesses = witnesses
-      .filter((w) => w.name.trim() !== "")
-      .map((w) => ({ name: w.name, mobile: w.mobile, address: w.address, relation: w.relation }));
+      .filter((witness) => String(witness.name || "").trim() !== "")
+      .map((witness) => [witness.name, witness.mobile || "", witness.address || "", witness.relation || ""]);
 
     const payload = {
       applicant_id: applicantId,
@@ -217,6 +292,30 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
     };
 
     return payload;
+  };
+
+  const editableFields = ["actTitle", "actDate", "actTime", "actPlace", "actDistrict", "shortDescription", "rescuedCount", "firRegistered", "policeStation", "firNumber", "firDate", "mediaPublished"];
+
+  const handleEdit = () => {
+    setEditSnapshot({
+      ...Object.fromEntries(editableFields.map((field) => [field, data[field] || ""])),
+      rescuedPeople,
+      witnesses,
+    });
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (editSnapshot) {
+      Object.entries(editSnapshot).forEach(([name, value]) => {
+        if (name !== "rescuedPeople" && name !== "witnesses") update({ target: { name, value, type: "text" } });
+      });
+      setRescuedPeople(editSnapshot.rescuedPeople);
+      setWitnesses(editSnapshot.witnesses);
+    }
+    setIsEditing(false);
+    setEditSnapshot(null);
+    setAlertInfo(null);
   };
 
   const validateBeforeSubmit = () => {
@@ -256,7 +355,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
     return Object.keys(errors).length > 0 ? errors : null;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (moveToNext = true) => {
+    if (isCompleted && !isEditing) {
+      onSubmitSuccess?.();
+      return;
+    }
     if (isOverAge) {
       setAlertInfo({ type: "error", message: "आयु 18 वर्ष से अधिक होने के कारण इस फॉर्म को सबमिट नहीं किया जा सकता।" });
       return;
@@ -288,7 +391,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
       const response = await authFetch(
         "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part3/",
         {
-          method: "POST",
+          method: isCompleted && isEditing ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
@@ -300,9 +403,15 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
         : await response.text();
 
       if (response.ok && (result.success === true || result.success === undefined)) {
-        setAlertInfo({ type: "success", message: "Step 2 सफलतापूर्वक सबमिट हो गया! ✅" });
+        const wasUpdate = isCompleted && isEditing;
+        setAlertInfo({ type: "success", message: wasUpdate ? "Step 2 सफलतापूर्वक अपडेट हो गया! ✅" : "Step 2 सफलतापूर्वक सबमिट हो गया! ✅" });
         window.scrollTo({ top: 0, behavior: "smooth" });
-        onSubmitSuccess?.();
+        if (wasUpdate) {
+          setIsCompleted(true);
+          setIsEditing(false);
+          setEditSnapshot(null);
+        }
+        if (moveToNext) onSubmitSuccess?.();
       } else {
         const errorMsg =
           (typeof result === "object" ? (result.detail || result.message || result.error) : result) ||
@@ -322,11 +431,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
       <td>{index + 1}</td>
       {witnessFields.map((field, fieldIndex) => (
         <td key={field}>
-          <input type="text" value={row[witnessRowFields[fieldIndex]] || ""} onChange={(e) => updateWitness(index, witnessRowFields[fieldIndex], e.target.value)} disabled={isOverAge} />
+          <input type="text" value={row[witnessRowFields[fieldIndex]] || ""} onChange={(e) => updateWitness(index, witnessRowFields[fieldIndex], e.target.value)} disabled={isFormLocked || isOverAge} />
           {rowError("witnesses", index, witnessRowFields[fieldIndex]) && <small className="nf-error">{rowError("witnesses", index, witnessRowFields[fieldIndex])}</small>}
         </td>
       ))}
-      <td><button type="button" className="nf-remove" onClick={() => removeWitness(index)} disabled={isOverAge}>हटाएं</button></td>
+      <td><button type="button" className="nf-remove" onClick={() => removeWitness(index)} disabled={isFormLocked || isOverAge}>हटाएं</button></td>
     </tr>
   ));
 
@@ -335,11 +444,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
       <td>{index + 1}</td>
       {rescuedPeopleFields.map((field) => (
         <td key={field}>
-          <input type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isOverAge} />
+          <input type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isFormLocked || isOverAge} />
           {rowError("rescuedPeople", index, field) && <small className="nf-error">{rowError("rescuedPeople", index, field)}</small>}
         </td>
       ))}
-      <td><button type="button" className="nf-remove" onClick={() => removePerson(index)} disabled={isOverAge}>हटाएं</button></td>
+      <td><button type="button" className="nf-remove" onClick={() => removePerson(index)} disabled={isFormLocked || isOverAge}>हटाएं</button></td>
     </tr>
   ));
 
@@ -392,6 +501,20 @@ const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) 
       <div className="nf-card-heading">
         <span>Step 2</span>
         <h2>वीरता की घटना का विवरण (Details of Bravery Act)</h2>
+        {isCompleted && (
+          <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+            {!isEditing ? (
+              <button type="button" className="nf-secondary" onClick={handleEdit}>Edit / संपादित करें</button>
+            ) : (
+              <>
+                <button type="button" className="nf-secondary" onClick={handleCancelEdit} disabled={submitting}>Cancel / रद्द करें</button>
+                <button type="button" className="nf-primary" onClick={() => handleSubmit(false)} disabled={submitting}>
+                  {submitting ? "अपडेट हो रहा है..." : "Update / अपडेट करें"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="nf-block">

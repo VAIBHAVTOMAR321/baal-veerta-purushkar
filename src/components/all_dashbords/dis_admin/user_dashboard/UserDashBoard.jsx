@@ -56,6 +56,8 @@ const UserDashBoard = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const stepBCheckedRef = useRef(false);
+  const stepCCheckedRef = useRef(false);
+  const [stepCSubmitTrigger, setStepCSubmitTrigger] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -169,6 +171,20 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleStepCSubmitSuccess = () => {
+    stepCCheckedRef.current = true;
+    setNotice("Step 2 सफलतापूर्वक सबमिट हो गया!");
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleStepCAlreadyCompleted = () => {
+    stepCCheckedRef.current = true;
+    setNotice("Step 2 पहले ही सबमिट हो चुका है, Step 3 पर जा रहे हैं...");
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const component = [
     <StepB
       key="step-b"
@@ -179,7 +195,16 @@ const UserDashBoard = () => {
       onCompleted={handleStepBAlreadyCompleted}
       isStepBChecked={stepBCheckedRef.current}
     />,
-    <StepC key="step-c" data={data} update={update} error={errors} />,
+    <StepC
+      key="step-c"
+      data={data}
+      update={update}
+      error={errors}
+      onSubmitSuccess={handleStepCSubmitSuccess}
+      onCompleted={handleStepCAlreadyCompleted}
+      isStepCChecked={stepCCheckedRef.current}
+      externalSubmitTrigger={stepCSubmitTrigger}
+    />,
     <StepE key="step-e" data={data} update={update} error={errors} />,
     <StepD key="step-d" data={data} update={update} error={errors} />,
     <StepF
@@ -267,7 +292,8 @@ const UserDashBoard = () => {
               // Only use default next for steps other than Step B (0)
               // Step B handles its own submission
               if (step !== 0) {
-                next();
+                if (step === 1) setStepCSubmitTrigger((current) => current + 1);
+                else next();
               }
             }}
             noValidate
