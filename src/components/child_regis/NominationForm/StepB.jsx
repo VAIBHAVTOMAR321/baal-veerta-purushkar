@@ -807,15 +807,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
         <button
           type="button"
           className="nf-btn nf-btn-next"
-          onClick={handleSubmit}
-          disabled={submitting || isCompleted && !isEditing || isNotUttarakhand}
+          onClick={isCompleted && isEditing ? () => handleSubmit(false) : isCompleted && !isEditing ? onNext : handleSubmit}
+          disabled={submitting || (!isCompleted && isNotUttarakhand)}
           style={{
             padding: "12px 32px",
-            backgroundColor: isNotUttarakhand ? "#ccc" : submitting ? "#6c757d" : "#28a745",
+            backgroundColor: isNotUttarakhand && !isCompleted ? "#ccc" : submitting ? "#6c757d" : "#28a745",
             color: "#fff",
             border: "none",
             borderRadius: "4px",
-            cursor: isNotUttarakhand ? "not-allowed" : submitting ? "wait" : "pointer",
+            cursor: isNotUttarakhand && !isCompleted ? "not-allowed" : submitting ? "wait" : "pointer",
             fontSize: "16px",
             fontWeight: "600",
             display: "flex",
@@ -834,8 +834,10 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
                 animation: "spin 0.8s linear infinite",
                 display: "inline-block"
               }}></span>
-              सबमिट हो रहा है...
+              {isCompleted && isEditing ? "अपडेट हो रहा है..." : "सबमिट हो रहा है..."}
             </>
+          ) : isCompleted && isEditing ? (
+            "Update / अपडेट करें"
           ) : (
             <>
               अगला चरण
