@@ -20,8 +20,24 @@ const requiredByStep = {
   ],
   1: [
     "actTitle", "actDate", "actPlace", "actDistrict",
-    "actNature", "shortDescription", "detailedDescription", "firRegistered",
+    "actNature", "shortDescription", "detailedDescription", "firRegistered", "mediaPublished",
   ],
+};
+
+const getTableErrors = (formData) => {
+  const nextErrors = {};
+  const validateRows = (rows, group, fields) => {
+    (rows || []).forEach((row, index) => {
+      if (fields.some((field) => String(row?.[field] || "").trim())) {
+        fields.forEach((field) => {
+          if (!String(row?.[field] || "").trim()) nextErrors[`${group}.${index}.${field}`] = "यह फ़ील्ड आवश्यक है";
+        });
+      }
+    });
+  };
+  validateRows(formData.rescuedDetails?.people, "rescuedPeople", ["name", "age", "relation"]);
+  validateRows(formData.witnesses, "witnesses", ["name", "mobile", "address", "relation"]);
+  return nextErrors;
 };
 
 const UserDashBoard = () => {
@@ -56,11 +72,19 @@ const UserDashBoard = () => {
 
   const update = useCallback((event) => {
     const { name, value, type, checked, files } = event.target;
-    setData((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value,
-    }));
-    setErrors((current) => ({ ...current, [name]: "" }));
+    setData((current) => {
+      const nextData = {
+        ...current,
+        [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value,
+      };
+      setErrors((currentErrors) => {
+        const nextErrors = { ...currentErrors };
+        Object.keys(nextErrors).filter((key) => key.startsWith("rescuedPeople.") || key.startsWith("witnesses.")).forEach((key) => delete nextErrors[key]);
+        delete nextErrors[name];
+        return { ...nextErrors, ...getTableErrors(nextData) };
+      });
+      return nextData;
+    });
   }, []);
 
   const validate = (targetStep) => {
@@ -69,6 +93,20 @@ const UserDashBoard = () => {
       if (!String(data[field] || "").trim())
         nextErrors[field] = "यह फ़ील्ड आवश्यक है";
     });
+    if (targetStep === 1) {
+      const validateRows = (rows, group, fields) => {
+        (rows || []).forEach((row, index) => {
+          if (fields.some((field) => String(row?.[field] || "").trim())) {
+            fields.forEach((field) => {
+              if (!String(row?.[field] || "").trim())
+                nextErrors[`${group}.${index}.${field}`] = "यह फ़ील्ड आवश्यक है";
+            });
+          }
+        });
+      };
+      validateRows(data.rescuedDetails?.people, "rescuedPeople", ["name", "age", "relation"]);
+      validateRows(data.witnesses, "witnesses", ["name", "mobile", "address", "relation"]);
+    }
     if (targetStep === 3)
       ["document0", "document1", "document2", "document3"].forEach((field) => {
         if (!data[field]) nextErrors[field] = "यह दस्तावेज़ अनिवार्य है";
