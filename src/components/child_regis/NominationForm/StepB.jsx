@@ -479,10 +479,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
       const payload = buildPayload();
       console.log("Submitting payload:", payload);
 
+      const method = isCompleted && isEditing ? "PUT" : "POST";
+
       const response = await authFetch(
         "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/",
         {
-          method: "POST",
+          method: method,
           body: JSON.stringify(payload),
         }
       );
@@ -504,6 +506,13 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
       if (result.success) {
         if (moveToNext && onNext) {
           onNext(result);
+        } else {
+          alert("Step 1 successfully updated");
+          setIsEditing(false);
+          setEditSnapshot(null);
+          setResident(data.resident || "");
+          setSelectedDistrict(data["permanentजनपद"] || "");
+          setCurrentSelectedDistrict(data["currentजनपद"] || "");
         }
         return true;
       } else {
@@ -807,7 +816,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
         <button
           type="button"
           className="nf-btn nf-btn-next"
-          onClick={isCompleted && isEditing ? () => handleSubmit(false) : isCompleted && !isEditing ? onNext : handleSubmit}
+          onClick={isCompleted && !isEditing ? onNext : () => handleSubmit()}
           disabled={submitting || (!isCompleted && isNotUttarakhand)}
           style={{
             padding: "12px 32px",
@@ -834,10 +843,8 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
                 animation: "spin 0.8s linear infinite",
                 display: "inline-block"
               }}></span>
-              {isCompleted && isEditing ? "अपडेट हो रहा है..." : "सबमिट हो रहा है..."}
+              {isCompleted && !isEditing ? "आगे बढ़ रहा है..." : "सबमिट हो रहा है..."}
             </>
-          ) : isCompleted && isEditing ? (
-            "Update / अपडेट करें"
           ) : (
             <>
               अगला चरण
