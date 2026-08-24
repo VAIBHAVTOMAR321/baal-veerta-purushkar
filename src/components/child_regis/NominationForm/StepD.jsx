@@ -16,6 +16,10 @@ const documents = [
   ["अन्य सहायक अभिलेख", "यदि लागू हो"],
 ];
 
+const documentHints = {
+  10: "कक्षा 1 से 12 तक के विद्यार्थियों के लिए: विद्यालय की प्रधानाचार्य/प्रबंधक द्वारा हस्ताक्षरित प्रमाण पत्र जिसमें विद्यार्थी का नाम, कक्षा, रोल नंबर, स्कूल का नाम और पिन कोड हो।",
+};
+
 const StepD = ({ data, update, error }) => {
   const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
   const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
@@ -69,6 +73,7 @@ const StepD = ({ data, update, error }) => {
       <div className="nf-upload-list">
         {documents.map(([label, applicability], index) => {
           const isPhotoVideoLink = index === 9;
+          const isSchoolCertificate = index === 10;
           const file = data[`document${index}`];
 
           return (
@@ -122,26 +127,36 @@ const StepD = ({ data, update, error }) => {
                 </div>
               ) : (
                 <>
-                  <input
-                    id={`nf-document-${index}`}
-                    name={`document${index}`}
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => handleFileChange(e, index)}
-                    aria-describedby={`nf-document-help-${index}`}
-                  />
+                  <div className="nf-upload-body">
+                    <div className="nf-upload-input">
+                      <input
+                        id={`nf-document-${index}`}
+                        name={`document${index}`}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleFileChange(e, index)}
+                        aria-describedby={`nf-document-help-${index}`}
+                      />
 
-                  {file && (
-                    <small className="nf-file-name">
-                      {file.name}
-                    </small>
-                  )}
+                      {file && (
+                        <small className="nf-file-name">
+                          {file.name}
+                        </small>
+                      )}
 
-                  {error[`document${index}`] && (
-                    <small className="nf-error">
-                      {error[`document${index}`]}
-                    </small>
-                  )}
+                      {error[`document${index}`] && (
+                        <small className="nf-error">
+                          {error[`document${index}`]}
+                        </small>
+                      )}
+                    </div>
+
+                    {isSchoolCertificate && documentHints[10] && (
+                      <div className="nf-upload-hint">
+                        {documentHints[10]}
+                      </div>
+                    )}
+                  </div>
 
                   <small id={`nf-document-help-${index}`}>
                     File Format: PDF/JPG/JPEG/PNG only | Max Size: 5MB प्रति दस्तावेज
