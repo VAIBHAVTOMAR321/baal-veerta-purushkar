@@ -9,6 +9,7 @@ import StepF from "../../../child_regis/NominationForm/StepF";
 import StepE from "../../../child_regis/NominationForm/StepE";
 import StepD from "../../../child_regis/NominationForm/StepD";
 import StepC from "../../../child_regis/NominationForm/StepC";
+import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
 
 const steps = ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"];
 const requiredByStep = {
@@ -52,6 +53,8 @@ const UserDashBoard = () => {
   });
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+  const [topAccepted, setTopAccepted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -140,20 +143,26 @@ const UserDashBoard = () => {
     setNotice("आवेदन ड्राफ्ट के रूप में सुरक्षित किया गया है।");
   };
 
-  const preview = () => setNotice("Preview Application तैयार है।");
+  const preview = () => setShowPreview(true);
+  const closePreview = () => setShowPreview(false);
 
   const finalSubmit = () => {
-    if (data.declarationAccepted && data.otpVerified)
+    if (
+      data.declarationAccepted &&
+      data.parentDeclarationAccepted &&
+      data.declarationDocument &&
+      data.parentDeclarationDocument &&
+      topAccepted
+    )
       setNotice("आवेदन सफलतापूर्वक प्रस्तुत किया गया है।");
   };
 
   const canSubmit = Boolean(
     data.declarationAccepted &&
-      data.otpVerified &&
-      data["finalनाम"] &&
-      data["finalस्थान"] &&
-      data["finalदिनांक"] &&
-      data["finalमोबाइल नंबर"]
+      data.parentDeclarationAccepted &&
+      data.declarationDocument &&
+      data.parentDeclarationDocument &&
+      topAccepted
   );
 
   // ✅ Handle Step B completion (after POST success)
@@ -239,6 +248,7 @@ const UserDashBoard = () => {
       onPreview={preview}
       onSubmit={finalSubmit}
       canSubmit={canSubmit}
+      topAccepted={topAccepted}
     />,
   ][step];
 
@@ -347,6 +357,14 @@ const UserDashBoard = () => {
           </form>
         </div>
       </div>
+      {showPreview && (
+        <PreviewModal
+          data={data}
+          onClose={closePreview}
+          topAccepted={topAccepted}
+          onTopAcceptedChange={setTopAccepted}
+        />
+      )}
     </div>
   );
 };

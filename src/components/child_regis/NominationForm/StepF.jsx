@@ -3,7 +3,7 @@ import { useAuth } from "../../login/AuthContext";
 
 const declaration = "मैं/हम यह प्रमाणित करते हैं कि इस ऑनलाइन नामांकन प्रपत्र में मेरे/हमारे द्वारा उपलब्ध कराई गई समस्त जानकारी एवं संलग्न अभिलेख मेरे/हमारे ज्ञान एवं विश्वास के अनुसार सत्य एवं सही हैं। उपरोक्त आवेदन में मेरे/हमारे द्वारा कोई महत्वपूर्ण तथ्य छिपाया नहीं गया है। तथा मुख्यमंत्री राज्य बाल पुरुष्कार हेतु नामांकन योग्य है।";
 const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवश्यक कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
-const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit }) => {
+const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccepted }) => {
   const { user } = useAuth();
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [showParentDocumentUpload, setShowParentDocumentUpload] = useState(false);
@@ -75,7 +75,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit }) => {
           </label>
         </div>
         {showDocumentUpload && (
-          <div className="nf-document-upload">
+          <div className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}>
             <label htmlFor="nf-declarationDocument" className="nf-document-upload-label">
               अभिलेख अपलोड करें
             </label>
@@ -86,6 +86,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit }) => {
                 name="declarationDocument"
                 onChange={handleFileChange}
                 className="nf-document-input"
+                disabled={topAccepted}
               />
               <span className="nf-document-dropzone-text">
                 {data.declarationDocument ? (typeof data.declarationDocument === "string" ? data.declarationDocument : data.declarationDocument.name) : "No file chosen"}
@@ -115,7 +116,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit }) => {
           </label>
         </div>
         {showParentDocumentUpload && (
-          <div className="nf-document-upload">
+          <div className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}>
             <label htmlFor="nf-parentDeclarationDocument" className="nf-document-upload-label">
               अभिलेख अपलोड करें
             </label>
@@ -126,6 +127,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit }) => {
                 name="parentDeclarationDocument"
                 onChange={handleParentFileChange}
                 className="nf-document-input"
+                disabled={topAccepted}
               />
               <span className="nf-document-dropzone-text">
                 {data.parentDeclarationDocument ? (typeof data.parentDeclarationDocument === "string" ? data.parentDeclarationDocument : data.parentDeclarationDocument.name) : "No file chosen"}
