@@ -16,7 +16,40 @@ const documents = [
   ["अन्य सहायक अभिलेख", "यदि लागू हो"],
 ];
 
+const documentHints = {
+  10: "कक्षा 1 से 12 तक के विद्यार्थियों के लिए: विद्यालय की प्रधानाचार्य/प्रबंधक द्वारा हस्ताक्षरित प्रमाण पत्र जिसमें विद्यार्थी का नाम, कक्षा, रोल नंबर, स्कूल का नाम और पिन कोड हो।",
+};
+
 const StepD = ({ data, update, error }) => {
+  const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
+  const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+
+  const handleFileChange = (e, index) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const mimeType = file.type.toLowerCase();
+
+    const isExtensionAllowed = allowedExtensions.includes(extension);
+    const isMimeTypeAllowed = allowedMimeTypes.includes(mimeType);
+
+    if (!isExtensionAllowed || !isMimeTypeAllowed) {
+      e.target.value = "";
+      update({
+        target: {
+          name: `document${index}`,
+          value: null,
+        },
+      });
+      alert(
+        `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल PDF, JPG, JPEG, PNG फ़ाइलें अपलोड करें।\nHEIC/HEIF और अन्य फॉर्मेट स्वीकार नहीं हैं।`
+      );
+      return;
+    }
+
+    update(e);
+  };
 
   const handleViewFile = (file) => {
     if (!file) return;
@@ -25,7 +58,6 @@ const StepD = ({ data, update, error }) => {
 
     window.open(fileUrl, "_blank", "noopener,noreferrer");
 
-    // Browser को file URL use करने के लिए थोड़ा time दें
     setTimeout(() => {
       URL.revokeObjectURL(fileUrl);
     }, 10000);
@@ -40,11 +72,12 @@ const StepD = ({ data, update, error }) => {
 
       <div className="nf-upload-list">
         {documents.map(([label, applicability], index) => {
+          const isPhotoVideoLink = index === 9;
+          const isSchoolCertificate = index === 10;
           const file = data[`document${index}`];
 
           return (
             <div className="nf-upload" key={label}>
-              
               <div className="nf-upload-header">
                 <div>
                   <strong>
@@ -60,8 +93,7 @@ const StepD = ({ data, update, error }) => {
                   </span>
                 </div>
 
-                {/* View Icon */}
-                {file && (
+                {file && !isPhotoVideoLink && (
                   <button
                     type="button"
                     className="nf-view-file"
@@ -73,30 +105,64 @@ const StepD = ({ data, update, error }) => {
                 )}
               </div>
 
-              <input
-                id={`nf-document-${index}`}
-                name={`document${index}`}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={update}
-                aria-describedby={`nf-document-help-${index}`}
-              />
+              {isPhotoVideoLink ? (
+                <div className="nf-field">
+                  <input
+                    id={`nf-document-${index}`}
+                    name={`document${index}`}
+                    type="url"
+                    placeholder="https://example.com/photo-or-video-link"
+                    value={file || ""}
+                    onChange={update}
+                    aria-describedby={`nf-document-help-${index}`}
+                  />
+                  {error[`document${index}`] && (
+                    <small className="nf-error">
+                      {error[`document${index}`]}
+                    </small>
+                  )}
+                  <small id={`nf-document-help-${index}`}>
+                    कृपया फोटो/वीडियो का लिंक दर्ज करें
+                  </small>
+                </div>
+              ) : (
+                <>
+                  <div className="nf-upload-body">
+                    <div className="nf-upload-input">
+                      <input
+                        id={`nf-document-${index}`}
+                        name={`document${index}`}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleFileChange(e, index)}
+                        aria-describedby={`nf-document-help-${index}`}
+                      />
 
-              {file && (
-                <small className="nf-file-name">
-                  {file.name}
-                </small>
+                      {file && (
+                        <small className="nf-file-name">
+                          {file.name}
+                        </small>
+                      )}
+
+                      {error[`document${index}`] && (
+                        <small className="nf-error">
+                          {error[`document${index}`]}
+                        </small>
+                      )}
+                    </div>
+
+                    {isSchoolCertificate && documentHints[10] && (
+                      <div className="nf-upload-hint">
+                        {documentHints[10]}
+                      </div>
+                    )}
+                  </div>
+
+                  <small id={`nf-document-help-${index}`}>
+                    File Format: PDF/JPG/JPEG/PNG only | Max Size: 5MB प्रति दस्तावेज
+                  </small>
+                </>
               )}
-
-              {error[`document${index}`] && (
-                <small className="nf-error">
-                  {error[`document${index}`]}
-                </small>
-              )}
-
-              <small id={`nf-document-help-${index}`}>
-                File Format: PDF/JPG/JPEG/PNG | Maximum File Size: ______ MB प्रति दस्तावेज
-              </small>
             </div>
           );
         })}
