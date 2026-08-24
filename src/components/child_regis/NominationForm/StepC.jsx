@@ -1,14 +1,29 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useAuth } from "../../login/AuthContext";
 
 const natureOptions = ["किसी व्यक्ति के जीवन की रक्षा", "स्वयं के जीवन की रक्षा हेतु साहसिक कार्य", "आपदा/प्राकृतिक आपदा में साहसिक कार्य", "दुर्घटना में बचाव कार्य", "डूबते हुए व्यक्ति को बचाना", "आग/अग्निकांड में बचाव कार्य", "अपराध/आपराधिक घटना के दौरान साहसिक कार्य", "अन्य असाधारण साहसिक कार्य"];
 
-const StepC = ({ data, update, error }) => {
+const incidentTypeMap = {
+  "किसी व्यक्ति के जीवन की रक्षा": "life_protection",
+  "स्वयं के जीवन की रक्षा हेतु साहसिक कार्य": "self_life_protection",
+  "आपदा/प्राकृतिक आपदा में साहसिक कार्य": "disaster_rescue",
+  "दुर्घटना में बचाव कार्य": "accident_rescue",
+  "डूबते हुए व्यक्ति को बचाना": "drowning_rescue",
+  "आग/अग्निकांड में बचाव कार्य": "fire_rescue",
+  "अपराध/आपराधिक घटना के दौरान साहसिक कार्य": "crime_rescue",
+  "अन्य असाधारण साहसिक कार्य": "other",
+};
+
+const StepC = ({ data, update, error, onSubmitSuccess, externalSubmitTrigger }) => {
+  const { authFetch } = useAuth();
   const [customTitleActive, setCustomTitleActive] = useState(false);
   const [rescuedPeople, setRescuedPeople] = useState(data.rescuedDetails?.people?.length ? data.rescuedDetails.people : [{ name: "", age: "", relation: "" }]);
   const [witnesses, setWitnesses] = useState(data.witnesses?.length ? data.witnesses : [{ name: "", mobile: "", address: "", relation: "" }]);
   const [districts, setDistricts] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [isOverAge, setIsOverAge] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null);
   const customTitleRef = useRef(null);
   const fetchDistrictsRef = useRef(false);
 
@@ -55,6 +70,20 @@ const StepC = ({ data, update, error }) => {
       setIsOverAge(false);
     }
   }, [data.actDate, data.birthDate]);
+
+  useEffect(() => {
+    if (alertInfo) {
+      const timer = setTimeout(() => setAlertInfo(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertInfo]);
+
+  useEffect(() => {
+    if (externalSubmitTrigger) {
+      handleSubmit();
+    }
+  }, [externalSubmitTrigger]);
+
   const input = (label, name, options = {}) => {
     const value = data[name] || "";
     const wordCount = options.textarea ? value.trim().split(/\s+/).filter(Boolean).length : 0;
@@ -151,6 +180,143 @@ const StepC = ({ data, update, error }) => {
     syncWitnesses(next);
   };
 
+  const buildPayload = () => {
+    const applicantId = data.applicant_id || data.applicantId || localStorage.getItem("applicantId") || "";
+
+    const actTitle = data.actTitle || "";
+    const incidentType = customTitleActive
+      ? "other"
+      : (incidentTypeMap[actTitle] || "");
+
+    const rescuedPersons = rescuedPeople
+      .filter((p) => p.name.trim() !== "")
+      .map((p) => ({ name: p.name, age: Number(p.age) || 0, relation: p.relation }));
+
+    const eyewitnesses = witnesses
+      .filter((w) => w.name.trim() !== "")
+      .map((w) => ({ name: w.name, mobile: w.mobile, address: w.address, relation: w.relation }));
+
+    const payload = {
+      applicant_id: applicantId,
+      incident_title: actTitle,
+      incident_type: incidentType,
+      incident_date: data.actDate || "",
+      age_at_incident: data.incidentAge || "",
+      incident_time: data.actTime || "",
+      incident_location: data.actPlace || "",
+      incident_district: data.actDistrict || "",
+      incident_description: data.shortDescription || "",
+      rescued_persons_description: data.rescuedCount || "",
+      rescued_persons: rescuedPersons.length ? rescuedPersons : null,
+      eyewitnesses: eyewitnesses.length ? eyewitnesses : null,
+      fir_status: data.firRegistered || "",
+      police_station: data.policeStation || "",
+      fir_number: data.firNumber || "",
+      fir_date: data.firDate || "",
+      media_report_available: data.mediaPublished || "",
+    };
+
+    return payload;
+  };
+
+  const validateBeforeSubmit = () => {
+    const errors = {};
+    if (!data.actTitle || data.actTitle.trim() === "") {
+      errors.actTitle = "वीरता की घटना का शीर्षक आवश्यक है।";
+    }
+    if (!data.actDate) {
+      errors.actDate = "घटना की दिनांक आवश्यक है।";
+    }
+    if (!data.actPlace || data.actPlace.trim() === "") {
+      errors.actPlace = "घटना का स्थान आवश्यक है।";
+    }
+    if (!data.actDistrict) {
+      errors.actDistrict = "घटना का जनपद आवश्यक है।";
+    }
+    if (!data.shortDescription || data.shortDescription.trim() === "") {
+      errors.shortDescription = "घटना का संक्षिप्त विवरण आवश्यक है।";
+    } else {
+      const wc = data.shortDescription.trim().split(/\s+/).filter(Boolean).length;
+      if (wc < 250 || wc > 500) {
+        errors.shortDescription = "विवरण कम से कम 250 और अधिकतम 500 शब्दों में होना चाहिए।";
+      }
+    }
+    if (!data.firRegistered) {
+      errors.firRegistered = "यह फ़ील्ड आवश्यक है।";
+    }
+    if (data.firRegistered === "हाँ") {
+      if (!data.policeStation || data.policeStation.trim() === "") errors.policeStation = "थाना आवश्यक है।";
+      if (!data.firNumber || data.firNumber.trim() === "") errors.firNumber = "FIR संख्या आवश्यक है।";
+      if (!data.firDate) errors.firDate = "FIR दिनांक आवश्यक है।";
+    }
+    if (!data.mediaPublished) {
+      errors.mediaPublished = "यह फ़ील्ड आवश्यक है।";
+    }
+
+    return Object.keys(errors).length > 0 ? errors : null;
+  };
+
+  const handleSubmit = async () => {
+    if (isOverAge) {
+      setAlertInfo({ type: "error", message: "आयु 18 वर्ष से अधिक होने के कारण इस फॉर्म को सबमिट नहीं किया जा सकता।" });
+      return;
+    }
+
+    const validationErrors = validateBeforeSubmit();
+    if (validationErrors) {
+      if (typeof update === "function" && typeof error === "object") {
+        Object.entries(validationErrors).forEach(([key, msg]) => {
+          update({ target: { name: `__error_${key}`, value: msg } });
+        });
+      }
+      setAlertInfo({ type: "error", message: "कृपया सभी आवश्यक फ़ील्ड भरें।" });
+      return;
+    }
+
+    const payload = buildPayload();
+
+    if (!payload.applicant_id) {
+      setAlertInfo({ type: "error", message: "आवेदक ID नहीं मिली। कृपया पहले Step 1 पूरा करें।" });
+      return;
+    }
+
+    setSubmitting(true);
+    setAlertInfo(null);
+
+    try {
+      console.log("[StepC] Submitting payload:", JSON.stringify(payload, null, 2));
+      const response = await authFetch(
+        "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part3/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (response.ok && (result.success === true || result.success === undefined)) {
+        setAlertInfo({ type: "success", message: "Step 2 सफलतापूर्वक सबमिट हो गया! ✅" });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        onSubmitSuccess?.();
+      } else {
+        const errorMsg =
+          (typeof result === "object" ? (result.detail || result.message || result.error) : result) ||
+          "सबमिशन में त्रुटि हुई।";
+        setAlertInfo({ type: "error", message: typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg) });
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+      setAlertInfo({ type: "error", message: "सबमिशन में त्रुटि हुई। कृपया पुनः प्रयास करें।" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const witnessRows = witnesses.map((row, index) => (
     <tr key={index}>
       <td>{index + 1}</td>
@@ -179,6 +345,50 @@ const StepC = ({ data, update, error }) => {
 
   return (
     <section className="nf-card">
+      {/* Alert Box */}
+      {alertInfo && (
+        <div
+          className="nf-alert"
+          style={{
+            padding: "1rem 1.25rem",
+            marginBottom: "1.5rem",
+            borderRadius: "8px",
+            border: alertInfo.type === "success"
+              ? "1px solid #22c55e"
+              : "1px solid #ef4444",
+            backgroundColor: alertInfo.type === "success"
+              ? "#f0fdf4"
+              : "#fef2f2",
+            color: alertInfo.type === "success" ? "#166534" : "#991b1b",
+            fontSize: "1rem",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            animation: "nfFadeIn 0.3s ease",
+          }}
+        >
+          <span>{alertInfo.message}</span>
+          <button
+            type="button"
+            onClick={() => setAlertInfo(null)}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "1.25rem",
+              cursor: "pointer",
+              color: alertInfo.type === "success" ? "#166534" : "#991b1b",
+              fontWeight: "bold",
+              lineHeight: 1,
+              padding: "0 0.25rem",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="nf-card-heading">
         <span>Step 2</span>
         <h2>वीरता की घटना का विवरण (Details of Bravery Act)</h2>
@@ -190,8 +400,8 @@ const StepC = ({ data, update, error }) => {
             <label htmlFor="nf-actTitle">1. वीरता की घटना का शीर्षक <span> *</span></label>
             {showCustomTitle ? (
               <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
-              <input ref={customTitleRef} id="nf-actTitle" name="actTitle" type="text" value={data.actTitle || ""} onChange={update} disabled={isOverAge} />
-              <button type="button" className="nf-reset" onClick={handleResetActTitle} disabled={isOverAge}>रीसेट</button>
+                <input ref={customTitleRef} id="nf-actTitle" name="actTitle" type="text" value={data.actTitle || ""} onChange={update} disabled={isOverAge} />
+                <button type="button" className="nf-reset" onClick={handleResetActTitle} disabled={isOverAge}>रीसेट</button>
               </div>
             ) : (
               <select
@@ -286,6 +496,7 @@ const StepC = ({ data, update, error }) => {
         </div>
         {data.firRegistered === "हाँ" && <div className="nf-grid nf-conditional">{input("थाना", "policeStation", { required: true })}{input("FIR संख्या", "firNumber", { required: true })}{input("FIR दिनांक", "firDate", { required: true, type: "date" })}</div>}
       </div>
+
     </section>
   );
 };
