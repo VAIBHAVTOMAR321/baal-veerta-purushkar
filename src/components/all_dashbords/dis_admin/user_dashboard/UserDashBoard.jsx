@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import UserTopNav from "./UserTopNav";
@@ -54,14 +54,14 @@ const UserDashBoard = () => {
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
-  const update = (event) => {
+  const update = useCallback((event) => {
     const { name, value, type, checked, files } = event.target;
     setData((current) => ({
       ...current,
       [name]: type === "checkbox" ? checked : type === "file" ? files[0] : value,
     }));
     setErrors((current) => ({ ...current, [name]: "" }));
-  };
+  }, []);
 
   const validate = (targetStep) => {
     const nextErrors = {};
@@ -113,12 +113,36 @@ const UserDashBoard = () => {
       data["finalमोबाइल नंबर"]
   );
 
+  // ✅ Handle Step B completion (after POST success)
+  const handleStepBNext = (result) => {
+    console.log("Step B completed:", result);
+    setNotice("Step 1 सफलतापूर्वक सबमिट हो गया!");
+    setStep(1); // Move to Step C
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ✅ Handle Step B already completed (auto-skip to Step C)
+  const handleStepBAlreadyCompleted = (record) => {
+    console.log("Step B already completed, auto-skipping to Step C:", record);
+    setNotice("Step 1 पहले ही पूरा हो चुका है, Step 2 पर जा रहे हैं...");
+    setStep(1); // Move to Step C
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const component = [
-    <StepB data={data} update={update} error={errors} />,
-    <StepC data={data} update={update} error={errors} />,
-    <StepE data={data} update={update} error={errors} />,
-    <StepD data={data} update={update} error={errors} />,
+    <StepB
+      key="step-b"
+      data={data}
+      update={update}
+      error={errors}
+      onNext={handleStepBNext}
+      onCompleted={handleStepBAlreadyCompleted}
+    />,
+    <StepC key="step-c" data={data} update={update} error={errors} />,
+    <StepE key="step-e" data={data} update={update} error={errors} />,
+    <StepD key="step-d" data={data} update={update} error={errors} />,
     <StepF
+      key="step-f"
       data={data}
       update={update}
       onSave={saveDraft}
@@ -152,7 +176,6 @@ const UserDashBoard = () => {
               <h1>मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h1>
               <p className="nf-subtitle">प्रथम स्क्रीन : नामांकनकर्ता का विवरण</p>
             </div>
-           
           </header>
 
           {/* ── Stepper ── */}
@@ -177,6 +200,21 @@ const UserDashBoard = () => {
           {notice && (
             <div className="nf-notice" role="status">
               {notice}
+              <button
+                type="button"
+                onClick={() => setNotice("")}
+                style={{
+                  marginLeft: "12px",
+                  background: "none",
+                  border: "none",
+                  color: "inherit",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "16px"
+                }}
+              >
+                ✕
+              </button>
             </div>
           )}
 
@@ -185,28 +223,35 @@ const UserDashBoard = () => {
             className="nf-form-body"
             onSubmit={(event) => {
               event.preventDefault();
-              if (step < 4) next();
+              // Only use default next for steps other than Step B (0)
+              // Step B handles its own submission
+              if (step !== 0) {
+                next();
+              }
             }}
             noValidate
           >
             {component}
 
-            <div className="nf-navigation">
-              {step > 0 && (
-                <button
-                  type="button"
-                  className="nf-secondary"
-                  onClick={previous}
-                >
-                  ← Previous / पिछला
-                </button>
-              )}
-              {step < 4 && (
-                <button type="submit" className="nf-primary">
-                  Next / आगे बढ़ें →
-                </button>
-              )}
-            </div>
+            {/* ✅ Hide default navigation for Step B (it has its own button) */}
+            {step !== 0 && (
+              <div className="nf-navigation">
+                {step > 0 && (
+                  <button
+                    type="button"
+                    className="nf-secondary"
+                    onClick={previous}
+                  >
+                    ← Previous / पिछला
+                  </button>
+                )}
+                {step < 4 && (
+                  <button type="submit" className="nf-primary">
+                    Next / आगे बढ़ें →
+                  </button>
+                )}
+              </div>
+            )}
           </form>
         </div>
       </div>
