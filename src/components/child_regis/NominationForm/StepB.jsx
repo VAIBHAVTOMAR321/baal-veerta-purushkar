@@ -1,38 +1,181 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../login/AuthContext";
 
 const addressFields = ["ग्राम/मोहल्ला", "डाकघर", "जनपद", "विकासखण्ड/नगर निकाय", "पिन कोड"];
 
-const StepB = ({ data, update, error }) => {
+const StepB = ({ data, update, error, onNext, onCompleted }) => {
+  const { authFetch } = useAuth();
   const [resident, setResident] = useState(data?.resident || "");
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
   const [childMobileError, setChildMobileError] = useState("");
   const [nominator, setNominator] = useState(null);
+  const [applicantId, setApplicantId] = useState(data?.applicant_id || "");
   const [districts, setDistricts] = useState([]);
   const [projects, setProjects] = useState([]);
   const [currentProjects, setCurrentProjects] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingData, setLoadingData] = useState(true); // ✅ Loading state for initial data
   const [selectedDistrict, setSelectedDistrict] = useState(data?.permanentजनपद || "");
   const [currentSelectedDistrict, setCurrentSelectedDistrict] = useState(data?.currentजनपद || "");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const fetchStarted = useRef(false);
+  const dataFetchStarted = useRef(false); // ✅ Separate ref for data fetch
 
+  // ✅ Fetch existing part2 data on mount to check if completed
+  useEffect(() => {
+    if (dataFetchStarted.current) return;
+    dataFetchStarted.current = true;
+
+    const fetchPart2Data = async () => {
+      setLoadingData(true);
+      try {
+        const response = await authFetch(
+          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/"
+        );
+
+        if (!response.ok) {
+          console.log("No existing part2 data or error:", response.status);
+          setLoadingData(false);
+          return;
+        }
+
+        const result = await response.json();
+        console.log("Part2 GET response:", result);
+
+        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+          const record = result.data[0];
+
+          // ✅ Check if status is "completed"
+          if (record.status === "completed") {
+            console.log("Step B already completed, skipping to Step C");
+
+            // Auto-fill all data from the response
+            const fieldMapping = {
+              applicant_id: record.applicant_id,
+              childName: record.child_full_name,
+              fatherName: record.father_name,
+              motherName: record.mother_name,
+              guardianName: record.guardian_name,
+              birthDate: record.date_of_birth,
+              gender: record.gender,
+              resident: record.permanent_resident_uttarakhand,
+              "permanentग्राम/मोहल्ला": record.permanent_village,
+              "permanentडाकघर": record.permanent_post_office,
+              "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
+              "permanentजनपद": record.permanent_district,
+              "permanentपिन कोड": record.permanent_pincode,
+              "currentग्राम/मोहल्ला": record.current_village,
+              "currentडाकघर": record.current_post_office,
+              "currentविकासखण्ड/नगर निकाय": record.current_block_local_body,
+              "currentजनपद": record.current_district,
+              "currentपिन कोड": record.current_pincode,
+              schoolName: record.school_name,
+              schoolAddress: record.school_address,
+              currentClass: record.current_class,
+              childMobile: record.child_guardian_mobile,
+            };
+
+            // Update all fields
+            Object.entries(fieldMapping).forEach(([key, value]) => {
+              if (value) {
+                update({ target: { name: key, value: value, type: "text" } });
+              }
+            });
+
+            // Set local states
+            if (record.applicant_id) {
+              setApplicantId(record.applicant_id);
+            }
+            if (record.permanent_resident_uttarakhand) {
+              setResident(record.permanent_resident_uttarakhand);
+            }
+            if (record.permanent_district) {
+              setSelectedDistrict(record.permanent_district);
+            }
+            if (record.current_district) {
+              setCurrentSelectedDistrict(record.current_district);
+            }
+
+            // ✅ Call onCompleted to skip to Step C
+            setTimeout(() => {
+              if (onCompleted) {
+                onCompleted(record);
+              }
+            }, 500);
+          } else {
+            // Data exists but not completed, pre-fill the form
+            const fieldMapping = {
+              applicant_id: record.applicant_id,
+              childName: record.child_full_name,
+              fatherName: record.father_name,
+              motherName: record.mother_name,
+              guardianName: record.guardian_name,
+              birthDate: record.date_of_birth,
+              gender: record.gender,
+              resident: record.permanent_resident_uttarakhand,
+              "permanentग्राम/मोहल्ला": record.permanent_village,
+              "permanentडाकघर": record.permanent_post_office,
+              "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
+              "permanentजनपद": record.permanent_district,
+              "permanentपिन कोड": record.permanent_pincode,
+              "currentग्राम/मोहल्ला": record.current_village,
+              "currentडाकघर": record.current_post_office,
+              "currentविकासखण्ड/नगर निकाय": record.current_block_local_body,
+              "currentजनपद": record.current_district,
+              "currentपिन कोड": record.current_pincode,
+              schoolName: record.school_name,
+              schoolAddress: record.school_address,
+              currentClass: record.current_class,
+              childMobile: record.child_guardian_mobile,
+            };
+
+            Object.entries(fieldMapping).forEach(([key, value]) => {
+              if (value) {
+                update({ target: { name: key, value: value, type: "text" } });
+              }
+            });
+
+            if (record.applicant_id) setApplicantId(record.applicant_id);
+            if (record.permanent_resident_uttarakhand) setResident(record.permanent_resident_uttarakhand);
+            if (record.permanent_district) setSelectedDistrict(record.permanent_district);
+            if (record.current_district) setCurrentSelectedDistrict(record.current_district);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch part2 data:", err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchPart2Data();
+  }, [authFetch, update, onCompleted]);
+
+  // Fetch nominator-part1 data for applicant_id and auto-fill names
   useEffect(() => {
     if (fetchStarted.current) return;
     fetchStarted.current = true;
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
 
     const fetchNominator = async () => {
       try {
-        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await authFetch(
+          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/"
+        );
         if (!response.ok) return;
 
         const result = await response.json();
         const record = Array.isArray(result.data) ? result.data[0] : null;
         if (record) {
           setNominator(record);
+
+          // Only set applicant_id if not already set from part2
+          if (record.applicant_id && !applicantId) {
+            setApplicantId(record.applicant_id);
+            update({ target: { name: "applicant_id", value: record.applicant_id, type: "text" } });
+          }
+
           const category = String(record.nominator_category || "").toLowerCase();
           const fieldName = {
             self: "childName",
@@ -44,7 +187,7 @@ const StepB = ({ data, update, error }) => {
             legal_guardian: "guardianName",
             "विधिक अभिभावक": "guardianName",
           }[category];
-          if (fieldName && record.full_name) {
+          if (fieldName && record.full_name && !data[fieldName]) {
             update({ target: { name: fieldName, value: record.full_name, type: "text" } });
           }
         }
@@ -54,13 +197,15 @@ const StepB = ({ data, update, error }) => {
     };
 
     fetchNominator();
-  }, [update]);
+  }, [update, authFetch]);
 
   useEffect(() => {
     const fetchDistricts = async () => {
       setLoadingDistricts(true);
       try {
-        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/");
+        const response = await fetch(
+          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/"
+        );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
           setDistricts([...new Set(result.data.map((item) => item.district).filter(Boolean))]);
@@ -202,11 +347,146 @@ const StepB = ({ data, update, error }) => {
     }
   };
 
+  // Build the payload matching the API structure
+  const buildPayload = () => {
+    const finalApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id || "";
+
+    return {
+      applicant_id: finalApplicantId,
+      child_full_name: data.childName || "",
+      father_name: data.fatherName || "",
+      mother_name: data.motherName || "",
+      guardian_name: data.guardianName || "",
+      date_of_birth: data.birthDate || "",
+      gender: data.gender || "",
+      permanent_resident_uttarakhand: data.resident || "",
+      permanent_village: data["permanentग्राम/मोहल्ला"] || "",
+      permanent_post_office: data["permanentडाकघर"] || "",
+      permanent_block_local_body: data["permanentविकासखण्ड/नगर निकाय"] || "",
+      permanent_district: data["permanentजनपद"] || "",
+      permanent_pincode: data["permanentपिन कोड"] || "",
+      current_village: data["currentग्राम/मोहल्ला"] || "",
+      current_post_office: data["currentडाकघर"] || "",
+      current_district: data["currentजनपद"] || "",
+      current_block_local_body: data["currentविकासखण्ड/नगर निकाय"] || "",
+      current_pincode: data["currentपिन कोड"] || "",
+      school_name: data.schoolName || "",
+      school_address: data.schoolAddress || "",
+      current_class: data.currentClass || "",
+      child_guardian_mobile: data.childMobile || "",
+    };
+  };
+
+  // Validate form before submission
+  const validateForm = () => {
+    const errors = {};
+
+    const currentApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id;
+    if (!currentApplicantId) {
+      errors.applicant_id = "Applicant ID not found";
+    }
+
+    if (!data.childName?.trim()) errors.childName = "बच्चे का नाम आवश्यक है";
+    if (!data.fatherName?.trim()) errors.fatherName = "पिता का नाम आवश्यक है";
+    if (!data.motherName?.trim()) errors.motherName = "माता का नाम आवश्यक है";
+    if (!data.birthDate) errors.birthDate = "जन्म तिथि आवश्यक है";
+    if (!data.gender) errors.gender = "लिंग चुनें";
+    if (!data.resident) errors.resident = "यह फ़ील्ड आवश्यक है";
+
+    if (data.resident === "हाँ") {
+      if (!data["permanentग्राम/मोहल्ला"]?.trim()) errors["permanentग्राम/मोहल्ला"] = "आवश्यक है";
+      if (!data["permanentडाकघर"]?.trim()) errors["permanentडाकघर"] = "आवश्यक है";
+      if (!data["permanentजनपद"]) errors["permanentजनपद"] = "जनपद चुनें";
+      if (!data["permanentविकासखण्ड/नगर निकाय"]) errors["permanentविकासखण्ड/नगर निकाय"] = "विकासखण्ड चुनें";
+      if (!data["permanentपिन कोड"]?.trim()) errors["permanentपिन कोड"] = "पिन कोड आवश्यक है";
+    }
+
+    if (data.childMobile && data.childMobile.length !== 10) {
+      errors.childMobile = "मोबाइल नंबर 10 अंकों का होना चाहिए";
+    }
+
+    return errors;
+  };
+
+  // Submit handler for Next button
+  const handleSubmit = async () => {
+    setSubmitError("");
+
+    const currentApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id;
+    if (!currentApplicantId) {
+      setSubmitError("Applicant ID नहीं मिला। कृपया पहले Step 1 पूरा करें।");
+      return false;
+    }
+
+    if (resident === "नहीं") {
+      setSubmitError("आप इस पुरस्कार के लिए eligible नहीं हैं");
+      return false;
+    }
+
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      if (error && typeof error === "object") {
+        Object.keys(validationErrors).forEach((key) => {
+          error[key] = validationErrors[key];
+        });
+      }
+      setSubmitError("कृपया सभी आवश्यक फ़ील्ड भरें");
+      return false;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const payload = buildPayload();
+      console.log("Submitting payload:", payload);
+
+      const response = await authFetch(
+        "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        let errorMsg = "Submission failed";
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.message || errorData.error || errorData.detail || JSON.stringify(errorData) || errorMsg;
+        } catch (e) {
+          errorMsg = `Server error: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMsg);
+      }
+
+      const result = await response.json();
+      console.log("Submit response:", result);
+
+      if (result.success) {
+        if (onNext) {
+          onNext(result);
+        }
+        return true;
+      } else {
+        throw new Error(result.message || "Submission failed");
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+      setSubmitError(err.message || "कुछ गलत हो गया, कृपया पुनः प्रयास करें");
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const isNotUttarakhand = resident === "नहीं";
 
   const input = (label, name, options = {}) => {
     const isSelect = Array.isArray(options.options);
-    const disabled = isNotUttarakhand && name !== "resident" ? true : (options.disabled || false);
+    const disabled =
+      isNotUttarakhand && name !== "resident"
+        ? true
+        : options.disabled || false;
     let value = data[name] || "";
 
     if (name === "childName" && isSelf) value = nominatorName;
@@ -221,20 +501,79 @@ const StepB = ({ data, update, error }) => {
 
     return (
       <div className="nf-field">
-        <label htmlFor={`nf-${name}`}>{label}{options.required && <span> *</span>}</label>
+        <label htmlFor={`nf-${name}`}>
+          {label}
+          {options.required && <span> *</span>}
+        </label>
         {isSelect ? (
-          <select id={`nf-${name}`} name={name} value={value} onChange={handleChange} disabled={disabled}>
+          <select
+            id={`nf-${name}`}
+            name={name}
+            value={value}
+            onChange={handleChange}
+            disabled={disabled}
+          >
             <option value="">{options.placeholder || "चयन करें"}</option>
-            {options.options.map((option) => <option key={option} value={option}>{option}</option>)}
+            {options.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
           </select>
         ) : (
-          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} placeholder={options.placeholder} onChange={handleChange} disabled={disabled} {...extraProps} />
+          <input
+            id={`nf-${name}`}
+            name={name}
+            type={options.type || "text"}
+            value={value}
+            placeholder={options.placeholder}
+            onChange={handleChange}
+            disabled={disabled}
+            {...extraProps}
+          />
         )}
         {error[name] && <small className="nf-error">{error[name]}</small>}
-        {name === "childMobile" && childMobileError && <small className="nf-error">{childMobileError}</small>}
+        {name === "childMobile" && childMobileError && (
+          <small className="nf-error">{childMobileError}</small>
+        )}
       </div>
     );
   };
+
+  // ✅ Show loading spinner while fetching initial data
+  if (loadingData) {
+    return (
+      <section className="nf-card nf-step-b">
+        <div className="nf-card-heading">
+          <span>Step 1</span>
+          <h2>नामांकित बच्चे का व्यक्तिगत विवरण (Nominee Details)</h2>
+        </div>
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "60px 20px",
+          flexDirection: "column",
+          gap: "16px"
+        }}>
+          <div style={{
+            width: "40px",
+            height: "40px",
+            border: "4px solid #e0e0e0",
+            borderTopColor: "#28a745",
+            borderRadius: "50%",
+            animation: "spin 0.8s linear infinite"
+          }}></div>
+          <p style={{ color: "#666", fontSize: "16px" }}>डेटा लोड हो रहा है...</p>
+        </div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </section>
+    );
+  }
 
   return (
     <section className="nf-card nf-step-b">
@@ -242,36 +581,107 @@ const StepB = ({ data, update, error }) => {
         <span>Step 1</span>
         <h2>नामांकित बच्चे का व्यक्तिगत विवरण (Nominee Details)</h2>
       </div>
+
+      {(applicantId || data?.applicant_id || nominator?.applicant_id) && (
+        <div style={{
+          padding: "8px 12px",
+          backgroundColor: "#e7f3ff",
+          borderRadius: "4px",
+          marginBottom: "16px",
+          fontSize: "14px",
+          color: "#0066cc"
+        }}>
+          Applicant ID: {applicantId || data?.applicant_id || nominator?.applicant_id}
+        </div>
+      )}
+
       {isNotUttarakhand && (
-        <div className="nf-ineligible-message">आप इस लिए eligible नहीं हो</div>
+        <div className="nf-ineligible-message">
+          आप इस लिए eligible नहीं हो (केवल उत्तराखण्ड के स्थायी निवासी)
+        </div>
       )}
       <div className="nf-grid">
-        {input("1. बच्चे का पूरा नाम", "childName", { required: true, placeholder: "बच्चे का पूरा नाम", disabled: isSelf })}
-        {input("2. पिता का नाम", "fatherName", { required: true, placeholder: "पिता का पूरा नाम", disabled: isFather })}
-        {input("3. माता का नाम", "motherName", { required: true, placeholder: "माता का पूरा नाम", disabled: isMother })}
-        {input("4. अभिभावक का नाम (यदि लागू हो)", "guardianName", { placeholder: "अभिभावक का पूरा नाम", disabled: isLegalGuardian })}
-        {input("5. बच्चे/अभिभावक का मोबाइल नंबर", "childMobile", { type: "tel", placeholder: "10 अंकों का मोबाइल नंबर" })}
-        {input("6. जन्म तिथि", "birthDate", { required: true, type: "date" })}
-        {input("7. लिंग", "gender", { required: true, options: ["बालक", "बालिका", "अन्य"], placeholder: "लिंग चुनें" })}
-        {input("8. उत्तराखण्ड का स्थायी निवासी", "resident", { required: true, options: ["हाँ", "नहीं"], placeholder: "चुनें" })}
+        {input("1. बच्चे का पूरा नाम", "childName", {
+          required: true,
+          placeholder: "बच्चे का पूरा नाम",
+          disabled: isSelf,
+        })}
+        {input("2. पिता का नाम", "fatherName", {
+          required: true,
+          placeholder: "पिता का पूरा नाम",
+          disabled: isFather,
+        })}
+        {input("3. माता का नाम", "motherName", {
+          required: true,
+          placeholder: "माता का पूरा नाम",
+          disabled: isMother,
+        })}
+        {input("4. अभिभावक का नाम (यदि लागू हो)", "guardianName", {
+          placeholder: "अभिभावक का पूरा नाम",
+          disabled: isLegalGuardian,
+        })}
+        {input("5. बच्चे/अभिभावक का मोबाइल नंबर", "childMobile", {
+          type: "tel",
+          placeholder: "10 अंकों का मोबाइल नंबर",
+        })}
+        {input("6. जन्म तिथि", "birthDate", {
+          required: true,
+          type: "date",
+        })}
+        {input("7. लिंग", "gender", {
+          required: true,
+          options: ["बालक", "बालिका", "अन्य"],
+          placeholder: "लिंग चुनें",
+        })}
+        {input("8. उत्तराखण्ड का स्थायी निवासी", "resident", {
+          required: true,
+          options: ["हाँ", "नहीं"],
+          placeholder: "चुनें",
+        })}
       </div>
       <fieldset className="nf-subsection nf-subsection-left">
-        <legend>9. स्थायी निवास का पता <span>*</span></legend>
+        <legend>
+          9. स्थायी निवास का पता <span>*</span>
+        </legend>
         <div className="nf-grid nf-address-grid">
           {addressFields.map((field) => {
             if (field === "जनपद") {
-              return input("जनपद", `permanent${field}`, { required: true, options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts });
+              return input("जनपद", `permanent${field}`, {
+                required: true,
+                options: districts,
+                placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें",
+                disabled: loadingDistricts,
+              });
             }
             if (field === "विकासखण्ड/नगर निकाय") {
-              return input("विकासखण्ड/नगर निकाय", `permanent${field}`, { required: true, options: projects, placeholder: !selectedDistrict ? "पहले जनपद चुनें" : loadingProjects ? "लोड हो रहा है..." : projects.length === 0 ? "कोई विकासखण्ड उपलब्ध नहीं" : "विकासखण्ड/नगर निकाय चुनें", disabled: loadingProjects || !selectedDistrict || projects.length === 0 });
+              return input("विकासखण्ड/नगर निकाय", `permanent${field}`, {
+                required: true,
+                options: projects,
+                placeholder: !selectedDistrict
+                  ? "पहले जनपद चुनें"
+                  : loadingProjects
+                  ? "लोड हो रहा है..."
+                  : projects.length === 0
+                  ? "कोई विकासखण्ड उपलब्ध नहीं"
+                  : "विकासखण्ड/नगर निकाय चुनें",
+                disabled: loadingProjects || !selectedDistrict || projects.length === 0,
+              });
             }
-            return input(field, `permanent${field}`, { required: true, placeholder: `${field} दर्ज करें` });
+            return input(field, `permanent${field}`, {
+              required: true,
+              placeholder: `${field} दर्ज करें`,
+            });
           })}
         </div>
       </fieldset>
       <div className="nf-field nf-checkbox-field">
         <label>
-          <input type="checkbox" checked={sameAsPermanent} onChange={handleSameAsPermanent} disabled={isNotUttarakhand} />
+          <input
+            type="checkbox"
+            checked={sameAsPermanent}
+            onChange={handleSameAsPermanent}
+            disabled={isNotUttarakhand}
+          />
           स्थायी पते के समान
         </label>
       </div>
@@ -280,20 +690,108 @@ const StepB = ({ data, update, error }) => {
         <div className="nf-grid nf-address-grid">
           {addressFields.map((field) => {
             if (field === "जनपद") {
-              return input("जनपद", `current${field}`, { options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts });
+              return input("जनपद", `current${field}`, {
+                options: districts,
+                placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें",
+                disabled: loadingDistricts,
+              });
             }
             if (field === "विकासखण्ड/नगर निकाय") {
-              return input("विकासखण्ड/नगर निकाय", `current${field}`, { options: currentProjects, placeholder: !currentSelectedDistrict ? "पहले जनपद चुनें" : loadingProjects ? "लोड हो रहा है..." : currentProjects.length === 0 ? "कोई विकासखण्ड उपलब्ध नहीं" : "विकासखण्ड/नगर निकाय चुनें", disabled: loadingProjects || !currentSelectedDistrict || currentProjects.length === 0 });
+              return input("विकासखण्ड/नगर निकाय", `current${field}`, {
+                options: currentProjects,
+                placeholder: !currentSelectedDistrict
+                  ? "पहले जनपद चुनें"
+                  : loadingProjects
+                  ? "लोड हो रहा है..."
+                  : currentProjects.length === 0
+                  ? "कोई विकासखण्ड उपलब्ध नहीं"
+                  : "विकासखण्ड/नगर निकाय चुनें",
+                disabled: loadingProjects || !currentSelectedDistrict || currentProjects.length === 0,
+              });
             }
-            return input(field, `current${field}`, { placeholder: `${field} दर्ज करें` });
+            return input(field, `current${field}`, {
+              placeholder: `${field} दर्ज करें`,
+            });
           })}
         </div>
       </fieldset>
       <div className="nf-grid">
-        {input("11. विद्यालय का नाम", "schoolName", { placeholder: "विद्यालय का नाम" })}
-        {input("12. विद्यालय का पता", "schoolAddress", { placeholder: "विद्यालय का पता" })}
-        {input("13. वर्तमान कक्षा", "currentClass", { placeholder: "कक्षा दर्ज करें" })}
+        {input("11. विद्यालय का नाम", "schoolName", {
+          placeholder: "विद्यालय का नाम",
+        })}
+        {input("12. विद्यालय का पता", "schoolAddress", {
+          placeholder: "विद्यालय का पता",
+        })}
+        {input("13. वर्तमान कक्षा", "currentClass", {
+          placeholder: "कक्षा दर्ज करें",
+        })}
       </div>
+
+      {submitError && (
+        <div className="nf-submit-error" style={{
+          color: "#dc3545",
+          padding: "12px",
+          marginTop: "16px",
+          backgroundColor: "#f8d7da",
+          borderRadius: "4px",
+          border: "1px solid #f5c6cb"
+        }}>
+          {submitError}
+        </div>
+      )}
+
+      <div className="nf-step-actions" style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        marginTop: "24px",
+        gap: "12px"
+      }}>
+        <button
+          type="button"
+          className="nf-btn nf-btn-next"
+          onClick={handleSubmit}
+          disabled={submitting || isNotUttarakhand}
+          style={{
+            padding: "12px 32px",
+            backgroundColor: isNotUttarakhand ? "#ccc" : submitting ? "#6c757d" : "#28a745",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            cursor: isNotUttarakhand ? "not-allowed" : submitting ? "wait" : "pointer",
+            fontSize: "16px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+          {submitting ? (
+            <>
+              <span style={{
+                width: "18px",
+                height: "18px",
+                border: "2px solid #fff",
+                borderTopColor: "transparent",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+                display: "inline-block"
+              }}></span>
+              सबमिट हो रहा है...
+            </>
+          ) : (
+            <>
+              अगला चरण
+              <span>→</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </section>
   );
 };
