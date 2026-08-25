@@ -66,7 +66,8 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
     if (index === 9) return indices;
     const isFirApplicable = index !== 6 || String(data.firRegistered || "").trim() === "हाँ";
     const isSchoolApplicable = index !== 10 || hasValue(data.currentClass);
-    if (isFirApplicable && isSchoolApplicable) indices.push(index);
+    const isMediaApplicable = index !== 7 || String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+    if (isFirApplicable && isSchoolApplicable && isMediaApplicable) indices.push(index);
     return indices;
   }, []);
 
