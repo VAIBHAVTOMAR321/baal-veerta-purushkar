@@ -68,7 +68,59 @@
 .nf-pv-block { margin-bottom: 8px; }
 .nf-pv-block-label { font-weight: 700; margin-top:22px; text-align: justify; font-size: 0.8rem; color: #000; margin-bottom: 3px; }
 .nf-pv-form-id { font-size: 0.74rem; color: #222; margin-bottom: 4px; font-weight: 600; }
+/* ═══════════════════════════════════════════════════
+   Declaration box
+   ═══════════════════════════════════════════════════ */
+.nf-pv-decl-box {
+  border: 1px solid #000;
+  padding: 10px 12px;
+  font-size: 0.74rem;
+  line-height: 1.65;
+  min-height: 80px;
+}
 
+.nf-pv-decl-box p {
+  margin: 0 0 6px;
+  text-align: justify;
+}
+
+.nf-pv-decl-title {
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 4px !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* view link row */
+.nf-pv-decl-view {
+  margin-bottom: 4px;
+}
+
+.nf-pv-dstatus.has {
+  color: #0d47a1;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+/* signature — right aligned */
+.nf-pv-decl-sign {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.nf-pv-sign-name {
+  font-weight: 700;
+  color: #000;
+  font-size: 0.78rem;
+  border-top: 1px solid #000;
+  padding-top: 2px;
+  min-width: 160px;
+  text-align: center;
+}
 /* ═══════════════════════════════════════════════════
    PHOTO ROW
    ═══════════════════════════════════════════════════ */

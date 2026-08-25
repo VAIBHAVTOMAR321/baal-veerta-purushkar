@@ -313,21 +313,57 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
             </table>
           </div>
 
-          {/* ═══ 4. घोषणा ═══ */}
+                   {/* ═══ 4. घोषणा ═══ */}
           <div className="nf-pv-block">
             <div className="nf-pv-block-label">घोषणा</div>
             <div className="nf-pv-decl-box">
+              {/* ── नामांकनकर्ता की घोषणा ── */}
+              <p className="nf-pv-decl-title">नामांकनकर्ता की घोषणा:</p>
               <p>
-                मेरे द्वारा उपरोक्त भरी गई समस्त जानकारी पूर्णतयः सत्य एवं सही है।
-                यदि कोई जानकारी उपरोक्त में अंकित है और गलत पाई जाती है तो विभाग द्वारा
-                नियमानुसार कार्यवाही की जा सकती है जिसकी सम्पूर्ण जिम्मेदारी आवेदक की होगी।
+                मेरे द्वारा उपरोक्त भरी गई समस्त जानकारी पूर्णतयः सत्य एवं
+                सही है। यदि कोई जानकारी उपरोक्त में अंकित है और गलत पाई
+                जाती है तो विभाग द्वारा नियमानुसार कार्यवाही की जा
+                सकती है जिसकी सम्पूर्ण जिम्मेदारी आवेदक की होगी।
               </p>
-              <div className="nf-pv-decl-foot">
-                {data?.declarationDocument && <span className="nf-pv-dstatus has">view</span>}
+              {data?.declarationDocument && (
+                <div className="nf-pv-decl-view">
+                  <span className="nf-pv-dstatus has">view</span>
+                </div>
+              )}
+              <div className="nf-pv-decl-sign">
                 <span className="nf-pv-sign-name">{data?.childName || "-"}</span>
+              </div>
+
+              {/* ── अभिभावक की घोषणा / सहमति ── */}
+              <p className="nf-pv-decl-title" style={{ marginTop: "14px" }}>
+                अभिभावक की घोषणा / सहमति:
+              </p>
+              <p>
+                मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल
+                विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी
+                एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस
+                विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन
+                कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा
+                भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त
+                किया जा सकता है तथा नियमानुसार आवश्यक कार्यवाही की
+                जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम,
+                फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग
+                विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं
+                आधिकारिक प्रयोजनों के लिए किया जा सकेगा।
+              </p>
+              {data?.parentDeclarationDocument && (
+                <div className="nf-pv-decl-view">
+                  <span className="nf-pv-dstatus has">view</span>
+                </div>
+              )}
+              <div className="nf-pv-decl-sign">
+                <span className="nf-pv-sign-name">
+                  {data?.guardianName || data?.fatherName || "-"}
+                </span>
               </div>
             </div>
           </div>
+          
         </div>
 
         {/* ── Footer ── */}
