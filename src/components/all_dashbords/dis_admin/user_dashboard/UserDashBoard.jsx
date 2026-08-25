@@ -63,6 +63,8 @@ const UserDashBoard = () => {
   const [stepCSubmitTrigger, setStepCSubmitTrigger] = useState(0);
   const stepECheckedRef = useRef(false);
   const [stepESubmitTrigger, setStepESubmitTrigger] = useState(0);
+  const stepDCheckedRef = useRef(false);
+  const [stepDSubmitTrigger, setStepDSubmitTrigger] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -124,6 +126,10 @@ const UserDashBoard = () => {
   };
 
   const next = () => {
+    if (step === 3) {
+      setStepDSubmitTrigger((current) => current + 1);
+      return;
+    }
     if (validate(step)) {
       setStep((current) => Math.min(current + 1, steps.length - 1));
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -210,6 +216,21 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleStepDSubmitSuccess = () => {
+    stepDCheckedRef.current = true;
+    setNotice("Step 4 सफलतापूर्वक सबमिट हो गया!");
+    setStep(4);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleStepDAlreadyCompleted = (record) => {
+    console.log("Step D already completed, auto-skipping to Step 5:", record);
+    stepDCheckedRef.current = true;
+    setNotice("Step 4 पहले ही पूरा हो चुका है, Step 5 पर जा रहे हैं...");
+    setStep(4);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const component = [
     <StepB
       key="step-b"
@@ -239,7 +260,16 @@ const UserDashBoard = () => {
       isStepEChecked={stepECheckedRef.current}
       externalSubmitTrigger={stepESubmitTrigger}
     />,
-    <StepD key="step-d" data={data} update={update} error={errors} />,
+    <StepD
+      key="step-d"
+      data={data}
+      update={update}
+      error={errors}
+      onSubmitSuccess={handleStepDSubmitSuccess}
+      onCompleted={handleStepDAlreadyCompleted}
+      isStepDChecked={stepDCheckedRef.current}
+      externalSubmitTrigger={stepDSubmitTrigger}
+    />,
     <StepF
       key="step-f"
       data={data}

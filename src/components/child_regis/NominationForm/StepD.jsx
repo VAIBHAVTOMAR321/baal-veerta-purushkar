@@ -1,5 +1,9 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../login/AuthContext";
 import { FaEye } from "react-icons/fa";
+
+const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/";
+const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
 
 const documents = [
   ["नामांकनकर्ता का पहचान पत्र", "अनिवार्य"],
@@ -9,9 +13,9 @@ const documents = [
   ["वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण", "अनिवार्य"],
   ["बच्चे का पासपोर्ट आकार का फोटो", "अनिवार्य"],
   ["FIR/पुलिस रिपोर्ट", "जहां लागू हो"],
-  ["समाचार पत्र की कटिंग/मीडिया रिपोर्ट", "यदि उपलब्ध हो"],
+  ["घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक", "जहां लागू हो"],
   ["प्रत्यक्षदर्शियों के बयान/प्रमाण", "यदि लागू हो"],
-  ["घटना से संबंधित फोटो/वीडियो", "यदि उपलब्ध हो"],
+  ["घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक", "जहां लागू हो"],
   ["विद्यालय का प्रमाण पत्र", "यदि लागू हो"],
   ["अन्य सहायक अभिलेख", "यदि लागू हो"],
 ];
@@ -20,9 +24,98 @@ const documentHints = {
   10: "विद्यालय द्वारा जारी प्रमाण पत्र, जिसमें विद्यार्थी का नाम, कक्षा और विद्यालय का नाम हो।",
 };
 
-const StepD = ({ data, update, error }) => {
+const documentFieldMap = [
+  "nominator_id_proof",
+  "child_aadhaar_identity",
+  "permanent_residence_certificate",
+  "child_birth_age_certificate",
+  "bravery_incident_description",
+  "child_passport_photo",
+  "fir_police_report",
+  "media_report",
+  "eyewitness_statements",
+  "incident_photo_video_url",
+  "school_certificate",
+  "otherSupporting_documents",
+];
+
+const hasValue = (value) => String(value || "").trim() !== "";
+const getDocumentUrl = (value) => {
+  if (!hasValue(value)) return "";
+  if (/^https?:\/\//i.test(String(value))) return String(value);
+  return `${mediaBaseUrl}/${String(value).replace(/^\/+/, "")}`;
+};
+const normalizeVideoUrl = (value) => {
+  const trimmedValue = String(value || "").trim();
+  if (!trimmedValue) return "";
+  return /^https?:\/\//i.test(trimmedValue) ? trimmedValue : `https://${trimmedValue}`;
+};
+
+const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDChecked, externalSubmitTrigger }) => {
+  const { authFetch } = useAuth();
   const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
   const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+
+  const [loadingData, setLoadingData] = useState(true);
+  const [submittingIndex, setSubmittingIndex] = useState(null);
+  const [alertInfo, setAlertInfo] = useState(null);
+  const [pendingDocuments, setPendingDocuments] = useState({});
+  const [hasPart5Record, setHasPart5Record] = useState(false);
+  const dataFetchStarted = useRef(false);
+  const visibleDocumentIndices = documents.reduce((indices, _, index) => {
+    if (index === 9) return indices;
+    const isFirApplicable = index !== 6 || String(data.firRegistered || "").trim() === "हाँ";
+    const isSchoolApplicable = index !== 10 || hasValue(data.currentClass);
+    if (isFirApplicable && isSchoolApplicable) indices.push(index);
+    return indices;
+  }, []);
+
+  useEffect(() => {
+    if (dataFetchStarted.current) return;
+    dataFetchStarted.current = true;
+    const fetchPart5Data = async () => {
+      try {
+        const response = await authFetch(endpoint);
+        if (!response.ok) return;
+        const result = await response.json();
+        const responseData = result?.data ?? result;
+        const record = Array.isArray(responseData) ? responseData[0] : responseData;
+        if (!record) return;
+
+        const applicantId = data.applicant_id || localStorage.getItem("applicantId") || "";
+        const isMatchingRecord = hasValue(record.applicant_id)
+          && (!applicantId || String(record.applicant_id) === String(applicantId));
+        if (isMatchingRecord) {
+          setHasPart5Record(true);
+        }
+
+        const fieldMapping = {};
+        documentFieldMap.forEach((field, index) => {
+          if (record[field] !== undefined && record[field] !== null && String(record[field]).trim() !== "") {
+            fieldMapping[`document${index}`] = record[field];
+          }
+        });
+
+        Object.entries(fieldMapping).forEach(([name, value]) => {
+          update({ target: { name, value, type: "text" } });
+        });
+
+        if (isMatchingRecord && !isStepDChecked && String(record.status || "").trim().toLowerCase() === "completed") {
+          onCompleted?.(record);
+        }
+
+      } catch (fetchError) {
+        console.error("Failed to fetch Part 5 data:", fetchError);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchPart5Data();
+  }, [authFetch, data.applicant_id, isStepDChecked, onCompleted, update]);
+
+  useEffect(() => {
+    if (externalSubmitTrigger) handleNext();
+  }, [externalSubmitTrigger]);
 
   const handleFileChange = (e, index) => {
     const file = e.target.files?.[0];
@@ -49,63 +142,290 @@ const StepD = ({ data, update, error }) => {
     }
 
     update(e);
+    setPendingDocuments((prev) => ({ ...prev, [index]: file }));
+  };
+
+  const handleRemoveDocument = (index) => {
+    const confirmed = window.confirm("क्या आप यह दस्तावेज़ हटाना चाहते हैं?");
+    if (!confirmed) return;
+    update({ target: { name: `document${index}`, value: null, type: "text" } });
+    setPendingDocuments((prev) => ({ ...prev, [index]: null }));
+    if (!hasPart5Record) return;
+    handleDocumentSubmit(index, null);
+  };
+
+  const handleUrlChange = (e, index) => {
+    update(e);
+    setPendingDocuments((prev) => ({ ...prev, [index]: e.target.value }));
   };
 
   const handleViewFile = (file) => {
     if (!file) return;
-
-    const fileUrl = URL.createObjectURL(file);
-
-    window.open(fileUrl, "_blank", "noopener,noreferrer");
-
-    setTimeout(() => {
-      URL.revokeObjectURL(fileUrl);
-    }, 10000);
+    if (file instanceof File) {
+      const fileUrl = URL.createObjectURL(file);
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => {
+        URL.revokeObjectURL(fileUrl);
+      }, 10000);
+    } else if (typeof file === "string") {
+      window.open(getDocumentUrl(file), "_blank", "noopener,noreferrer");
+    }
   };
+
+  const buildFormData = (index, value) => {
+    const formData = new FormData();
+    const applicantId = data.applicant_id || localStorage.getItem("applicantId") || "";
+
+    if (!applicantId) return null;
+
+    formData.append("applicant_id", applicantId);
+    if (index === 9) formData.append(documentFieldMap[index], String(value));
+    else formData.append(documentFieldMap[index], value);
+
+    return formData;
+  };
+
+  const validateDocuments = () => {
+    const errors = {};
+    visibleDocumentIndices.forEach((index) => {
+      const applicability = documents[index][1];
+      if (index !== 7 && applicability === "अनिवार्य" && !data[`document${index}`]) {
+        errors[`document${index}`] = "यह दस्तावेज़ अनिवार्य है";
+      }
+    });
+    const mediaRequired = String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+    if (mediaRequired && !hasValue(data.document7) && !hasValue(data.document9)) {
+      errors.document7 = "समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक में से कोई एक आवश्यक है";
+      errors.document9 = errors.document7;
+    }
+    return errors;
+  };
+
+  const handleDocumentSubmit = async (index, valueOverride) => {
+    const value = valueOverride === undefined ? pendingDocuments[index] : valueOverride;
+    if (value === undefined || (typeof value === "string" && !hasValue(value))) return;
+    if (index === 9) {
+      try {
+        new URL(normalizeVideoUrl(value));
+      } catch {
+        setAlertInfo({ type: "error", message: "कृपया मान्य वीडियो लिंक दर्ज करें।" });
+        return;
+      }
+    }
+
+    setSubmittingIndex(index);
+    setAlertInfo(null);
+    try {
+      const applicantId = data.applicant_id || localStorage.getItem("applicantId") || "";
+      if (!applicantId) throw new Error("Applicant ID नहीं मिला। कृपया पहले Step 1 पूरा करें।");
+
+      const method = hasPart5Record ? "PUT" : "POST";
+      const requestOptions = value === null
+        ? {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              applicant_id: applicantId,
+              [documentFieldMap[index]]: null,
+            }),
+          }
+        : index === 9
+        ? {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              applicant_id: applicantId,
+              [documentFieldMap[index]]: normalizeVideoUrl(value),
+            }),
+          }
+        : { method, body: buildFormData(index, value) };
+      const response = await authFetch(endpoint, requestOptions);
+
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (response.ok && (result.success === true || result.success === undefined)) {
+        setAlertInfo({ type: "success", message: "दस्तावेज़ सफलतापूर्वक सेव हो गया! ✅" });
+        setPendingDocuments((prev) => ({ ...prev, [index]: undefined }));
+        setHasPart5Record(true);
+      } else {
+        const errorMsg = (typeof result === "object" ? (result.detail || result.message || result.error) : result) || "सबमिशन में त्रुटि हुई।";
+        setAlertInfo({ type: "error", message: typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg) });
+      }
+    } catch (err) {
+      console.error("Document submit error:", err);
+      setAlertInfo({ type: "error", message: err.message || "सबमिशन में त्रुटि हुई। कृपया पुनः प्रयास करें।" });
+    } finally {
+      setSubmittingIndex(null);
+    }
+  };
+
+  const handleNext = () => {
+    const validationErrors = validateDocuments();
+    if (Object.keys(validationErrors).length) {
+      setAlertInfo({ type: "error", message: "कृपया सभी अनिवार्य दस्तावेज़ अपलोड और सेव करें।" });
+      return;
+    }
+    onSubmitSuccess?.();
+  };
+
+  if (loadingData) {
+    return (
+      <section className="nf-card">
+        <div className="nf-card-heading">
+          <span>Step 4</span>
+          <h2>आवश्यक अभिलेख अपलोड (Document Upload)</h2>
+        </div>
+        <p>डेटा लोड हो रहा है...</p>
+      </section>
+    );
+  }
 
   return (
     <section className="nf-card">
+      {alertInfo && (
+        <div
+          className="nf-alert"
+          style={{
+            padding: "1rem 1.25rem",
+            marginBottom: "1.5rem",
+            borderRadius: "8px",
+            border: alertInfo.type === "success"
+              ? "1px solid #22c55e"
+              : "1px solid #ef4444",
+            backgroundColor: alertInfo.type === "success"
+              ? "#f0fdf4"
+              : "#fef2f2",
+            color: alertInfo.type === "success" ? "#166534" : "#991b1b",
+            fontSize: "1rem",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            animation: "nfFadeIn 0.3s ease",
+          }}
+        >
+          <span>{alertInfo.message}</span>
+          <button
+            type="button"
+            onClick={() => setAlertInfo(null)}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "1.25rem",
+              cursor: "pointer",
+              color: alertInfo.type === "success" ? "#166534" : "#991b1b",
+              fontWeight: "bold",
+              lineHeight: 1,
+              padding: "0 0.25rem",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="nf-card-heading">
         <span>Step 4</span>
         <h2>आवश्यक अभिलेख अपलोड (Document Upload)</h2>
       </div>
 
       <div className="nf-upload-list">
-        {documents.map(([label, applicability], index) => {
+        {visibleDocumentIndices.map((index, displayIndex) => {
+          const [label, applicability] = documents[index];
           const isPhotoVideoLink = index === 9;
+          const isCombinedMedia = index === 7;
+          const mediaRequired = String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
           const isSchoolCertificate = index === 10;
           const file = data[`document${index}`];
+          const pendingFile = pendingDocuments[index];
+          const isSubmitting = submittingIndex === index;
 
           return (
             <div className="nf-upload" key={label}>
               <div className="nf-upload-header">
                 <div>
                   <strong>
-                    {index + 1}. {label}
+                    {displayIndex + 1}. {label}
                   </strong>
-
                   <span
                     className={`nf-tag ${
-                      applicability === "अनिवार्य" ? "required" : ""
+                      applicability === "अनिवार्य" || (isCombinedMedia && mediaRequired) ? "required" : ""
                     }`}
                   >
-                    {applicability}
+                    {isCombinedMedia && mediaRequired ? "अनिवार्य" : applicability}
                   </span>
                 </div>
 
-                {file && !isPhotoVideoLink && (
-                  <button
-                    type="button"
-                    className="nf-view-file"
-                    onClick={() => handleViewFile(file)}
-                    title="View Document"
-                  >
-                    <FaEye />
-                  </button>
+                {file && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {!isPhotoVideoLink && (
+                      <button
+                        type="button"
+                        className="nf-view-file"
+                        onClick={() => handleViewFile(file)}
+                        title="View Document"
+                      >
+                        <FaEye />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="nf-secondary"
+                      onClick={() => handleRemoveDocument(index)}
+                      disabled={isSubmitting}
+                    >
+                      हटाएं
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {isPhotoVideoLink ? (
+              {isCombinedMedia ? (
+                <div className="nf-field">
+                  <label htmlFor="nf-document-7-file">समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो</label>
+                  <input
+                    id="nf-document-7-file"
+                    name="document7"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => handleFileChange(e, 7)}
+                    disabled={isSubmitting}
+                  />
+                  {data.document7 && <small className="nf-file-name">{typeof data.document7 === "string" ? data.document7 : data.document7.name}</small>}
+                  {data.document7 && (
+                    <button type="button" className="nf-secondary" onClick={() => handleRemoveDocument(7)} disabled={isSubmitting}>हटाएं</button>
+                  )}
+                  <label htmlFor="nf-document-9-url">वीडियो लिंक</label>
+                  <input
+                    id="nf-document-9-url"
+                    name="document9"
+                    type="url"
+                    placeholder="https://example.com/photo-or-video-link"
+                    value={data.document9 || ""}
+                    onChange={(e) => handleUrlChange(e, 9)}
+                    disabled={submittingIndex === 9}
+                  />
+                  {data.document9 && (
+                    <button type="button" className="nf-secondary" onClick={() => handleRemoveDocument(9)} disabled={submittingIndex === 9}>हटाएं</button>
+                  )}
+                  <small>कम से कम एक विकल्प अपलोड करना अनिवार्य है।</small>
+                  {error.document7 && <small className="nf-error">{error.document7}</small>}
+                  {pendingDocuments[7] && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(7)} disabled={isSubmitting}>
+                      {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
+                  {pendingDocuments[9] && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(9)} disabled={submittingIndex === 9}>
+                      {submittingIndex === 9 ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
+                </div>
+              ) : isPhotoVideoLink ? (
                 <div className="nf-field">
                   <input
                     id={`nf-document-${index}`}
@@ -113,7 +433,8 @@ const StepD = ({ data, update, error }) => {
                     type="url"
                     placeholder="https://example.com/photo-or-video-link"
                     value={file || ""}
-                    onChange={update}
+                    onChange={(e) => handleUrlChange(e, index)}
+                    disabled={isSubmitting}
                     aria-describedby={`nf-document-help-${index}`}
                   />
                   {error[`document${index}`] && (
@@ -124,6 +445,11 @@ const StepD = ({ data, update, error }) => {
                   <small id={`nf-document-help-${index}`}>
                     कृपया फोटो/वीडियो का लिंक दर्ज करें
                   </small>
+                  {pendingFile && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(index)} disabled={isSubmitting}>
+                      {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -135,12 +461,13 @@ const StepD = ({ data, update, error }) => {
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         onChange={(e) => handleFileChange(e, index)}
+                        disabled={isSubmitting}
                         aria-describedby={`nf-document-help-${index}`}
                       />
 
                       {file && (
                         <small className="nf-file-name">
-                          {file.name}
+                          {typeof file === "string" ? file : file.name}
                         </small>
                       )}
 
@@ -161,12 +488,18 @@ const StepD = ({ data, update, error }) => {
                   <small id={`nf-document-help-${index}`}>
                     File Format: PDF/JPG/JPEG/PNG only | Max Size: 5MB प्रति दस्तावेज
                   </small>
+                  {pendingFile && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(index)} disabled={isSubmitting}>
+                      {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
                 </>
               )}
             </div>
           );
         })}
       </div>
+
     </section>
   );
 };

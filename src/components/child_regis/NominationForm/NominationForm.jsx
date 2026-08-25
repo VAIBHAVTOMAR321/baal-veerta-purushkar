@@ -44,6 +44,8 @@ const NominationForm = () => {
   const stepCCheckedRef = useRef(false);
   const [stepESubmitTrigger, setStepESubmitTrigger] = useState(0);
   const stepECheckedRef = useRef(false);
+  const [stepDSubmitTrigger, setStepDSubmitTrigger] = useState(0);
+  const stepDCheckedRef = useRef(false);
 
   const handleStepBComplete = (record) => {
     if (!stepBCheckedRef.current) {
@@ -77,6 +79,20 @@ const NominationForm = () => {
     stepECheckedRef.current = true;
     setNotice("Step 3 पहले ही सबमिट हो चुका है, Step 4 पर जा रहे हैं...");
     setStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleStepDSubmitSuccess = () => {
+    stepDCheckedRef.current = true;
+    setNotice("Step 4 सफलतापूर्वक सबमिट हो गया!");
+    setStep(4);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleStepDAlreadyCompleted = () => {
+    stepDCheckedRef.current = true;
+    setNotice("Step 4 पहले ही सबमिट हो चुका है, Step 5 पर जा रहे हैं...");
+    setStep(4);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -124,6 +140,10 @@ const NominationForm = () => {
       setStepESubmitTrigger((prev) => prev + 1);
       return;
     }
+    if (step === 3) {
+      setStepDSubmitTrigger((prev) => prev + 1);
+      return;
+    }
     if (validate(step)) {
       setStep((current) => Math.min(current + 1, steps.length - 1));
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -135,7 +155,7 @@ const NominationForm = () => {
   const closePreview = () => setShowPreview(false);
   const finalSubmit = () => { if (data.declarationAccepted && data.parentDeclarationAccepted && data.declarationDocument && data.parentDeclarationDocument && topAccepted) setNotice("आवेदन सफलतापूर्वक प्रस्तुत किया गया है।"); };
   const canSubmit = Boolean(data.declarationAccepted && data.parentDeclarationAccepted && data.declarationDocument && data.parentDeclarationDocument && topAccepted);
-  const component = [<StepB data={data} update={update} error={errors} onCompleted={handleStepBComplete} isStepBChecked={stepBCheckedRef.current} onNext={next} />, <StepC data={data} update={update} error={errors} onSubmitSuccess={handleStepCSubmitSuccess} onCompleted={handleStepCAlreadyCompleted} isStepCChecked={stepCCheckedRef.current} externalSubmitTrigger={stepCSubmitTrigger} />, <StepE data={data} update={update} onSubmitSuccess={handleStepESubmitSuccess} onCompleted={handleStepEAlreadyCompleted} isStepEChecked={stepECheckedRef.current} externalSubmitTrigger={stepESubmitTrigger} />, <StepD data={data} update={update} error={errors} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} topAccepted={topAccepted} />][step];
+  const component = [<StepB data={data} update={update} error={errors} onCompleted={handleStepBComplete} isStepBChecked={stepBCheckedRef.current} onNext={next} />, <StepC data={data} update={update} error={errors} onSubmitSuccess={handleStepCSubmitSuccess} onCompleted={handleStepCAlreadyCompleted} isStepCChecked={stepCCheckedRef.current} externalSubmitTrigger={stepCSubmitTrigger} />, <StepE data={data} update={update} onSubmitSuccess={handleStepESubmitSuccess} onCompleted={handleStepEAlreadyCompleted} isStepEChecked={stepECheckedRef.current} externalSubmitTrigger={stepESubmitTrigger} />, <StepD data={data} update={update} error={errors} onSubmitSuccess={handleStepDSubmitSuccess} onCompleted={handleStepDAlreadyCompleted} isStepDChecked={stepDCheckedRef.current} externalSubmitTrigger={stepDSubmitTrigger} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} topAccepted={topAccepted} />][step];
 
   return <main className="nf-page"><header className="nf-header"><div className="nf-brand-mark">उत्तराखण्ड<br /><small>सरकार</small></div><div><p>ऑनलाइन नामांकन प्रपत्र</p><h1>मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h1></div><button type="button" className="nf-back" onClick={() => navigate("/StudentRegistration")}>भाग–A</button></header><div className="nf-shell"><nav className="nf-stepper" aria-label="Application steps">{steps.map((label, index) => <div className={`nf-step ${index === step ? "current" : ""} ${index < step ? "complete" : ""}`} key={label}><span>{index < step ? "✓" : index + 1}</span><strong>Step {index + 1}</strong><small>{label}</small></div>)}</nav>{notice && <div className="nf-notice" role="status">{notice}</div>}<form onSubmit={(event) => { event.preventDefault(); if (step < 4) next(); }} noValidate>{component}<div className="nf-navigation">{step > 0 && <button type="button" className="nf-secondary" onClick={previous}>← Previous / पिछला</button>}{step < 4 && <button type="submit" className="nf-primary">Next / आगे बढ़ें →</button>}</div></form></div>{showPreview && <PreviewModal data={data} onClose={closePreview} topAccepted={topAccepted} onTopAcceptedChange={setTopAccepted} />}</main>;
 };
