@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   PreviewModal.css – A4 · 4-Col · Merged Section
+   PreviewModal.css – A4 · 4-Col · All Merged
    ═══════════════════════════════════════════════════ */
 
 /* ── Overlay ── */
@@ -32,8 +32,8 @@
 /* ── Close X ── */
 .nf-pv-x {
   position: absolute;
-  top: -1px;
-  right: 4px;
+  top: 10px;
+  right: 9px;
   z-index: 10;
   background: #333;
   border: 2px solid #fff;
@@ -66,53 +66,37 @@
 
 /* ── Block ── */
 .nf-pv-block { margin-bottom: 8px; }
-.nf-pv-block-label { font-weight: 700; font-size: 0.8rem; color: #000; margin-bottom: 3px; }
+.nf-pv-block-label { font-weight: 700; margin-top:22px; text-align: justify; font-size: 0.8rem; color: #000; margin-bottom: 3px; }
 .nf-pv-form-id { font-size: 0.74rem; color: #222; margin-bottom: 4px; font-weight: 600; }
 
 /* ═══════════════════════════════════════════════════
-   PHOTO ROW – 4-col table + photo
+   PHOTO ROW
    ═══════════════════════════════════════════════════ */
 .nf-pv-photo-row {
   display: flex;
   border: 1px solid #000;
 }
-
-.nf-pv-photo-row > .nf-pv-t4 {
-  flex: 1;
-  border: none;
-}
-
+.nf-pv-photo-row > .nf-pv-t4 { flex: 1; border: none; }
 .nf-pv-photo-row > .nf-pv-t4 td:first-child { border-left: none; }
 .nf-pv-photo-row > .nf-pv-t4 td:last-child  { border-right: none; }
 .nf-pv-photo-row > .nf-pv-t4 tr:first-child td { border-top: none; }
 .nf-pv-photo-row > .nf-pv-t4 tr:last-child td  { border-bottom: none; }
 
-/* ── Photo box ── */
 .nf-pv-photo-wrap {
-  width: 120px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 5px 6px 4px;
-  gap: 2px;
+  width: 120px; flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: center; padding: 5px 6px 4px; gap: 2px;
 }
 .nf-pv-photo-box {
-  width: 100px;
-  height: 124px;
-  border: 1.5px solid #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f7f8fa;
-  overflow: hidden;
+  width: 100px; height: 124px; border: 1.5px solid #000;
+  display: flex; align-items: center; justify-content: center;
+  background: #f7f8fa; overflow: hidden;
 }
 .nf-pv-photo-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .nf-pv-photo-ph { color: #aaa; font-size: 0.72rem; font-weight: 600; user-select: none; }
 .nf-pv-photo-label { font-size: 0.6rem; font-weight: 700; color: #333; text-align: center; }
 
 /* ═══════════════════════════════════════════════════
-   4-COLUMN TABLE  L | V | L | V
+   4-COLUMN TABLE
    ═══════════════════════════════════════════════════ */
 .nf-pv-t4 {
   width: 100%;
@@ -128,22 +112,20 @@
   word-break: break-word;
 }
 
-/* label cells (cols 1 & 3) */
 .nf-pv-l4 {
   font-weight: 700;
   background: #f0f4f8;
   color: #000;
-  width: 34%;
+  width: 33%;
   white-space: nowrap;
 }
 
-/* value cells (cols 2 & 4) */
 .nf-pv-v4 {
   color: #000;
   width: 30%;
 }
 
-/* visual separator row inside 4-col table */
+/* separator */
 .nf-pv-sep4 {
   height: 0 !important;
   padding: 0 !important;
@@ -153,58 +135,63 @@
 }
 
 /* ═══════════════════════════════════════════════════
+   Yes/No inside 4-col (question colSpan 3)
+   ═══════════════════════════════════════════════════ */
+.nf-pv-ynv4 {
+  text-align: center;
+  font-weight: 700;
+}
+
+.nf-pv-sub4 {
+  padding-left: 22px !important;
+  font-weight: 400 !important;
+  background: #fafbfc !important;
+  white-space: normal !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   Document name cell inside 4-col
+   ═══════════════════════════════════════════════════ */
+.nf-pv-docname {
+  white-space: normal !important;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.nf-pv-docname span {
+  display: block;
+}
+
+.nf-pv-docname small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.6rem;
+  color: #666;
+  word-break: break-all;
+  margin-top: 1px;
+}
+
+/* preview cell inside 4-col */
+.nf-pv-prev-td {
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 3px 4px !important;
+}
+
+/* empty cell for odd last doc */
+.nf-pv-empty {
+  background: transparent !important;
+}
+
+/* ═══════════════════════════════════════════════════
    Expand / Collapse
    ═══════════════════════════════════════════════════ */
 .nf-pv-more-btn {
-  background: none;
-  border: none;
-  color: #0d47a1;
-  font-size: 0.68rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-  margin-left: 4px;
-  white-space: nowrap;
+  background: none; border: none; color: #0d47a1;
+  font-size: 0.68rem; font-weight: 700; cursor: pointer;
+  padding: 0; margin-left: 4px; white-space: nowrap;
 }
 .nf-pv-more-btn:hover { text-decoration: underline; color: #0a3670; }
-
-/* ═══════════════════════════════════════════════════
-   Yes / No table
-   ═══════════════════════════════════════════════════ */
-.nf-pv-tyn { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
-.nf-pv-tyn td { border: 1px solid #000; padding: 3px 7px; vertical-align: top; }
-.nf-pv-tyn td:first-child { width: 78%; }
-.nf-pv-ynv { width: 22%; text-align: center; font-weight: 700; color: #000; }
-.nf-pv-sub { padding-left: 20px !important; font-weight: 400 !important; background: #fafbfc; }
-
-/* ═══════════════════════════════════════════════════
-   FULL-WIDTH DOCUMENT TABLE
-   ═══════════════════════════════════════════════════ */
-.nf-pv-tdoc-full { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
-.nf-pv-tdoc-full thead th {
-  background: #e9ecef; color: #000; font-weight: 700; text-align: center;
-  padding: 4px 6px; border: 1px solid #000; font-size: 0.72rem;
-}
-.nf-pv-th-serial { width: 32px; }
-.nf-pv-th-name   { text-align: left; }
-.nf-pv-th-prev   { width: 82px; }
-.nf-pv-th-status { width: 95px; }
-
-.nf-pv-tdoc-full tbody td { border: 1px solid #000; padding: 3px 6px; vertical-align: middle; }
-.nf-pv-doc-sno { text-align: center; font-weight: 700; color: #000; }
-.nf-pv-doc-name-cell { display: flex; flex-direction: column; gap: 0; }
-.nf-pv-doc-nlabel { font-weight: 600; color: #000; }
-.nf-pv-doc-fname { font-size: 0.64rem; color: #666; word-break: break-all; }
-.nf-pv-doc-prev-cell { text-align: center; padding: 3px !important; }
-.nf-pv-doc-stat-cell { text-align: center; }
-
-.nf-pv-st-up {
-  display: inline-block; background: #d4edda; color: #155724; font-weight: 700;
-  font-size: 0.66rem; padding: 1px 8px; border-radius: 2px; border: 1px solid #28a745;
-}
-.nf-pv-st-na {
-  display: inline-block; color: #999; font-weight: 600; font-size: 0.66rem; font-style: italic;
-}
 
 /* ═══════════════════════════════════════════════════
    DocPreview box
@@ -224,7 +211,7 @@
 .nf-pv-dprev-doc span { font-size: 0.55rem; font-weight: 800; color: #217193; letter-spacing: 0.3px; }
 
 /* ═══════════════════════════════════════════════════
-   Declaration box
+   Declaration
    ═══════════════════════════════════════════════════ */
 .nf-pv-decl-box { border: 1px solid #000; padding: 8px 10px; font-size: 0.74rem; line-height: 1.6; min-height: 80px; }
 .nf-pv-decl-box p { margin: 0 0 20px; text-align: justify; }
@@ -258,18 +245,16 @@
   .nf-pv-body { padding: 8px 10px 12px; }
   .nf-pv-footer { padding: 6px 10px 8px; }
 
-  /* photo row: stack */
   .nf-pv-photo-row { flex-direction: column; }
   .nf-pv-photo-wrap { width: 100%; flex-direction: row; justify-content: center; padding: 5px; border-top: 1px solid #000; }
   .nf-pv-photo-box { width: 80px; height: 100px; }
 
-  /* restore borders */
   .nf-pv-photo-row > .nf-pv-t4 td:first-child { border-left: 1px solid #000; }
   .nf-pv-photo-row > .nf-pv-t4 td:last-child  { border-right: 1px solid #000; }
   .nf-pv-photo-row > .nf-pv-t4 tr:first-child td { border-top: 1px solid #000; }
   .nf-pv-photo-row > .nf-pv-t4 tr:last-child td  { border-bottom: 1px solid #000; }
 
-  /* 4-col → 2-col pairs */
+  /* 4-col → stacked label-value pairs */
   .nf-pv-t4 { table-layout: auto; }
   .nf-pv-t4 tr { display: block; border: 1px solid #000; margin-bottom: 0; }
   .nf-pv-t4 td { display: block; border: none; width: 100% !important; }
@@ -283,31 +268,23 @@
   }
   .nf-pv-t4 td[colspan] { display: block; }
 
-  /* separator stays visible */
   .nf-pv-sep4 {
-    display: block;
-    height: 0;
-    margin: 4px 0;
+    display: block; height: 0; margin: 4px 0;
     border-top: 2px solid #000 !important;
   }
 
-  /* doc table → cards */
-  .nf-pv-tdoc-full thead { display: none; }
-  .nf-pv-tdoc-full tbody tr {
-    display: flex; flex-wrap: wrap; align-items: center;
-    border: 1px solid #000; padding: 4px; gap: 4px;
-  }
-  .nf-pv-tdoc-full tbody td { display: block; border: none; padding: 0; }
-  .nf-pv-doc-sno { width: auto; font-size: 0.66rem; min-width: 18px; }
-  .nf-pv-doc-name-cell { flex: 1; min-width: 0; }
-  .nf-pv-doc-prev-cell { width: auto; }
-  .nf-pv-doc-stat-cell { width: auto; }
+  /* Yes/No sub-questions */
+  .nf-pv-sub4 { padding-left: 6px !important; }
+  .nf-pv-ynv4 { text-align: left; padding-left: 20px; }
 
-  /* yn table */
-  .nf-pv-tyn td:first-child, .nf-pv-ynv { width: auto; display: block; border-bottom: none; }
-  .nf-pv-tyn tr { display: block; border: 1px solid #000; }
-  .nf-pv-tyn td { display: block; border: none; width: 100%; }
-  .nf-pv-ynv { text-align: left; padding-left: 20px; border-top: none; }
+  /* doc name cells */
+  .nf-pv-docname { font-size: 0.66rem; }
+
+  /* preview cells */
+  .nf-pv-prev-td { text-align: left !important; padding: 3px 6px !important; }
+
+  /* hide empty cells */
+  .nf-pv-empty { display: none; }
 
   .nf-pv-x { top: -10px; right: -6px; width: 28px; height: 28px; font-size: 1.1rem; }
 }
