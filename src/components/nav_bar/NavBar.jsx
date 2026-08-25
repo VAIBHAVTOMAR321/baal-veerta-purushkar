@@ -35,7 +35,8 @@ function NavBar() {
             className="d-inline-block align-top me-2"
             alt="Child Development Logo"
           />
-          Women Empowerment & Child Development
+          Women Empowerment<br />
+          & Child Development
         </Navbar.Brand>
 
         {/* Mobile Toggle */}
