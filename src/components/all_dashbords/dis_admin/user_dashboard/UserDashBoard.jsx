@@ -59,6 +59,7 @@ const UserDashBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState([]);
   const stepBCheckedRef = useRef(false);
   const stepCCheckedRef = useRef(false);
   const [stepCSubmitTrigger, setStepCSubmitTrigger] = useState(0);
@@ -81,6 +82,24 @@ const UserDashBoard = () => {
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
+  // ✅ Mark a step as completed
+  const markStepCompleted = useCallback((stepIndex) => {
+    setCompletedSteps((prev) => prev.includes(stepIndex) ? prev : [...prev, stepIndex]);
+  }, []);
+
+  // ✅ Check if a step is completed
+  const isStepCompleted = useCallback((stepIndex) => {
+    return completedSteps.includes(stepIndex);
+  }, [completedSteps]);
+
+  // ✅ Navigate to a completed step
+  const goToStep = useCallback((stepIndex) => {
+    if (isStepCompleted(stepIndex) || stepIndex === step) {
+      setStep(stepIndex);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isStepCompleted, step]);
+
   const update = useCallback((event) => {
     const { name, value, type, checked, files } = event.target;
     setData((current) => {
@@ -90,7 +109,9 @@ const UserDashBoard = () => {
       };
       setErrors((currentErrors) => {
         const nextErrors = { ...currentErrors };
-        Object.keys(nextErrors).filter((key) => key.startsWith("rescuedPeople.") || key.startsWith("witnesses.")).forEach((key) => delete nextErrors[key]);
+        Object.keys(nextErrors)
+          .filter((key) => key.startsWith("rescuedPeople.") || key.startsWith("witnesses."))
+          .forEach((key) => delete nextErrors[key]);
         delete nextErrors[name];
         return { ...nextErrors, ...getTableErrors(nextData) };
       });
@@ -177,8 +198,9 @@ const UserDashBoard = () => {
   // ✅ Handle Step B completion (after POST success)
   const handleStepBNext = (result) => {
     stepBCheckedRef.current = true;
+    markStepCompleted(0);
     setNotice("Step 1 सफलतापूर्वक सबमिट हो गया!");
-    setStep(1); // Move to Step C
+    setStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -186,13 +208,15 @@ const UserDashBoard = () => {
   const handleStepBAlreadyCompleted = (record) => {
     console.log("Step B already completed, auto-skipping to Step C:", record);
     stepBCheckedRef.current = true;
+    markStepCompleted(0);
     setNotice("Step 1 पहले ही पूरा हो चुका है, Step 2 पर जा रहे हैं...");
-    setStep(1); // Move to Step C
+    setStep(1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleStepCSubmitSuccess = () => {
     stepCCheckedRef.current = true;
+    markStepCompleted(1);
     setNotice("Step 2 सफलतापूर्वक सबमिट हो गया!");
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -200,6 +224,7 @@ const UserDashBoard = () => {
 
   const handleStepCAlreadyCompleted = () => {
     stepCCheckedRef.current = true;
+    markStepCompleted(1);
     setNotice("Step 2 पहले ही सबमिट हो चुका है, Step 3 पर जा रहे हैं...");
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -207,6 +232,7 @@ const UserDashBoard = () => {
 
   const handleStepESubmitSuccess = () => {
     stepECheckedRef.current = true;
+    markStepCompleted(2);
     setNotice("Step 3 सफलतापूर्वक सबमिट हो गया!");
     setStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -214,6 +240,7 @@ const UserDashBoard = () => {
 
   const handleStepEAlreadyCompleted = () => {
     stepECheckedRef.current = true;
+    markStepCompleted(2);
     setNotice("Step 3 पहले ही सबमिट हो चुका है, Step 4 पर जा रहे हैं...");
     setStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -221,6 +248,7 @@ const UserDashBoard = () => {
 
   const handleStepDSubmitSuccess = () => {
     stepDCheckedRef.current = true;
+    markStepCompleted(3);
     setNotice("Step 4 सफलतापूर्वक सबमिट हो गया!");
     setStep(4);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -229,6 +257,7 @@ const UserDashBoard = () => {
   const handleStepDAlreadyCompleted = (record) => {
     console.log("Step D already completed, auto-skipping to Step 5:", record);
     stepDCheckedRef.current = true;
+    markStepCompleted(3);
     setNotice("Step 4 पहले ही पूरा हो चुका है, Step 5 पर जा रहे हैं...");
     setStep(4);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -236,6 +265,7 @@ const UserDashBoard = () => {
 
   const handleApplicationCompleted = () => {
     setIsApplicationCompleted(true);
+    markStepCompleted(4);
   };
 
   const component = [
@@ -316,22 +346,43 @@ const UserDashBoard = () => {
             </div>
           </header>
 
-          {/* ── Stepper ── */}
+          {/* ── Stepper (with clickable completed steps) ── */}
           <nav className="nf-stepper" aria-label="Application steps">
-            {steps.map((label, index) => (
-              <div
-                className={`nf-step ${
-                  index === step ? "current" : ""
-                } ${index < step || (isApplicationCompleted && index === 4) ? "complete" : ""}`}
-                key={label}
-              >
-                <span className="nf-step-number">
-                  {index < step ? "✓" : index + 1}
-                </span>
-                <strong>Step {index + 1}</strong>
-                <small>{label}</small>
-              </div>
-            ))}
+            {steps.map((label, index) => {
+              const completed = isStepCompleted(index);
+              const isCurrent = index === step;
+              const clickable = completed || isCurrent;
+
+              return (
+                <div
+                  className={`nf-step ${isCurrent ? "current" : ""} ${completed ? "complete" : ""} ${
+                    clickable ? "clickable" : ""
+                  }`}
+                  key={label}
+                  role={clickable ? "button" : undefined}
+                  tabIndex={clickable ? 0 : undefined}
+                  aria-label={
+                    clickable
+                      ? `Step ${index + 1} - पूर्ण, क्लिक करें और देखें`
+                      : `Step ${index + 1}${completed ? " - पूर्ण" : ""}${isCurrent ? " - वर्तमान" : ""}`
+                  }
+                  onClick={() => goToStep(index)}
+                  onKeyDown={(e) => {
+                    if (clickable && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      goToStep(index);
+                    }
+                  }}
+                  style={clickable ? { cursor: "pointer" } : undefined}
+                >
+                  <span className="nf-step-number">
+                    {completed && !isCurrent ? "✓" : index + 1}
+                  </span>
+                  <strong>Step {index + 1}</strong>
+                  <small>{label}</small>
+                </div>
+              );
+            })}
           </nav>
 
           {/* ── Notice ── */}
@@ -348,7 +399,7 @@ const UserDashBoard = () => {
                   color: "inherit",
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "16px"
+                  fontSize: "16px",
                 }}
               >
                 ✕
@@ -361,8 +412,6 @@ const UserDashBoard = () => {
             className="nf-form-body"
             onSubmit={(event) => {
               event.preventDefault();
-              // Only use default next for steps other than Step B (0)
-              // Step B handles its own submission
               if (step !== 0) {
                 if (step === 1) setStepCSubmitTrigger((current) => current + 1);
                 else if (step === 2) setStepESubmitTrigger((current) => current + 1);
@@ -371,14 +420,16 @@ const UserDashBoard = () => {
             }}
             noValidate
           >
-            <fieldset disabled={isApplicationCompleted && step !== 4} style={{ border: 0, padding: 0, margin: 0 }}>
+            <fieldset
+              disabled={isApplicationCompleted && step !== 4}
+              style={{ border: 0, padding: 0, margin: 0 }}
+            >
               {component}
             </fieldset>
 
-            {/* ✅ Hide default navigation for Step B (it has its own button) */}
             {step !== 0 && (
               <div className="nf-navigation">
-                  {step > 0 && !isApplicationCompleted && (
+                {step > 0 && !isApplicationCompleted && (
                   <button
                     type="button"
                     className="nf-secondary"
