@@ -255,6 +255,17 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     syncWitnesses(next);
   };
 
+  const normalizeTime = (time) => {
+    if (!time) return "";
+    if (/^\d{2}:\d{2}$/.test(time)) return `${time}:00`;
+    return time;
+  };
+
+  const normalizeDate = (date) => {
+    if (!date) return "";
+    return date;
+  };
+
   const buildPayload = () => {
     const applicantId = data.applicant_id || data.applicantId || localStorage.getItem("applicantId") || "";
 
@@ -275,9 +286,9 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       applicant_id: applicantId,
       incident_title: actTitle,
       incident_type: incidentType,
-      incident_date: data.actDate || "",
+      incident_date: normalizeDate(data.actDate || ""),
       age_at_incident: data.incidentAge || "",
-      incident_time: data.actTime || "",
+      incident_time: normalizeTime(data.actTime || ""),
       incident_location: data.actPlace || "",
       incident_district: data.actDistrict || "",
       incident_description: data.shortDescription || "",
@@ -287,7 +298,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       fir_status: data.firRegistered || "",
       police_station: data.policeStation || "",
       fir_number: data.firNumber || "",
-      fir_date: data.firDate || "",
+      fir_date: normalizeDate(data.firDate || ""),
       media_report_available: data.mediaPublished || "",
     };
 
@@ -402,25 +413,36 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         ? await response.json()
         : await response.text();
 
-      if (response.ok && (result.success === true || result.success === undefined)) {
-        const wasUpdate = isCompleted && isEditing;
-        setAlertInfo({ type: "success", message: wasUpdate ? "Step 2 सफलतापूर्वक अपडेट हो गया! ✅" : "Step 2 सफलतापूर्वक सबमिट हो गया! ✅" });
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        if (wasUpdate) {
-          setIsCompleted(true);
-          setIsEditing(false);
-          setEditSnapshot(null);
-        }
-        if (moveToNext) onSubmitSuccess?.();
-      } else {
+      if (!response.ok) {
         const errorMsg =
-          (typeof result === "object" ? (result.detail || result.message || result.error) : result) ||
-          "सबमिशन में त्रुटि हुई।";
-        setAlertInfo({ type: "error", message: typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg) });
+          (typeof result === "object"
+            ? result.detail || result.message || result.error || JSON.stringify(result)
+            : result) ||
+          `Server error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMsg);
       }
+
+      if (result.success !== true) {
+        const errorMsg =
+          (typeof result === "object"
+            ? result.detail || result.message || result.error || JSON.stringify(result)
+            : result) ||
+          "सबमिशन में त्रुटि हुई।";
+        throw new Error(errorMsg);
+      }
+
+      const wasUpdate = isCompleted && isEditing;
+      setAlertInfo({ type: "success", message: wasUpdate ? "Step 2 सफलतापूर्वक अपडेट हो गया! ✅" : "Step 2 सफलतापूर्वक सबमिट हो गया! ✅" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (wasUpdate) {
+        setIsCompleted(true);
+        setIsEditing(false);
+        setEditSnapshot(null);
+      }
+      if (moveToNext) onSubmitSuccess?.();
     } catch (err) {
       console.error("Submit error:", err);
-      setAlertInfo({ type: "error", message: "सबमिशन में त्रुटि हुई। कृपया पुनः प्रयास करें।" });
+      setAlertInfo({ type: "error", message: err.message || "सबमिशन में त्रुटि हुई। कृपया पुनः प्रयास करें।" });
     } finally {
       setSubmitting(false);
     }
