@@ -405,6 +405,10 @@ function Home() {
           {/* RIGHT - LOGIN (6 col) */}
           <Col lg={6} className="home-right-col d-flex align-items-start justify-content-center">
             <div className="login-wrapper">
+              <a href="/CM Rajya baal veerta purskar.pdf" target="_blank" rel="noopener noreferrer" className="mobile-pdf-link">
+                <FaFileAlt className="pdf-icon" />
+                योजना की पूरी जानकारी / Scheme Details (PDF)
+              </a>
               <Card className="login-card">
                 <Card.Body className="login-card-body">
                   <div className="login-header">

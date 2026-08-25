@@ -172,6 +172,28 @@
   color: #dc2626;
 }
 
+.mobile-pdf-link {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: #fff8e1;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-decoration: none;
+  margin-bottom: 1rem;
+  animation: pdfBlink 2s infinite;
+}
+
+.mobile-pdf-link .pdf-icon {
+  font-size: 1.1rem;
+  color: #dc2626;
+}
+
 .steps-heading-icon {
   color: #0d6efd;
   font-size: 1.2rem;
@@ -185,8 +207,7 @@
   }
 
   .steps-pdf-link {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.75rem;
+    display: none;
   }
 }
 
@@ -741,6 +762,14 @@
 
   .scroll-hint {
     display: none;
+  }
+
+  .steps-pdf-link {
+    display: none;
+  }
+
+  .mobile-pdf-link {
+    display: inline-flex;
   }
 }
 
