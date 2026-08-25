@@ -319,11 +319,17 @@ function Home() {
           <Col lg={6} className="home-left-col d-flex">
             <div className="home-left-content">
 
-              <div className="steps-section">
-                <h3 className="steps-heading">
-                  <FaClipboardList className="steps-heading-icon" />
-                  नामांकन प्रक्रिया
-                </h3>
+                <div className="steps-section">
+                  <div className="steps-heading-row">
+                    <h3 className="steps-heading">
+                      <FaClipboardList className="steps-heading-icon" />
+                      नामांकन प्रक्रिया
+                    </h3>
+                    <a href="/CM Rajya baal veerta purskar.pdf" target="_blank" rel="noopener noreferrer" className="steps-pdf-link">
+                      <FaFileAlt className="pdf-icon" />
+                      योजना की पूरी जानकारी / Scheme Details (PDF)
+                    </a>
+                  </div>
 
                 <div className="steps-scroll-wrap">
                   <div
