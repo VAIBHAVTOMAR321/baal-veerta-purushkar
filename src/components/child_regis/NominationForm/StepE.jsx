@@ -123,10 +123,14 @@ const StepE = ({ data, update, onSubmitSuccess, onCompleted, isStepEChecked, ext
                 {!isEditing ? <button type="button" className="nf-secondary" onClick={handleEdit}>Edit / संपादित करें</button> : <><button type="button" className="nf-secondary" onClick={handleCancelEdit} disabled={submitting}>Cancel / रद्द करें</button><button type="button" className="nf-primary" onClick={() => handleSubmit(false)} disabled={submitting}>{submitting ? "अपडेट हो रहा है..." : "Update / अपडेट करें"}</button></>}
             </div>}
         </div>
-        <div className="nf-grid">
+
+
+         <div className="nf-grid">
             <div className="nf-field"><label>1. क्या इस घटना के संबंध में कोई अन्य पुरस्कार/सम्मान प्राप्त हुआ है?</label><div className="nf-radio-group">{["हाँ", "नहीं"].map((option) => <label key={option}><input type="radio" name="otherAward" value={option} checked={data.otherAward === option} onChange={update} disabled={isFormLocked} /> {option}</label>)}</div></div>
             {data.otherAward === "हाँ" && <div className="nf-field"><label htmlFor="nf-otherAwardDetails">विवरण:</label><textarea id="nf-otherAwardDetails" name="otherAwardDetails" value={data.otherAwardDetails || ""} onChange={update} rows={3} disabled={isFormLocked} /></div>}
         </div>
+       
+
         <div className="nf-field nf-wide"><label htmlFor="nf-additionalInformation">2. अतिरिक्त टिप्पणी/अन्य महत्वपूर्ण जानकारी</label><textarea id="nf-additionalInformation" name="additionalInformation" value={data.additionalInformation || ""} onChange={update} rows={6} disabled={isFormLocked} /></div>
     </section>;
 };
