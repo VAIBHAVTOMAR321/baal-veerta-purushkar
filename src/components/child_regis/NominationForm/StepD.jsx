@@ -62,6 +62,10 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
   const [pendingDocuments, setPendingDocuments] = useState({});
   const [hasPart5Record, setHasPart5Record] = useState(false);
   const dataFetchStarted = useRef(false);
+
+  // ★ FIX: Track previous trigger value to only respond to CHANGES, not stale mount value
+  const prevTriggerRef = useRef(externalSubmitTrigger);
+
   const visibleDocumentIndices = documents.reduce((indices, _, index) => {
     if (index === 9) return indices;
     const isFirApplicable = index !== 6 || String(data.firRegistered || "").trim() === "हाँ";
@@ -114,8 +118,12 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
     fetchPart5Data();
   }, [authFetch, data.applicant_id, isStepDChecked, onCompleted, update]);
 
+  // ★ FIX: Only fire handleNext when trigger CHANGES, not on mount with stale value
   useEffect(() => {
-    if (externalSubmitTrigger) handleNext();
+    if (externalSubmitTrigger !== prevTriggerRef.current) {
+      prevTriggerRef.current = externalSubmitTrigger;
+      if (externalSubmitTrigger) handleNext();
+    }
   }, [externalSubmitTrigger]);
 
   const handleFileChange = (e, index) => {
