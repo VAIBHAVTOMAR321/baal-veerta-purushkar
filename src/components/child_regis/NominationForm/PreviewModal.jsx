@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import "./PreviewModal.css";
 
 const yesNo = (val) =>
@@ -21,56 +21,131 @@ const calcAge = (dob) => {
       months--;
       days += new Date(ref.getFullYear(), ref.getMonth(), 0).getDate();
     }
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
+    if (months < 0) { years--; months += 12; }
     return `${years} वर्ष ${months} माह ${days} दिन (as on 1-July-2025)`;
-  } catch {
-    return "-";
-  }
+  } catch { return "-"; }
 };
 
+const getFileType = (file) => {
+  if (!file) return null;
+  if (typeof file === "string") {
+    if (/\.pdf$/i.test(file)) return "pdf";
+    if (/\.(doc|docx)$/i.test(file)) return "doc";
+    if (/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file)) return "image";
+    return "other";
+  }
+  if (file instanceof File) {
+    if (file.type.startsWith("image/")) return "image";
+    if (file.type === "application/pdf") return "pdf";
+    if (file.type.includes("word") || file.type.includes("document")) return "doc";
+    return "other";
+  }
+  return null;
+};
+
+const getFileSrc = (file) => {
+  if (!file) return null;
+  if (typeof file === "string") return file;
+  if (file instanceof File) return URL.createObjectURL(file);
+  return null;
+};
+
+/* ── Doc preview box ── */
+const DocPreview = ({ file }) => {
+  const src = useMemo(() => getFileSrc(file), [file]);
+  const type = useMemo(() => getFileType(file), [file]);
+
+  if (!src) {
+    return (
+      <div className="nf-pv-dprev nf-pv-dprev-na">
+        <span>Not Applicable</span>
+      </div>
+    );
+  }
+  const openFile = () => { if (src) window.open(src, "_blank"); };
+
+  if (type === "image") {
+    return (
+      <div className="nf-pv-dprev" onClick={openFile} title="क्लिक करें">
+        <img src={src} alt="preview" className="nf-pv-dprev-img" />
+      </div>
+    );
+  }
+  if (type === "pdf") {
+    return (
+      <div className="nf-pv-dprev nf-pv-dprev-pdf" onClick={openFile} title="क्लिक करें">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c0392b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+        <span>PDF</span>
+      </div>
+    );
+  }
+  return (
+    <div className="nf-pv-dprev nf-pv-dprev-doc" onClick={openFile} title="क्लिक करें">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#217193" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+      <span>DOC</span>
+    </div>
+  );
+};
+
+/* ── 4-column row: L1 | V1 | L2 | V2 ── */
+const Row4 = ({ l1, v1, l2, v2 }) => (
+  <tr>
+    <td className="nf-pv-l4">{l1}</td>
+    <td className="nf-pv-v4">{v1 || "-"}</td>
+    <td className="nf-pv-l4">{l2}</td>
+    <td className="nf-pv-v4">{v2 || "-"}</td>
+  </tr>
+);
+
+/* ── full-width row inside 4-col table ── */
+const Row4Full = ({ label, value }) => (
+  <tr>
+    <td className="nf-pv-l4">{label}</td>
+    <td className="nf-pv-v4" colSpan="3">{value || "-"}</td>
+  </tr>
+);
+
+/* ── Expand / Collapse text ── */
+const ExpandText = ({ text, maxWords = 20 }) => {
+  const [open, setOpen] = useState(false);
+  if (!text) return <span>-</span>;
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return <span>{text}</span>;
+  return (
+    <span>
+      {open ? text : words.slice(0, maxWords).join(" ") + "..."}
+      <button type="button" className="nf-pv-more-btn" onClick={() => setOpen((p) => !p)}>
+        {open ? " कम दिखाएं ▲" : " और पढ़ें ▼"}
+      </button>
+    </span>
+  );
+};
+
+/* ════════════════════════════════════════════════ */
 const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
   const applicationNumber = data?.applicant_id || "System Generated";
   const district = data?.["permanentजनपद"] || data?.district || "-";
 
   const submissionDate = new Date().toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: true,
   }).replace(",", "");
 
-  /* ── photo source ── */
-  const photoSrc = useMemo(() => {
-    const f = data?.document5;
-    if (!f) return null;
-    if (typeof f === "string") return f;
-    if (f instanceof File) return URL.createObjectURL(f);
-    return null;
-  }, [data?.document5]);
+  const photoSrc = useMemo(() => getFileSrc(data?.document5), [data?.document5]);
 
-  const currentAddress = [
-    data?.["currentग्राम/मोहल्ला"],
-    data?.["currentडाकघर"],
-    data?.["currentजनपद"],
-    data?.["currentपिन कोड"],
-  ]
-    .filter(Boolean)
-    .join(" / ");
-
-  const permanentAddress = [
-    data?.["permanentग्राम/मोहल्ला"],
-    data?.["permanentडाकघर"],
-    data?.["permanentजनपद"],
-    data?.["permanentपिन कोड"],
-  ]
-    .filter(Boolean)
-    .join(" / ");
+  const curAddr = [data?.["currentग्राम/मोहल्ला"], data?.["currentडाकघर"], data?.["currentजनपद"], data?.["currentपिन कोड"]].filter(Boolean).join(" / ");
+  const perAddr = [data?.["permanentग्राम/मोहल्ला"], data?.["permanentडाकघर"], data?.["permanentजनपद"], data?.["permanentपिन कोड"]].filter(Boolean).join(" / ");
 
   const documents = [
     { label: "नामांकनकर्ता का पहचान पत्र", key: "document0" },
@@ -87,116 +162,57 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
     { label: "अन्य सहायक अभिलेख", key: "document11" },
   ];
 
-  const docPairs = [];
-  for (let i = 0; i < documents.length; i += 2) {
-    docPairs.push([documents[i], documents[i + 1] || null]);
-  }
+  const allDocs = [
+    ...documents,
+    { label: "नामांकनकर्ता घोषणा अभिलेख", key: "declarationDocument" },
+    { label: "अभिभावक घोषणा अभिलेख", key: "parentDeclarationDocument" },
+  ];
 
   return (
     <div className="nf-pv-overlay" onClick={onClose}>
-      <div className="nf-pv-modal" onClick={(e) => e.stopPropagation()}>
-        {/* ── Department Header ── */}
+      <div className="nf-pv-sheet" onClick={(e) => e.stopPropagation()}>
+
+        <button type="button" className="nf-pv-x" onClick={onClose} aria-label="Close">×</button>
+
+        {/* ── Header ── */}
         <div className="nf-pv-dept-header">
           <h1>महिला सशक्तिकरण एवं बाल विकास विभाग</h1>
           <p>उत्तराखण्ड सरकार</p>
-          <button
-            type="button"
-            className="nf-pv-x"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
         </div>
 
-        {/* ── Scrollable Body ── */}
+        {/* ── Body ── */}
         <div className="nf-pv-body">
-          {/* ═══ 1. आवेदक का विवरण  (table + photo) ═══ */}
+
+          {/* ═══ 1. आवेदक + पता (ONE SECTION, 4-COL, + PHOTO) ═══ */}
           <div className="nf-pv-block">
             <div className="nf-pv-block-label">आवेदक का विवरण:</div>
             <div className="nf-pv-form-id">
-              Form ID: {applicationNumber} (Final Submitted on{" "}
-              {submissionDate})
+              Form ID: {applicationNumber} (Final Submitted on {submissionDate})
             </div>
-
             <div className="nf-pv-photo-row">
-              {/* left: 4-col table */}
               <table className="nf-pv-t4">
                 <tbody>
-                  <tr>
-                    <td className="nf-pv-l">बच्चे का पूरा नाम</td>
-                    <td className="nf-pv-v">
-                      {data?.childName || "-"}
-                    </td>
-                    <td className="nf-pv-l">पिता का नाम</td>
-                    <td className="nf-pv-v">
-                      {data?.fatherName || "-"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="nf-pv-l">माता का नाम</td>
-                    <td className="nf-pv-v">
-                      {data?.motherName || "-"}
-                    </td>
-                    <td className="nf-pv-l">अभिभावक का नाम</td>
-                    <td className="nf-pv-v">
-                      {data?.guardianName || "-"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="nf-pv-l">मोबाइल नंबर</td>
-                    <td className="nf-pv-v">
-                      {data?.childMobile || "-"}
-                    </td>
-                    <td className="nf-pv-l">लिंग</td>
-                    <td className="nf-pv-v">{data?.gender || "-"}</td>
-                  </tr>
-                  <tr>
-                    <td className="nf-pv-l">जन्म तिथि</td>
-                    <td className="nf-pv-v">
-                      {data?.birthDate || "-"}
-                    </td>
-                    <td className="nf-pv-l">आयु</td>
-                    <td className="nf-pv-v">
-                      {calcAge(data?.birthDate)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="nf-pv-l">
-                      उत्तराखण्ड का स्थायी निवासी
-                    </td>
-                    <td className="nf-pv-v">
-                      {yesNo(data?.resident)}
-                    </td>
-                    <td className="nf-pv-l">वर्तमान कक्षा</td>
-                    <td className="nf-pv-v">
-                      {data?.currentClass || "-"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="nf-pv-l">विद्यालय का नाम</td>
-                    <td className="nf-pv-v" colSpan="3">
-                      {data?.schoolName || "-"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="nf-pv-l">विद्यालय का पता</td>
-                    <td className="nf-pv-v" colSpan="3">
-                      {data?.schoolAddress || "-"}
-                    </td>
-                  </tr>
+                  {/* ── personal ── */}
+                  <Row4 l1="बच्चे का पूरा नाम" v1={data?.childName} l2="पिता का नाम" v2={data?.fatherName} />
+                  <Row4 l1="माता का नाम" v1={data?.motherName} l2="अभिभावक का नाम" v2={data?.guardianName} />
+                  <Row4 l1="मोबाइल नंबर" v1={data?.childMobile} l2="लिंग" v2={data?.gender} />
+                  <Row4 l1="जन्म तिथि" v1={data?.birthDate} l2="आयु" v2={calcAge(data?.birthDate)} />
+                  <Row4 l1="उत्तराखण्ड का स्थायी निवासी" v1={yesNo(data?.resident)} l2="वर्तमान कक्षा" v2={data?.currentClass} />
+                  <Row4Full label="विद्यालय का नाम" value={data?.schoolName} />
+                  <Row4Full label="विद्यालय का पता" value={data?.schoolAddress} />
+
+                  {/* ── address (visual separator then rows) ── */}
+                  <tr><td colSpan="4" className="nf-pv-sep4" /></tr>
+                  <Row4 l1="वर्तमान पता" v1={curAddr} l2="स्थायी पता" v2={perAddr} />
+                  <Row4 l1="वर्तमान विकासखण्ड / नगर निकाय" v1={data?.["currentविकासखण्ड/नगर निकाय"]} l2="स्थायी विकासखण्ड / नगर निकाय" v2={data?.["permanentविकासखण्ड/नगर निकाय"]} />
+                  <Row4 l1="वर्तमान जनपद" v1={data?.["currentजनपद"]} l2="स्थायी जनपद" v2={district} />
+                  <Row4 l1="वर्तमान पिन कोड" v1={data?.["currentपिन कोड"]} l2="स्थायी पिन कोड" v2={data?.["permanentपिन कोड"]} />
                 </tbody>
               </table>
-
-              {/* right: photo box */}
               <div className="nf-pv-photo-wrap">
                 <div className="nf-pv-photo-box">
                   {photoSrc ? (
-                    <img
-                      src={photoSrc}
-                      alt="फोटो"
-                      className="nf-pv-photo-img"
-                    />
+                    <img src={photoSrc} alt="फोटो" className="nf-pv-photo-img" />
                   ) : (
                     <span className="nf-pv-photo-ph">फोटो</span>
                   )}
@@ -206,273 +222,108 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
             </div>
           </div>
 
-          {/* ═══ 2. पता ═══ */}
+          {/* ═══ 2. वीरता (4-col + expand) ═══ */}
           <div className="nf-pv-block">
+            <div className="nf-pv-block-label">वीरता की घटना का विवरण:</div>
             <table className="nf-pv-t4">
               <tbody>
+                <Row4Full label="घटना का शीर्षक" value={data?.actTitle} />
+                <Row4 l1="घटना की दिनांक" v1={data?.actDate} l2="घटना का समय" v2={data?.actTime} />
+                <Row4 l1="घटना का स्थान" v1={data?.actPlace} l2="घटना का जनपद" v2={data?.actDistrict} />
                 <tr>
-                  <td className="nf-pv-l">वर्तमान पता</td>
-                  <td className="nf-pv-v">
-                    {currentAddress || "-"}
-                  </td>
-                  <td className="nf-pv-l">स्थायी पता</td>
-                  <td className="nf-pv-v">
-                    {permanentAddress || "-"}
+                  <td className="nf-pv-l4">संक्षिप्त विवरण</td>
+                  <td className="nf-pv-v4" colSpan="3">
+                    <ExpandText text={data?.shortDescription} maxWords={20} />
                   </td>
                 </tr>
-                <tr>
-                  <td className="nf-pv-l">
-                    विकासखण्ड / नगर निकाय
-                  </td>
-                  <td className="nf-pv-v">
-                    {data?.[
-                      "currentविकासखण्ड/नगर निकाय"
-                    ] || "-"}
-                  </td>
-                  <td className="nf-pv-l">
-                    विकासखण्ड / नगर निकाय
-                  </td>
-                  <td className="nf-pv-v">
-                    {data?.[
-                      "permanentविकासखण्ड/नगर निकाय"
-                    ] || "-"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="nf-pv-l">जनपद</td>
-                  <td className="nf-pv-v">
-                    {data?.["currentजनपद"] || "-"}
-                  </td>
-                  <td className="nf-pv-l">जनपद</td>
-                  <td className="nf-pv-v">{district}</td>
-                </tr>
+                <Row4Full label="बचाए गये व्यक्तियों का विवरण" value={data?.rescuedCount} />
               </tbody>
             </table>
           </div>
 
-          {/* ═══ 3. वीरता की घटना ═══ */}
+          {/* ═══ 3. Yes/No ═══ */}
           <div className="nf-pv-block">
-            <div className="nf-pv-block-label">
-              वीरता की घटना का विवरण:
-            </div>
-            <table className="nf-pv-t4">
-              <tbody>
-                <tr>
-                  <td className="nf-pv-l">घटना का शीर्षक</td>
-                  <td className="nf-pv-v" colSpan="3">
-                    {data?.actTitle || "-"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="nf-pv-l">घटना की दिनांक</td>
-                  <td className="nf-pv-v">
-                    {data?.actDate || "-"}
-                  </td>
-                  <td className="nf-pv-l">घटना का समय</td>
-                  <td className="nf-pv-v">
-                    {data?.actTime || "-"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="nf-pv-l">घटना का स्थान</td>
-                  <td className="nf-pv-v">
-                    {data?.actPlace || "-"}
-                  </td>
-                  <td className="nf-pv-l">घटना का जनपद</td>
-                  <td className="nf-pv-v">
-                    {data?.actDistrict || "-"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="nf-pv-l">संक्षिप्त विवरण</td>
-                  <td
-                    className="nf-pv-v"
-                    colSpan="3"
-                    style={{ whiteSpace: "pre-wrap" }}
-                  >
-                    {data?.shortDescription || "-"}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="nf-pv-l">
-                    बच्चे द्वारा बचाए गये व्यक्तियों का विवरण
-                  </td>
-                  <td className="nf-pv-v" colSpan="3">
-                    {data?.rescuedCount || "-"}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* ═══ 4. Yes / No Questions ═══ */}
-          <div className="nf-pv-block">
+            <div className="nf-pv-block-label">अतिरिक्त जानकारी:</div>
             <table className="nf-pv-tyn">
               <tbody>
                 <tr>
-                  <td>
-                    1. क्या पुलिस रिपोर्ट / FIR दर्ज है ?
-                  </td>
-                  <td className="nf-pv-ynv">
-                    {yesNo(data?.firRegistered)}
-                  </td>
+                  <td>1. क्या पुलिस रिपोर्ट / FIR दर्ज है ?</td>
+                  <td className="nf-pv-ynv">{yesNo(data?.firRegistered)}</td>
                 </tr>
                 {data?.firRegistered === "हाँ" && (
                   <>
-                    <tr>
-                      <td className="nf-pv-sub">थाना</td>
-                      <td className="nf-pv-ynv">
-                        {data?.policeStation || "-"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="nf-pv-sub">FIR संख्या</td>
-                      <td className="nf-pv-ynv">
-                        {data?.firNumber || "-"}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="nf-pv-sub">FIR दिनांक</td>
-                      <td className="nf-pv-ynv">
-                        {data?.firDate || "-"}
-                      </td>
-                    </tr>
+                    <tr><td className="nf-pv-sub">थाना</td><td className="nf-pv-ynv">{data?.policeStation || "-"}</td></tr>
+                    <tr><td className="nf-pv-sub">FIR संख्या</td><td className="nf-pv-ynv">{data?.firNumber || "-"}</td></tr>
+                    <tr><td className="nf-pv-sub">FIR दिनांक</td><td className="nf-pv-ynv">{data?.firDate || "-"}</td></tr>
                   </>
                 )}
                 <tr>
-                  <td>
-                    2. क्या समाचार पत्र / मीडिया रिपोर्ट प्रकाशित
-                    हुई ?
-                  </td>
-                  <td className="nf-pv-ynv">
-                    {data?.mediaPublished || "-"}
-                  </td>
+                  <td>2. क्या समाचार पत्र / मीडिया रिपोर्ट प्रकाशित हुई ?</td>
+                  <td className="nf-pv-ynv">{data?.mediaPublished || "-"}</td>
                 </tr>
                 <tr>
-                  <td>
-                    3. क्या कोई अन्य पुरस्कार / सम्मान प्राप्त
-                    हुआ है ?
-                  </td>
-                  <td className="nf-pv-ynv">
-                    {yesNo(data?.otherAward)}
-                  </td>
+                  <td>3. क्या कोई अन्य पुरस्कार / सम्मान प्राप्त हुआ है ?</td>
+                  <td className="nf-pv-ynv">{yesNo(data?.otherAward)}</td>
                 </tr>
                 {data?.otherAward === "हाँ" && (
-                  <tr>
-                    <td className="nf-pv-sub">
-                      अन्य पुरस्कार का विवरण
-                    </td>
-                    <td className="nf-pv-ynv">
-                      {data?.otherAwardDetails || "-"}
-                    </td>
-                  </tr>
+                  <tr><td className="nf-pv-sub">अन्य पुरस्कार का विवरण</td><td className="nf-pv-ynv">{data?.otherAwardDetails || "-"}</td></tr>
                 )}
                 <tr>
-                  <td>
-                    4. अतिरिक्त टिप्पणी / अन्य महत्वपूर्ण
-                    जानकारी
-                  </td>
-                  <td className="nf-pv-ynv">
-                    {data?.additionalInformation || "-"}
-                  </td>
+                  <td>4. अतिरिक्त टिप्पणी / अन्य महत्वपूर्ण जानकारी</td>
+                  <td className="nf-pv-ynv">{data?.additionalInformation || "-"}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {/* ═══ 5. अपलोड दस्तावेजों का विवरण ═══ */}
+          {/* ═══ 4. दस्तावेज़ ═══ */}
           <div className="nf-pv-block">
-            <div className="nf-pv-block-label">
-              अपलोड दस्तावेजों का विवरण
-            </div>
-            <table className="nf-pv-tdoc">
-              <tbody>
-                {docPairs.map((pair, idx) => (
-                  <tr key={idx}>
-                    {pair.map(
-                      (doc) =>
-                        doc && (
-                          <td key={doc.key} className="nf-pv-dcell">
-                            <span className="nf-pv-dname">
-                              {doc.label}
-                            </span>
-                            <span
-                              className={`nf-pv-dstatus ${
-                                data?.[doc.key]
-                                  ? "has"
-                                  : "na"
-                              }`}
-                            >
-                              {data?.[doc.key]
-                                ? "view"
-                                : "Not Applicable"}
-                            </span>
-                          </td>
-                        )
-                    )}
-                    {pair.length === 1 && <td />}
-                  </tr>
-                ))}
-
-                {/* declaration docs row */}
+            <div className="nf-pv-block-label">अपलोड दस्तावेजों का विवरण</div>
+            <table className="nf-pv-tdoc-full">
+              <thead>
                 <tr>
-                  <td className="nf-pv-dcell">
-                    <span className="nf-pv-dname">
-                      नामांकनकर्ता घोषणा अभिलेख
-                    </span>
-                    <span
-                      className={`nf-pv-dstatus ${
-                        data?.declarationDocument
-                          ? "has"
-                          : "na"
-                      }`}
-                    >
-                      {data?.declarationDocument
-                        ? "view"
-                        : "Not Applicable"}
-                    </span>
-                  </td>
-                  <td className="nf-pv-dcell">
-                    <span className="nf-pv-dname">
-                      अभिभावक घोषणा अभिलेख
-                    </span>
-                    <span
-                      className={`nf-pv-dstatus ${
-                        data?.parentDeclarationDocument
-                          ? "has"
-                          : "na"
-                      }`}
-                    >
-                      {data?.parentDeclarationDocument
-                        ? "view"
-                        : "Not Applicable"}
-                    </span>
-                  </td>
+                  <th className="nf-pv-th-serial">क्र.</th>
+                  <th className="nf-pv-th-name">दस्तावेज़ का नाम</th>
+                  <th className="nf-pv-th-prev">पूर्वावलोकन</th>
+                  <th className="nf-pv-th-status">स्थिति</th>
                 </tr>
+              </thead>
+              <tbody>
+                {allDocs.map((doc, idx) => {
+                  const file = data?.[doc.key];
+                  const fname = file && typeof file === "object" ? file.name : null;
+                  return (
+                    <tr key={doc.key}>
+                      <td className="nf-pv-doc-sno">{idx + 1}</td>
+                      <td className="nf-pv-doc-name-cell">
+                        <span className="nf-pv-doc-nlabel">{doc.label}</span>
+                        {fname && <span className="nf-pv-doc-fname">{fname}</span>}
+                      </td>
+                      <td className="nf-pv-doc-prev-cell"><DocPreview file={file} /></td>
+                      <td className="nf-pv-doc-stat-cell">
+                        {file
+                          ? <span className="nf-pv-st-up">Uploaded</span>
+                          : <span className="nf-pv-st-na">Not Applicable</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
-          {/* ═══ 6. घोषणा ═══ */}
+          {/* ═══ 5. घोषणा ═══ */}
           <div className="nf-pv-block">
             <div className="nf-pv-block-label">घोषणा</div>
             <div className="nf-pv-decl-box">
               <p>
-                मेरे द्वारा उपरोक्त भरी गई समस्त जानकारी
-                पूर्णतयः सत्य एवं सही है। यदि कोई जानकारी
-                उपरोक्त में अंकित है और गलत पाई जाती है तो
-                विभाग द्वारा नियमानुसार कार्यवाही की जा सकती
-                है जिसकी सम्पूर्ण जिम्मेदारी आवेदक की होगी।
+                मेरे द्वारा उपरोक्त भरी गई समस्त जानकारी पूर्णतयः सत्य एवं सही है।
+                यदि कोई जानकारी उपरोक्त में अंकित है और गलत पाई जाती है तो विभाग द्वारा
+                नियमानुसार कार्यवाही की जा सकती है जिसकी सम्पूर्ण जिम्मेदारी आवेदक की होगी।
               </p>
               <div className="nf-pv-decl-foot">
-                {data?.declarationDocument && (
-                  <span className="nf-pv-dstatus has">
-                    view
-                  </span>
-                )}
-                <span className="nf-pv-sign-name">
-                  {data?.childName || "-"}
-                </span>
+                {data?.declarationDocument && <span className="nf-pv-dstatus has">view</span>}
+                <span className="nf-pv-sign-name">{data?.childName || "-"}</span>
               </div>
             </div>
           </div>
@@ -481,29 +332,11 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
         {/* ── Footer ── */}
         <div className="nf-pv-footer">
           <label className="nf-pv-accept">
-            <input
-              type="checkbox"
-              checked={topAccepted}
-              onChange={onTopAcceptedChange}
-            />
-            <span>
-              मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे
-              सहमत हूँ।
-            </span>
+            <input type="checkbox" checked={topAccepted} onChange={onTopAcceptedChange} />
+            <span>मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे सहमत हूँ।</span>
           </label>
-          {topAccepted && (
-            <small className="nf-pv-warn">
-              बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स
-              को अनचेक करें।
-            </small>
-          )}
-          <button
-            type="button"
-            className="nf-pv-closebtn"
-            onClick={onClose}
-          >
-            Close
-          </button>
+          {topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
+          <button type="button" className="nf-pv-closebtn" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

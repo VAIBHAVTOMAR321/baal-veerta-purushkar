@@ -1,148 +1,105 @@
-/* ═══════════════════════════════════════════════
-   PreviewModal.css – Government-form layout
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   PreviewModal.css – A4 · 4-Col · Merged Section
+   ═══════════════════════════════════════════════════ */
 
-/* ---- overlay ---- */
+/* ── Overlay ── */
 .nf-pv-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: #c8c8c8;
   display: flex;
-  align-items: stretch;
   justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+  overflow-y: auto;
   z-index: 1000;
   animation: nfPvIn 0.2s ease;
 }
 
-/* ---- modal shell ---- */
-.nf-pv-modal {
+/* ── A4 Sheet ── */
+.nf-pv-sheet {
+  width: 268mm;
+  max-width: 100%;
+  min-height: 297mm;
   background: #fff;
-  width: 100%;
-  height: 100%;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
+  position: relative;
   overflow: hidden;
 }
 
-/* ---- department header (blue bar) ---- */
-.nf-pv-dept-header {
-  position: relative;
-  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 60%, #1976d2 100%);
-  color: #fff;
-  text-align: center;
-  padding: 10px 16px;
-  border-bottom: 2px solid #000;
-  flex-shrink: 0;
-}
-
-.nf-pv-dept-header h1 {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-}
-
-.nf-pv-dept-header p {
-  margin: 2px 0 0;
-  font-size: 0.75rem;
-  color: #d8b56a;
-  font-weight: 600;
-}
-
-/* close X */
+/* ── Close X ── */
 .nf-pv-x {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  top: -1px;
+  right: 4px;
+  z-index: 10;
+  background: #333;
+  border: 2px solid #fff;
   color: #fff;
-  width: 28px;
-  height: 28px;
-  border-radius: 5px;
-  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
   display: grid;
   place-content: center;
-  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: background 0.15s;
 }
-.nf-pv-x:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
+.nf-pv-x:hover { background: #c0392b; }
 
-/* ---- scrollable body ---- */
-.nf-pv-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 14px 16px;
+/* ── Header ── */
+.nf-pv-dept-header {
+  text-align: center;
+  padding: 14px 20mm 10px;
+  border-bottom: 2px solid #000;
+  flex-shrink: 0;
 }
+.nf-pv-dept-header h1 { margin: 0; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.4px; color: #000; }
+.nf-pv-dept-header p { margin: 2px 0 0; font-size: 0.76rem; color: #333; font-weight: 600; }
 
-/* ---- generic block wrapper ---- */
-.nf-pv-block {
-  margin-bottom: 10px;
-}
+/* ── Body ── */
+.nf-pv-body { flex: 1; padding: 12px 15mm 16px; overflow-y: auto; }
 
-.nf-pv-block-label {
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: #17324d;
-  margin-bottom: 4px;
-}
+/* ── Block ── */
+.nf-pv-block { margin-bottom: 8px; }
+.nf-pv-block-label { font-weight: 700; font-size: 0.8rem; color: #000; margin-bottom: 3px; }
+.nf-pv-form-id { font-size: 0.74rem; color: #222; margin-bottom: 4px; font-weight: 600; }
 
-.nf-pv-form-id {
-  font-size: 0.76rem;
-  color: #222;
-  margin-bottom: 5px;
-  font-weight: 600;
-}
-
-/* ═══════════════════════════════════════════════
-   PHOTO ROW  –  table left + photo right
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   PHOTO ROW – 4-col table + photo
+   ═══════════════════════════════════════════════════ */
 .nf-pv-photo-row {
   display: flex;
-  gap: 0;
-  align-items: stretch;
   border: 1px solid #000;
 }
 
-/* table takes remaining width */
 .nf-pv-photo-row > .nf-pv-t4 {
   flex: 1;
   border: none;
 }
 
-/* override outer borders so only wrapper has them */
-.nf-pv-photo-row > .nf-pv-t4 td:first-child {
-  border-left: none;
-}
-.nf-pv-photo-row > .nf-pv-t4 td:last-child {
-  border-right: none;
-}
-.nf-pv-photo-row > .nf-pv-t4 tr:first-child td {
-  border-top: none;
-}
-.nf-pv-photo-row > .nf-pv-t4 tr:last-child td {
-  border-bottom: none;
-}
+.nf-pv-photo-row > .nf-pv-t4 td:first-child { border-left: none; }
+.nf-pv-photo-row > .nf-pv-t4 td:last-child  { border-right: none; }
+.nf-pv-photo-row > .nf-pv-t4 tr:first-child td { border-top: none; }
+.nf-pv-photo-row > .nf-pv-t4 tr:last-child td  { border-bottom: none; }
 
-/* ---- photo wrapper ---- */
+/* ── Photo box ── */
 .nf-pv-photo-wrap {
-  width: 140px;
+  width: 120px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 6px 8px 4px;
-  gap: 3px;
+  padding: 5px 6px 4px;
+  gap: 2px;
 }
-
 .nf-pv-photo-box {
-  width: 120px;
-  height: 148px;
+  width: 100px;
+  height: 124px;
   border: 1.5px solid #000;
   display: flex;
   align-items: center;
@@ -150,37 +107,17 @@
   background: #f7f8fa;
   overflow: hidden;
 }
+.nf-pv-photo-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nf-pv-photo-ph { color: #aaa; font-size: 0.72rem; font-weight: 600; user-select: none; }
+.nf-pv-photo-label { font-size: 0.6rem; font-weight: 700; color: #333; text-align: center; }
 
-.nf-pv-photo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.nf-pv-photo-ph {
-  color: #aaa;
-  font-size: 0.78rem;
-  font-weight: 600;
-  user-select: none;
-  pointer-events: none;
-}
-
-.nf-pv-photo-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #555;
-  text-align: center;
-  line-height: 1.2;
-}
-
-/* ═══════════════════════════════════════
-   4-column table  (personal info / address / event)
-   ═══════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   4-COLUMN TABLE  L | V | L | V
+   ═══════════════════════════════════════════════════ */
 .nf-pv-t4 {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   table-layout: fixed;
 }
 
@@ -191,302 +128,191 @@
   word-break: break-word;
 }
 
-.nf-pv-l {
-  /* label cell */
-  font-weight: 600;
+/* label cells (cols 1 & 3) */
+.nf-pv-l4 {
+  font-weight: 700;
   background: #f0f4f8;
-  width: 22%;
+  color: #000;
+  width: 34%;
   white-space: nowrap;
-  color: #4f6677;
 }
 
-.nf-pv-v {
-  /* value cell */
-  color: #17324d;
-  width: 28%;
+/* value cells (cols 2 & 4) */
+.nf-pv-v4 {
+  color: #000;
+  width: 30%;
 }
 
-/* ═══════════════════════════════════════
-   Yes / No questions table
-   ═══════════════════════════════════════ */
-.nf-pv-tyn {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.76rem;
+/* visual separator row inside 4-col table */
+.nf-pv-sep4 {
+  height: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-top: 2px solid #000 !important;
+  background: transparent !important;
 }
 
-.nf-pv-tyn td {
-  border: 1px solid #000;
-  padding: 3px 7px;
-  vertical-align: top;
-}
-
-.nf-pv-tyn td:first-child {
-  width: 78%;
-}
-
-.nf-pv-ynv {
-  width: 22%;
-  text-align: center;
-  font-weight: 700;
-  color: #17324d;
-}
-
-.nf-pv-sub {
-  padding-left: 22px !important;
-  font-weight: 400 !important;
-  background: #fafbfc;
-}
-
-/* ═══════════════════════════════════════
-   Documents 2-col grid
-   ═══════════════════════════════════════ */
-.nf-pv-tdoc {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.76rem;
-  table-layout: fixed;
-}
-
-.nf-pv-tdoc td {
-  border: 1px solid #000;
-  padding: 3px 7px;
-  vertical-align: middle;
-  width: 50%;
-}
-
-.nf-pv-dcell {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.nf-pv-dname {
-  flex: 1;
-  word-break: break-word;
-  color: #333;
-}
-
-.nf-pv-dstatus {
-  flex-shrink: 0;
-  font-weight: 600;
-  white-space: nowrap;
-  font-size: 0.74rem;
-}
-
-.nf-pv-dstatus.has {
+/* ═══════════════════════════════════════════════════
+   Expand / Collapse
+   ═══════════════════════════════════════════════════ */
+.nf-pv-more-btn {
+  background: none;
+  border: none;
   color: #0d47a1;
-  text-decoration: underline;
+  font-size: 0.68rem;
+  font-weight: 700;
   cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+.nf-pv-more-btn:hover { text-decoration: underline; color: #0a3670; }
+
+/* ═══════════════════════════════════════════════════
+   Yes / No table
+   ═══════════════════════════════════════════════════ */
+.nf-pv-tyn { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+.nf-pv-tyn td { border: 1px solid #000; padding: 3px 7px; vertical-align: top; }
+.nf-pv-tyn td:first-child { width: 78%; }
+.nf-pv-ynv { width: 22%; text-align: center; font-weight: 700; color: #000; }
+.nf-pv-sub { padding-left: 20px !important; font-weight: 400 !important; background: #fafbfc; }
+
+/* ═══════════════════════════════════════════════════
+   FULL-WIDTH DOCUMENT TABLE
+   ═══════════════════════════════════════════════════ */
+.nf-pv-tdoc-full { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+.nf-pv-tdoc-full thead th {
+  background: #e9ecef; color: #000; font-weight: 700; text-align: center;
+  padding: 4px 6px; border: 1px solid #000; font-size: 0.72rem;
+}
+.nf-pv-th-serial { width: 32px; }
+.nf-pv-th-name   { text-align: left; }
+.nf-pv-th-prev   { width: 82px; }
+.nf-pv-th-status { width: 95px; }
+
+.nf-pv-tdoc-full tbody td { border: 1px solid #000; padding: 3px 6px; vertical-align: middle; }
+.nf-pv-doc-sno { text-align: center; font-weight: 700; color: #000; }
+.nf-pv-doc-name-cell { display: flex; flex-direction: column; gap: 0; }
+.nf-pv-doc-nlabel { font-weight: 600; color: #000; }
+.nf-pv-doc-fname { font-size: 0.64rem; color: #666; word-break: break-all; }
+.nf-pv-doc-prev-cell { text-align: center; padding: 3px !important; }
+.nf-pv-doc-stat-cell { text-align: center; }
+
+.nf-pv-st-up {
+  display: inline-block; background: #d4edda; color: #155724; font-weight: 700;
+  font-size: 0.66rem; padding: 1px 8px; border-radius: 2px; border: 1px solid #28a745;
+}
+.nf-pv-st-na {
+  display: inline-block; color: #999; font-weight: 600; font-size: 0.66rem; font-style: italic;
 }
 
-.nf-pv-dstatus.na {
-  color: #999;
-  font-style: italic;
+/* ═══════════════════════════════════════════════════
+   DocPreview box
+   ═══════════════════════════════════════════════════ */
+.nf-pv-dprev {
+  width: 65px; height: 78px; border: 1px solid #000;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #f7f8fa; overflow: hidden; cursor: pointer; transition: box-shadow 0.15s; vertical-align: middle;
 }
+.nf-pv-dprev:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.nf-pv-dprev-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nf-pv-dprev-na { cursor: default; background: #fafafa; border-color: #ccc; }
+.nf-pv-dprev-na span { font-size: 0.5rem; color: #aaa; font-style: italic; text-align: center; line-height: 1.15; padding: 0 2px; }
+.nf-pv-dprev-pdf { background: #fdf2f2; gap: 2px; }
+.nf-pv-dprev-pdf span { font-size: 0.55rem; font-weight: 800; color: #c0392b; letter-spacing: 0.3px; }
+.nf-pv-dprev-doc { background: #f0f7fa; gap: 2px; }
+.nf-pv-dprev-doc span { font-size: 0.55rem; font-weight: 800; color: #217193; letter-spacing: 0.3px; }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    Declaration box
-   ═══════════════════════════════════════ */
-.nf-pv-decl-box {
-  border: 1px solid #000;
-  padding: 10px 12px;
-  font-size: 0.76rem;
-  line-height: 1.65;
-  min-height: 90px;
-}
+   ═══════════════════════════════════════════════════ */
+.nf-pv-decl-box { border: 1px solid #000; padding: 8px 10px; font-size: 0.74rem; line-height: 1.6; min-height: 80px; }
+.nf-pv-decl-box p { margin: 0 0 20px; text-align: justify; }
+.nf-pv-decl-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.nf-pv-dstatus.has { color: #0d47a1; text-decoration: underline; cursor: pointer; font-weight: 600; font-size: 0.72rem; }
+.nf-pv-sign-name { font-weight: 700; color: #000; font-size: 0.78rem; }
 
-.nf-pv-decl-box p {
-  margin: 0 0 24px;
-  text-align: justify;
-}
-
-.nf-pv-decl-foot {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.nf-pv-sign-name {
-  font-weight: 700;
-  color: #17324d;
-  font-size: 0.8rem;
-}
-
-/* ═══════════════════════════════════════
-   Footer bar
-   ═══════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════════════ */
 .nf-pv-footer {
-  padding: 8px 14px;
-  border-top: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  background: #fff;
-  flex-shrink: 0;
+  padding: 6px 15mm 10px; border-top: 1px solid #ddd;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0;
 }
-
-.nf-pv-accept {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.nf-pv-accept input[type="checkbox"] {
-  accent-color: #0d47a1;
-  width: 15px;
-  height: 15px;
-  cursor: pointer;
-}
-
-.nf-pv-warn {
-  font-size: 0.72rem;
-  color: #c82333;
-  font-weight: 600;
-}
-
+.nf-pv-accept { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; cursor: pointer; user-select: none; color: #000; }
+.nf-pv-accept input[type="checkbox"] { accent-color: #000; width: 14px; height: 14px; cursor: pointer; }
+.nf-pv-warn { font-size: 0.68rem; color: #c82333; font-weight: 600; }
 .nf-pv-closebtn {
-  margin-top: 2px;
-  padding: 5px 22px;
-  border: 1px solid #217193;
-  background: #fff;
-  color: #17516b;
-  font-weight: 700;
-  font-size: 0.8rem;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.15s;
+  margin-top: 2px; padding: 4px 20px; border: 1px solid #333; background: #fff;
+  color: #000; font-weight: 700; font-size: 0.76rem; cursor: pointer; border-radius: 3px; transition: background 0.15s;
 }
+.nf-pv-closebtn:hover { background: #f0f0f0; }
 
-.nf-pv-closebtn:hover {
-  background: #f3f6f8;
-}
-
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    Responsive
-   ═══════════════════════════════════════ */
-@media (max-width: 640px) {
-  .nf-pv-body {
-    padding: 8px 6px 12px;
-  }
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+  .nf-pv-overlay { padding: 8px; }
+  .nf-pv-sheet { width: 100%; min-height: auto; }
+  .nf-pv-dept-header { padding: 10px 12px 8px; }
+  .nf-pv-body { padding: 8px 10px 12px; }
+  .nf-pv-footer { padding: 6px 10px 8px; }
 
-  /* photo row: stack vertically */
-  .nf-pv-photo-row {
-    flex-direction: column;
-  }
+  /* photo row: stack */
+  .nf-pv-photo-row { flex-direction: column; }
+  .nf-pv-photo-wrap { width: 100%; flex-direction: row; justify-content: center; padding: 5px; border-top: 1px solid #000; }
+  .nf-pv-photo-box { width: 80px; height: 100px; }
 
-  .nf-pv-photo-wrap {
-    width: 100%;
-    flex-direction: row;
-    justify-content: center;
-    padding: 6px;
-    border-top: 1px solid #000;
-  }
+  /* restore borders */
+  .nf-pv-photo-row > .nf-pv-t4 td:first-child { border-left: 1px solid #000; }
+  .nf-pv-photo-row > .nf-pv-t4 td:last-child  { border-right: 1px solid #000; }
+  .nf-pv-photo-row > .nf-pv-t4 tr:first-child td { border-top: 1px solid #000; }
+  .nf-pv-photo-row > .nf-pv-t4 tr:last-child td  { border-bottom: 1px solid #000; }
 
-  .nf-pv-photo-box {
-    width: 90px;
-    height: 110px;
-  }
+  /* 4-col → 2-col pairs */
+  .nf-pv-t4 { table-layout: auto; }
+  .nf-pv-t4 tr { display: block; border: 1px solid #000; margin-bottom: 0; }
+  .nf-pv-t4 td { display: block; border: none; width: 100% !important; }
 
-  /* restore table borders when stacked */
-  .nf-pv-photo-row > .nf-pv-t4 td:first-child {
-    border-left: 1px solid #000;
+  .nf-pv-l4 {
+    width: auto; display: block; background: #f0f4f8;
+    padding: 2px 6px; border-bottom: none; white-space: normal;
   }
-  .nf-pv-photo-row > .nf-pv-t4 td:last-child {
-    border-right: 1px solid #000;
+  .nf-pv-v4 {
+    width: auto; display: block; padding: 0 6px 3px; border-top: none;
   }
-  .nf-pv-photo-row > .nf-pv-t4 tr:first-child td {
-    border-top: 1px solid #000;
-  }
-  .nf-pv-photo-row > .nf-pv-t4 tr:last-child td {
-    border-bottom: 1px solid #000;
-  }
+  .nf-pv-t4 td[colspan] { display: block; }
 
-  /* 4-col → stacked on mobile */
-  .nf-pv-t4 {
-    table-layout: auto;
-  }
-
-  .nf-pv-t4 tr {
+  /* separator stays visible */
+  .nf-pv-sep4 {
     display: block;
-    margin-bottom: 0;
-    border: 1px solid #000;
+    height: 0;
+    margin: 4px 0;
+    border-top: 2px solid #000 !important;
   }
 
-  .nf-pv-t4 td {
-    display: block;
-    border: none;
-    width: 100% !important;
+  /* doc table → cards */
+  .nf-pv-tdoc-full thead { display: none; }
+  .nf-pv-tdoc-full tbody tr {
+    display: flex; flex-wrap: wrap; align-items: center;
+    border: 1px solid #000; padding: 4px; gap: 4px;
   }
-
-  .nf-pv-l {
-    width: auto;
-    display: block;
-    background: #f0f4f8;
-    padding: 2px 6px;
-    border-bottom: none;
-  }
-
-  .nf-pv-v {
-    width: auto;
-    display: block;
-    padding: 0 6px 3px;
-    border-top: none;
-  }
-
-  .nf-pv-t4 td[colspan] {
-    display: block;
-  }
-
-  /* doc grid → single column */
-  .nf-pv-tdoc td {
-    display: block;
-    width: 100%;
-  }
-
-  .nf-pv-dcell {
-    flex-wrap: wrap;
-  }
+  .nf-pv-tdoc-full tbody td { display: block; border: none; padding: 0; }
+  .nf-pv-doc-sno { width: auto; font-size: 0.66rem; min-width: 18px; }
+  .nf-pv-doc-name-cell { flex: 1; min-width: 0; }
+  .nf-pv-doc-prev-cell { width: auto; }
+  .nf-pv-doc-stat-cell { width: auto; }
 
   /* yn table */
-  .nf-pv-tyn td:first-child,
-  .nf-pv-ynv {
-    width: auto;
-    display: block;
-    border-bottom: none;
-  }
+  .nf-pv-tyn td:first-child, .nf-pv-ynv { width: auto; display: block; border-bottom: none; }
+  .nf-pv-tyn tr { display: block; border: 1px solid #000; }
+  .nf-pv-tyn td { display: block; border: none; width: 100%; }
+  .nf-pv-ynv { text-align: left; padding-left: 20px; border-top: none; }
 
-  .nf-pv-tyn tr {
-    display: block;
-    margin-bottom: 0;
-    border: 1px solid #000;
-  }
-
-  .nf-pv-tyn td {
-    display: block;
-    border: none;
-    width: 100%;
-  }
-
-  .nf-pv-ynv {
-    text-align: left;
-    padding-left: 22px;
-    border-top: none;
-  }
+  .nf-pv-x { top: -10px; right: -6px; width: 28px; height: 28px; font-size: 1.1rem; }
 }
 
-/* animation */
 @keyframes nfPvIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
