@@ -333,6 +333,11 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
               <div className="nf-pv-decl-sign">
                 <span className="nf-pv-sign-name">{data?.childName || "-"}</span>
               </div>
+              <div className="nf-pv-sign-line">
+                <span>नामांकनकर्ता</span>
+                <span>द्वारा</span>
+                <span>हस्ताक्षर</span>
+              </div>
 
               {/* ── अभिभावक की घोषणा / सहमति ── */}
               <p className="nf-pv-decl-title" style={{ marginTop: "14px" }}>
@@ -360,6 +365,11 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
                 <span className="nf-pv-sign-name">
                   {data?.guardianName || data?.fatherName || "-"}
                 </span>
+              </div>
+              <div className="nf-pv-sign-line">
+                <span>अभिभावक</span>
+                <span>द्वारा</span>
+                <span>हस्ताक्षर</span>
               </div>
             </div>
           </div>
