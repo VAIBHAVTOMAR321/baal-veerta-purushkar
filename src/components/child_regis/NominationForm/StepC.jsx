@@ -27,7 +27,7 @@ const normalizeWitness = (witness) => Array.isArray(witness)
   ? { name: witness[0] || "", mobile: witness[1] || "", address: witness[2] || "", relation: witness[3] || "" }
   : { name: witness?.name || "", mobile: witness?.mobile || "", address: witness?.address || "", relation: witness?.relation || "" };
 
-const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCChecked, externalSubmitTrigger }) => {
+const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCChecked, externalSubmitTrigger, onErrorsChange }) => {
   const { authFetch } = useAuth();
   const [customTitleActive, setCustomTitleActive] = useState(false);
   const [rescuedPeople, setRescuedPeople] = useState(data.rescuedDetails?.people?.length ? data.rescuedDetails.people : [{ name: "", age: "", relation: "" }]);
@@ -332,19 +332,19 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const validateBeforeSubmit = () => {
     const errors = {};
     if (!data.actTitle || data.actTitle.trim() === "") {
-      errors.actTitle = "वीरता की घटना का शीर्षक आवश्यक है।";
+      errors.actTitle = "यह फ़ील्ड अनिवार्य है";
     }
     if (!data.actDate) {
-      errors.actDate = "घटना की दिनांक आवश्यक है।";
+      errors.actDate = "यह फ़ील्ड अनिवार्य है";
     }
     if (!data.actPlace || data.actPlace.trim() === "") {
-      errors.actPlace = "घटना का स्थान आवश्यक है।";
+      errors.actPlace = "यह फ़ील्ड अनिवार्य है";
     }
     if (!data.actDistrict) {
-      errors.actDistrict = "घटना का जनपद आवश्यक है।";
+      errors.actDistrict = "यह फ़ील्ड अनिवार्य है";
     }
     if (!data.shortDescription || data.shortDescription.trim() === "") {
-      errors.shortDescription = "घटना का संक्षिप्त विवरण आवश्यक है।";
+      errors.shortDescription = "यह फ़ील्ड अनिवार्य है";
     } else {
       const wc = data.shortDescription.trim().split(/\s+/).filter(Boolean).length;
       if (wc < 250 || wc > 500) {
@@ -352,16 +352,30 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       }
     }
     if (!data.firRegistered) {
-      errors.firRegistered = "यह फ़ील्ड आवश्यक है।";
+      errors.firRegistered = "यह फ़ील्ड अनिवार्य है";
     }
     if (data.firRegistered === "हाँ") {
-      if (!data.policeStation || data.policeStation.trim() === "") errors.policeStation = "थाना आवश्यक है।";
-      if (!data.firNumber || data.firNumber.trim() === "") errors.firNumber = "FIR संख्या आवश्यक है।";
-      if (!data.firDate) errors.firDate = "FIR दिनांक आवश्यक है।";
+      if (!data.policeStation || data.policeStation.trim() === "") errors.policeStation = "यह फ़ील्ड अनिवार्य है";
+      if (!data.firNumber || data.firNumber.trim() === "") errors.firNumber = "यह फ़ील्ड अनिवार्य है";
+      if (!data.firDate) errors.firDate = "यह फ़ील्ड अनिवार्य है";
     }
     if (!data.mediaPublished) {
-      errors.mediaPublished = "यह फ़ील्ड आवश्यक है।";
+      errors.mediaPublished = "यह फ़ील्ड अनिवार्य है";
     }
+
+    const validateRows = (rows, group, fields) => {
+      (rows || []).forEach((row, index) => {
+        if (fields.some((field) => String(row?.[field] || "").trim())) {
+          fields.forEach((field) => {
+            if (!String(row?.[field] || "").trim()) {
+              errors[`${group}.${index}.${field}`] = "यह फ़ील्ड अनिवार्य है";
+            }
+          });
+        }
+      });
+    };
+    validateRows(data.rescuedDetails?.people, "rescuedPeople", ["name", "age", "relation"]);
+    validateRows(data.witnesses, "witnesses", ["name", "mobile", "address", "relation"]);
 
     return Object.keys(errors).length > 0 ? errors : null;
   };
@@ -376,14 +390,21 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       return;
     }
 
+    setAlertInfo(null);
     const validationErrors = validateBeforeSubmit();
     if (validationErrors) {
-      if (typeof update === "function" && typeof error === "object") {
-        Object.entries(validationErrors).forEach(([key, msg]) => {
-          update({ target: { name: `__error_${key}`, value: msg } });
-        });
-      }
-      setAlertInfo({ type: "error", message: "कृपया सभी आवश्यक फ़ील्ड भरें।" });
+      if (onErrorsChange) onErrorsChange(validationErrors);
+      requestAnimationFrame(() => {
+        const firstKey = Object.keys(validationErrors)[0];
+        let el = document.getElementById(`nf-${firstKey}`);
+        if (!el) {
+          const match = firstKey.match(/^(rescuedPeople|witnesses)\.(\d+)\.(.+)$/);
+          if (match) {
+            el = document.getElementById(`nf-${match[1]}-${match[2]}-${match[3]}`);
+          }
+        }
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
       return;
     }
 
@@ -453,7 +474,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       <td>{index + 1}</td>
       {witnessFields.map((field, fieldIndex) => (
         <td key={field}>
-          <input type="text" value={row[witnessRowFields[fieldIndex]] || ""} onChange={(e) => updateWitness(index, witnessRowFields[fieldIndex], e.target.value)} disabled={isFormLocked || isOverAge} />
+          <input id={`nf-witnesses-${index}-${witnessRowFields[fieldIndex]}`} type="text" value={row[witnessRowFields[fieldIndex]] || ""} onChange={(e) => updateWitness(index, witnessRowFields[fieldIndex], e.target.value)} disabled={isFormLocked || isOverAge} />
           {rowError("witnesses", index, witnessRowFields[fieldIndex]) && <small className="nf-error">{rowError("witnesses", index, witnessRowFields[fieldIndex])}</small>}
         </td>
       ))}
@@ -466,7 +487,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       <td>{index + 1}</td>
       {rescuedPeopleFields.map((field) => (
         <td key={field}>
-          <input type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isFormLocked || isOverAge} />
+          <input id={`nf-rescuedPeople-${index}-${field}`} type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isFormLocked || isOverAge} />
           {rowError("rescuedPeople", index, field) && <small className="nf-error">{rowError("rescuedPeople", index, field)}</small>}
         </td>
       ))}

@@ -10,8 +10,8 @@ import "./NominationForm.css";
 
 const steps = ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"];
 const requiredByStep = {
-   0: ["childName", "fatherName", "motherName", "birthDate", "ageYears", "ageMonths", "gender", "resident", "permanentग्राम/मोहल्ला", "permanentडाकघर", "permanentविकासखण्ड/नगर निकाय", "permanentजनपद", "permanentपिन कोड"],
-   1: ["actTitle", "actDate", "actPlace", "actDistrict", "actNature", "shortDescription", "detailedDescription", "firRegistered", "mediaPublished"],
+   0: ["childName", "fatherName", "motherName", "birthDate", "gender", "resident"],
+   1: ["actTitle", "actDate", "actPlace", "actDistrict", "shortDescription", "firRegistered", "mediaPublished"],
  };
 
 const getTableErrors = (formData) => {
@@ -137,13 +137,13 @@ const NominationForm = () => {
 
   const validate = (targetStep) => {
     const nextErrors = {};
-    (requiredByStep[targetStep] || []).forEach((field) => { if (!String(data[field] || "").trim()) nextErrors[field] = "यह फ़ील्ड आवश्यक है"; });
+    (requiredByStep[targetStep] || []).forEach((field) => { if (!String(data[field] || "").trim()) nextErrors[field] = "यह फ़ील्ड अनिवार्य है"; });
     if (targetStep === 1) {
       const validateRows = (rows, group, fields) => {
         (rows || []).forEach((row, index) => {
           if (fields.some((field) => String(row?.[field] || "").trim())) {
             fields.forEach((field) => {
-              if (!String(row?.[field] || "").trim()) nextErrors[`${group}.${index}.${field}`] = "यह फ़ील्ड आवश्यक है";
+              if (!String(row?.[field] || "").trim()) nextErrors[`${group}.${index}.${field}`] = "यह फ़ील्ड अनिवार्य है";
             });
           }
         });
@@ -153,7 +153,21 @@ const NominationForm = () => {
     }
     if (targetStep === 3) ["document0", "document1", "document2", "document3"].forEach((field) => { if (!data[field]) nextErrors[field] = "यह दस्तावेज़ अनिवार्य है"; });
     setErrors(nextErrors);
-    return !Object.keys(nextErrors).length;
+    if (Object.keys(nextErrors).length) {
+      requestAnimationFrame(() => {
+        const firstKey = Object.keys(nextErrors)[0];
+        let el = document.getElementById(`nf-${firstKey}`);
+        if (!el) {
+          const match = firstKey.match(/^(rescuedPeople|witnesses)\.(\d+)\.(.+)$/);
+          if (match) {
+            el = document.getElementById(`nf-${match[1]}-${match[2]}-${match[3]}`);
+          }
+        }
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return false;
+    }
+    return true;
   };
 
   const next = () => {
@@ -188,10 +202,10 @@ const NominationForm = () => {
   const canSubmit = Boolean(data.declarationAccepted && data.parentDeclarationAccepted && data.declarationDocument && data.parentDeclarationDocument && topAccepted);
 
   const component = [
-    <StepB data={data} update={update} error={errors} onCompleted={handleStepBComplete} isStepBChecked={stepBCheckedRef.current} onNext={next} />,
-    <StepC data={data} update={update} error={errors} onSubmitSuccess={handleStepCSubmitSuccess} onCompleted={handleStepCAlreadyCompleted} isStepCChecked={stepCCheckedRef.current} externalSubmitTrigger={stepCSubmitTrigger} />,
+    <StepB data={data} update={update} error={errors} onCompleted={handleStepBComplete} isStepBChecked={stepBCheckedRef.current} onNext={next} onErrorsChange={setErrors} />,
+    <StepC data={data} update={update} error={errors} onSubmitSuccess={handleStepCSubmitSuccess} onCompleted={handleStepCAlreadyCompleted} isStepCChecked={stepCCheckedRef.current} externalSubmitTrigger={stepCSubmitTrigger} onErrorsChange={setErrors} />,
     <StepE data={data} update={update} onSubmitSuccess={handleStepESubmitSuccess} onCompleted={handleStepEAlreadyCompleted} isStepEChecked={stepECheckedRef.current} externalSubmitTrigger={stepESubmitTrigger} />,
-    <StepD data={data} update={update} error={errors} onSubmitSuccess={handleStepDSubmitSuccess} onCompleted={handleStepDAlreadyCompleted} isStepDChecked={stepDCheckedRef.current} externalSubmitTrigger={stepDSubmitTrigger} />,
+    <StepD data={data} update={update} error={errors} onSubmitSuccess={handleStepDSubmitSuccess} onCompleted={handleStepDAlreadyCompleted} isStepDChecked={stepDCheckedRef.current} externalSubmitTrigger={stepDSubmitTrigger} onErrorsChange={setErrors} />,
     <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} topAccepted={topAccepted} onApplicationCompleted={handleApplicationCompleted} />
   ][step];
 

@@ -51,7 +51,7 @@ const normalizeVideoUrl = (value) => {
   return /^https?:\/\//i.test(trimmedValue) ? trimmedValue : `https://${trimmedValue}`;
 };
 
-const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDChecked, externalSubmitTrigger }) => {
+const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDChecked, externalSubmitTrigger, onErrorsChange }) => {
   const { authFetch } = useAuth();
   const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
   const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
@@ -272,9 +272,23 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
   };
 
   const handleNext = () => {
+    setAlertInfo(null);
     const validationErrors = validateDocuments();
     if (Object.keys(validationErrors).length) {
-      setAlertInfo({ type: "error", message: "कृपया सभी अनिवार्य दस्तावेज़ अपलोड और सेव करें।" });
+      if (onErrorsChange) onErrorsChange(validationErrors);
+      requestAnimationFrame(() => {
+        const firstKey = Object.keys(validationErrors)[0];
+        let el = null;
+        if (firstKey === "document7") {
+          el = document.getElementById("nf-document-7-file");
+        } else if (firstKey === "document9") {
+          el = document.getElementById("nf-document-9-url");
+        } else if (firstKey.startsWith("document")) {
+          const index = firstKey.replace("document", "");
+          el = document.getElementById(`nf-document-${index}`);
+        }
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
       return;
     }
     onSubmitSuccess?.();
@@ -421,9 +435,10 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                   {data.document9 && (
                     <button type="button" className="nf-secondary" onClick={() => handleRemoveDocument(9)} disabled={submittingIndex === 9}>हटाएं</button>
                   )}
-                  <small>कम से कम एक विकल्प अपलोड करना अनिवार्य है।</small>
-                  {error.document7 && <small className="nf-error">{error.document7}</small>}
-                  {pendingDocuments[7] && (
+                   <small>कम से कम एक विकल्प अपलोड करना अनिवार्य है।</small>
+                   {error.document7 && <small className="nf-error">{error.document7}</small>}
+                   {error.document9 && <small className="nf-error">{error.document9}</small>}
+                   {pendingDocuments[7] && (
                     <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(7)} disabled={isSubmitting}>
                       {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
                     </button>

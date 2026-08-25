@@ -8,7 +8,7 @@ const isPart2Submitted = (record) => {
   return ["completed", "submitted"].includes(status) || record?.submitted === true || record?.is_submitted === true;
 };
 
-const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => {
+const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErrorsChange }) => {
   const { authFetch } = useAuth();
   const [resident, setResident] = useState(data?.resident || "");
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
@@ -398,19 +398,19 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
       errors.applicant_id = "Applicant ID not found";
     }
 
-    if (!data.childName?.trim()) errors.childName = "बच्चे का नाम आवश्यक है";
-    if (!data.fatherName?.trim()) errors.fatherName = "पिता का नाम आवश्यक है";
-    if (!data.motherName?.trim()) errors.motherName = "माता का नाम आवश्यक है";
-    if (!data.birthDate) errors.birthDate = "जन्म तिथि आवश्यक है";
-    if (!data.gender) errors.gender = "लिंग चुनें";
-    if (!data.resident) errors.resident = "यह फ़ील्ड आवश्यक है";
+    if (!data.childName?.trim()) errors.childName = "यह फ़ील्ड अनिवार्य है";
+    if (!data.fatherName?.trim()) errors.fatherName = "यह फ़ील्ड अनिवार्य है";
+    if (!data.motherName?.trim()) errors.motherName = "यह फ़ील्ड अनिवार्य है";
+    if (!data.birthDate) errors.birthDate = "यह फ़ील्ड अनिवार्य है";
+    if (!data.gender) errors.gender = "यह फ़ील्ड अनिवार्य है";
+    if (!data.resident) errors.resident = "यह फ़ील्ड अनिवार्य है";
 
     if (data.resident === "हाँ") {
-      if (!data["permanentग्राम/मोहल्ला"]?.trim()) errors["permanentग्राम/मोहल्ला"] = "आवश्यक है";
-      if (!data["permanentडाकघर"]?.trim()) errors["permanentडाकघर"] = "आवश्यक है";
-      if (!data["permanentजनपद"]) errors["permanentजनपद"] = "जनपद चुनें";
-      if (!data["permanentविकासखण्ड/नगर निकाय"]) errors["permanentविकासखण्ड/नगर निकाय"] = "विकासखण्ड चुनें";
-      if (!data["permanentपिन कोड"]?.trim()) errors["permanentपिन कोड"] = "पिन कोड आवश्यक है";
+      if (!data["permanentग्राम/मोहल्ला"]?.trim()) errors["permanentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentडाकघर"]?.trim()) errors["permanentडाकघर"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentजनपद"]) errors["permanentजनपद"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentविकासखण्ड/नगर निकाय"]) errors["permanentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentपिन कोड"]?.trim()) errors["permanentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
     }
 
     if (data.childMobile && data.childMobile.length !== 10) {
@@ -464,12 +464,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked }) => 
 
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
-      if (error && typeof error === "object") {
-        Object.keys(validationErrors).forEach((key) => {
-          error[key] = validationErrors[key];
-        });
-      }
-      setSubmitError("कृपया सभी आवश्यक फ़ील्ड भरें");
+      if (onErrorsChange) onErrorsChange(validationErrors);
+      requestAnimationFrame(() => {
+        const firstKey = Object.keys(validationErrors)[0];
+        const el = document.getElementById(`nf-${firstKey}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
       return false;
     }
 
