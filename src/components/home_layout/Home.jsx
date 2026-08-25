@@ -374,8 +374,10 @@ function Home() {
                             <IconComponent className="step-icon" />
                           </div>
                           <div className="step-content">
-                            <h5 className="step-title">{step.title}</h5>
-                            <p className="step-subtitle">{step.subtitle}</p>
+                            <div className="step-title-row">
+                              <h5 className="step-title">{step.title}</h5>
+                              <span className="step-subtitle">{step.subtitle}</span>
+                            </div>
                             <p className="step-description">{step.description}</p>
                           </div>
                           {index < registrationSteps.length - 1 && (
