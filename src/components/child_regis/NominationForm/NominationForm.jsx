@@ -38,6 +38,7 @@ const NominationForm = () => {
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [isApplicationCompleted, setIsApplicationCompleted] = useState(false);
   const [topAccepted, setTopAccepted] = useState(Boolean(data.topAccepted));
   const stepBCheckedRef = useRef(false);
   const [stepCSubmitTrigger, setStepCSubmitTrigger] = useState(0);
@@ -96,6 +97,10 @@ const NominationForm = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleApplicationCompleted = () => {
+    setIsApplicationCompleted(true);
+  };
+
   const update = (event) => {
     const { name, value, type, checked, files } = event.target;
     setData((current) => {
@@ -132,6 +137,7 @@ const NominationForm = () => {
   };
 
   const next = () => {
+    if (isApplicationCompleted) return;
     if (step === 1) {
       setStepCSubmitTrigger((prev) => prev + 1);
       return;
@@ -149,14 +155,18 @@ const NominationForm = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
-  const previous = () => { setStep((current) => Math.max(current - 1, 0)); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const previous = () => {
+    if (isApplicationCompleted) return;
+    setStep((current) => Math.max(current - 1, 0));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const saveDraft = () => { localStorage.setItem("bal-veerata-nomination-draft", JSON.stringify({ ...data, savedAt: new Date().toISOString() })); setNotice("आवेदन ड्राफ्ट के रूप में सुरक्षित किया गया है।"); };
   const preview = () => setShowPreview(true);
   const closePreview = () => setShowPreview(false);
   const finalSubmit = () => { if (data.declarationAccepted && data.parentDeclarationAccepted && data.declarationDocument && data.parentDeclarationDocument && topAccepted) setNotice("आवेदन सफलतापूर्वक प्रस्तुत किया गया है।"); };
   const canSubmit = Boolean(data.declarationAccepted && data.parentDeclarationAccepted && data.declarationDocument && data.parentDeclarationDocument && topAccepted);
-  const component = [<StepB data={data} update={update} error={errors} onCompleted={handleStepBComplete} isStepBChecked={stepBCheckedRef.current} onNext={next} />, <StepC data={data} update={update} error={errors} onSubmitSuccess={handleStepCSubmitSuccess} onCompleted={handleStepCAlreadyCompleted} isStepCChecked={stepCCheckedRef.current} externalSubmitTrigger={stepCSubmitTrigger} />, <StepE data={data} update={update} onSubmitSuccess={handleStepESubmitSuccess} onCompleted={handleStepEAlreadyCompleted} isStepEChecked={stepECheckedRef.current} externalSubmitTrigger={stepESubmitTrigger} />, <StepD data={data} update={update} error={errors} onSubmitSuccess={handleStepDSubmitSuccess} onCompleted={handleStepDAlreadyCompleted} isStepDChecked={stepDCheckedRef.current} externalSubmitTrigger={stepDSubmitTrigger} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} topAccepted={topAccepted} />][step];
+  const component = [<StepB data={data} update={update} error={errors} onCompleted={handleStepBComplete} isStepBChecked={stepBCheckedRef.current} onNext={next} />, <StepC data={data} update={update} error={errors} onSubmitSuccess={handleStepCSubmitSuccess} onCompleted={handleStepCAlreadyCompleted} isStepCChecked={stepCCheckedRef.current} externalSubmitTrigger={stepCSubmitTrigger} />, <StepE data={data} update={update} onSubmitSuccess={handleStepESubmitSuccess} onCompleted={handleStepEAlreadyCompleted} isStepEChecked={stepECheckedRef.current} externalSubmitTrigger={stepESubmitTrigger} />, <StepD data={data} update={update} error={errors} onSubmitSuccess={handleStepDSubmitSuccess} onCompleted={handleStepDAlreadyCompleted} isStepDChecked={stepDCheckedRef.current} externalSubmitTrigger={stepDSubmitTrigger} />, <StepF data={data} update={update} onSave={saveDraft} onPreview={preview} onSubmit={finalSubmit} canSubmit={canSubmit} topAccepted={topAccepted} onApplicationCompleted={handleApplicationCompleted} />][step];
 
-  return <main className="nf-page"><header className="nf-header"><div className="nf-brand-mark">उत्तराखण्ड<br /><small>सरकार</small></div><div><p>ऑनलाइन नामांकन प्रपत्र</p><h1>मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h1></div><button type="button" className="nf-back" onClick={() => navigate("/StudentRegistration")}>भाग–A</button></header><div className="nf-shell"><nav className="nf-stepper" aria-label="Application steps">{steps.map((label, index) => <div className={`nf-step ${index === step ? "current" : ""} ${index < step ? "complete" : ""}`} key={label}><span>{index < step ? "✓" : index + 1}</span><strong>Step {index + 1}</strong><small>{label}</small></div>)}</nav>{notice && <div className="nf-notice" role="status">{notice}</div>}<form onSubmit={(event) => { event.preventDefault(); if (step < 4) next(); }} noValidate>{component}<div className="nf-navigation">{step > 0 && <button type="button" className="nf-secondary" onClick={previous}>← Previous / पिछला</button>}{step < 4 && <button type="submit" className="nf-primary">Next / आगे बढ़ें →</button>}</div></form></div>{showPreview && <PreviewModal data={data} onClose={closePreview} topAccepted={topAccepted} onTopAcceptedChange={setTopAccepted} />}</main>;
+  return <main className="nf-page"><header className="nf-header"><div className="nf-brand-mark">उत्तराखण्ड<br /><small>सरकार</small></div><div><p>ऑनलाइन नामांकन प्रपत्र</p><h1>मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h1></div><button type="button" className="nf-back" onClick={() => navigate("/StudentRegistration")} disabled={isApplicationCompleted}>भाग–A</button></header><div className="nf-shell"><nav className="nf-stepper" aria-label="Application steps">{steps.map((label, index) => <div className={`nf-step ${index === step ? "current" : ""} ${index < step || (isApplicationCompleted && index === 4) ? "complete" : ""}`} key={label}><span>{index < step || (isApplicationCompleted && index === 4) ? "✓" : index + 1}</span><strong>Step {index + 1}</strong><small>{label}</small></div>)}</nav>{notice && <div className="nf-notice" role="status">{notice}</div>}<form onSubmit={(event) => { event.preventDefault(); if (step < 4) next(); }} noValidate><fieldset disabled={isApplicationCompleted && step !== 4} style={{ border: 0, padding: 0, margin: 0 }}>{component}<div className="nf-navigation">{step > 0 && !isApplicationCompleted && <button type="button" className="nf-secondary" onClick={previous}>← Previous / पिछला</button>}{step < 4 && !isApplicationCompleted && <button type="submit" className="nf-primary">Next / आगे बढ़ें →</button>}</div></fieldset></form></div>{showPreview && <PreviewModal data={data} onClose={closePreview} topAccepted={topAccepted} onTopAcceptedChange={setTopAccepted} />}</main>;
 };
 export default NominationForm;

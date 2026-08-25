@@ -37,6 +37,18 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
         const record = Array.isArray(responseData) ? responseData[0] : responseData;
         const recordApplicantId = record?.applicant_id;
         if (active && record && (!applicantId || String(recordApplicantId) === String(applicantId))) {
+          if (record.declarationDocument) {
+            update({ target: { name: "declarationDocument", value: record.declarationDocument, type: "text" } });
+          }
+          if (record.parentDeclarationDocument) {
+            update({ target: { name: "parentDeclarationDocument", value: record.parentDeclarationDocument, type: "text" } });
+          }
+          if (record.declarationDocument) {
+            update({ target: { name: "declarationAccepted", checked: true, type: "checkbox" } });
+          }
+          if (record.parentDeclarationDocument) {
+            update({ target: { name: "parentDeclarationAccepted", checked: true, type: "checkbox" } });
+          }
           const status = String(record.status || record.submission_status || "").trim().toLowerCase();
           if (status === "completed") {
             setIsCompleted(true);
@@ -151,6 +163,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               name="declarationAccepted"
               checked={Boolean(data.declarationAccepted)}
               onChange={handleCheckboxChange}
+              disabled={isCompleted}
             /> <span>मैंने उपर्युक्त घोषणा को पढ़ लिया है तथा मैं इससे सहमत हूँ।</span>
           </label>
         </div>
@@ -191,6 +204,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               name="parentDeclarationAccepted"
               checked={Boolean(data.parentDeclarationAccepted)}
               onChange={handleParentCheckboxChange}
+              disabled={isCompleted}
             />
             <span>मैंने उपर्युक्त सहमति को पढ़ लिया है तथा मैं इससे सहमत हूँ।</span>
           </label>
@@ -228,14 +242,16 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
           <button type="button" className="nf-secondary" onClick={onPreview}>
             Preview Application
           </button>
-          <button
-            type="button"
-            className="nf-primary"
-            disabled={!canSubmit || isCompleted}
-            onClick={handleFinalSubmit}
-          >
-            {submitting ? "Submitting..." : "Final Submit"}
-          </button>
+          {!isCompleted && (
+            <button
+              type="button"
+              className="nf-primary"
+              disabled={!canSubmit}
+              onClick={handleFinalSubmit}
+            >
+              {submitting ? "Submitting..." : "Final Submit"}
+            </button>
+          )}
         </div>
         <p className="nf-note">
           नोट: Final Submit के पश्चात आवेदन में कोई संशोधन नहीं किया जा सकेगा।

@@ -55,6 +55,7 @@ const UserDashBoard = () => {
   const [notice, setNotice] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [topAccepted, setTopAccepted] = useState(false);
+  const [isApplicationCompleted, setIsApplicationCompleted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -126,6 +127,7 @@ const UserDashBoard = () => {
   };
 
   const next = () => {
+    if (isApplicationCompleted) return;
     if (step === 3) {
       setStepDSubmitTrigger((current) => current + 1);
       return;
@@ -137,6 +139,7 @@ const UserDashBoard = () => {
   };
 
   const previous = () => {
+    if (isApplicationCompleted) return;
     setStep((current) => Math.max(current - 1, 0));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -231,6 +234,10 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleApplicationCompleted = () => {
+    setIsApplicationCompleted(true);
+  };
+
   const component = [
     <StepB
       key="step-b"
@@ -279,6 +286,7 @@ const UserDashBoard = () => {
       onSubmit={finalSubmit}
       canSubmit={canSubmit}
       topAccepted={topAccepted}
+      onApplicationCompleted={handleApplicationCompleted}
     />,
   ][step];
 
@@ -314,7 +322,7 @@ const UserDashBoard = () => {
               <div
                 className={`nf-step ${
                   index === step ? "current" : ""
-                } ${index < step ? "complete" : ""}`}
+                } ${index < step || (isApplicationCompleted && index === 4) ? "complete" : ""}`}
                 key={label}
               >
                 <span className="nf-step-number">
@@ -363,21 +371,24 @@ const UserDashBoard = () => {
             }}
             noValidate
           >
-            {component}
+            <fieldset disabled={isApplicationCompleted && step !== 4} style={{ border: 0, padding: 0, margin: 0 }}>
+              {component}
+            </fieldset>
 
             {/* ✅ Hide default navigation for Step B (it has its own button) */}
             {step !== 0 && (
               <div className="nf-navigation">
-                {step > 0 && (
+                  {step > 0 && !isApplicationCompleted && (
                   <button
                     type="button"
                     className="nf-secondary"
                     onClick={previous}
+                    disabled={isApplicationCompleted}
                   >
                     ← Previous / पिछला
                   </button>
                 )}
-                {step < 4 && (
+                {step < 4 && !isApplicationCompleted && (
                   <button type="submit" className="nf-primary">
                     Next / आगे बढ़ें →
                   </button>
