@@ -60,6 +60,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
   const [submittingIndex, setSubmittingIndex] = useState(null);
   const [alertInfo, setAlertInfo] = useState(null);
   const [pendingDocuments, setPendingDocuments] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [hasPart5Record, setHasPart5Record] = useState(false);
   const dataFetchStarted = useRef(false);
 
@@ -152,6 +153,11 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
 
     update(e);
     setPendingDocuments((prev) => ({ ...prev, [index]: file }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[`document${index}`];
+      return next;
+    });
   };
 
   const handleRemoveDocument = (index) => {
@@ -166,6 +172,11 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
   const handleUrlChange = (e, index) => {
     update(e);
     setPendingDocuments((prev) => ({ ...prev, [index]: e.target.value }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[`document${index}`];
+      return next;
+    });
   };
 
   const handleViewFile = (file) => {
@@ -274,8 +285,9 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
   const handleNext = () => {
     setAlertInfo(null);
     const validationErrors = validateDocuments();
+    setFieldErrors(validationErrors);
+    if (onErrorsChange) onErrorsChange(validationErrors);
     if (Object.keys(validationErrors).length) {
-      if (onErrorsChange) onErrorsChange(validationErrors);
       requestAnimationFrame(() => {
         const firstKey = Object.keys(validationErrors)[0];
         let el = null;
@@ -436,8 +448,16 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                     <button type="button" className="nf-secondary" onClick={() => handleRemoveDocument(9)} disabled={submittingIndex === 9}>हटाएं</button>
                   )}
                    <small>कम से कम एक विकल्प अपलोड करना अनिवार्य है।</small>
-                   {error.document7 && <small className="nf-error">{error.document7}</small>}
-                   {error.document9 && <small className="nf-error">{error.document9}</small>}
+                   {(fieldErrors.document7 || error.document7) && (
+                    <small className="nf-error">
+                      {fieldErrors.document7 || error.document7}
+                    </small>
+                  )}
+                   {(fieldErrors.document9 || error.document9) && (
+                    <small className="nf-error">
+                      {fieldErrors.document9 || error.document9}
+                    </small>
+                  )}
                    {pendingDocuments[7] && (
                     <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(7)} disabled={isSubmitting}>
                       {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
@@ -463,7 +483,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                   />
                   {error[`document${index}`] && (
                     <small className="nf-error">
-                      {error[`document${index}`]}
+                      {fieldErrors[`document${index}`] || error[`document${index}`]}
                     </small>
                   )}
                   <small id={`nf-document-help-${index}`}>
@@ -475,7 +495,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                     </button>
                   )}
                 </div>
-              ) : (
+               ) : (
                 <>
                   <div className="nf-upload-body">
                     <div className="nf-upload-input">
@@ -492,6 +512,12 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                       {file && (
                         <small className="nf-file-name">
                           {typeof file === "string" ? file : file.name}
+                        </small>
+                      )}
+
+                      {fieldErrors[`document${index}`] && (
+                        <small className="nf-error">
+                          {fieldErrors[`document${index}`]}
                         </small>
                       )}
 
