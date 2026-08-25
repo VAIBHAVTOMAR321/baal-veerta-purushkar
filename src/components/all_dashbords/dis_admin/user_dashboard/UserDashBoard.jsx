@@ -60,6 +60,7 @@ const UserDashBoard = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [completedSteps, setCompletedSteps] = useState([]);
+  const [maxStep, setMaxStep] = useState(0);
   const stepBCheckedRef = useRef(false);
   const stepCCheckedRef = useRef(false);
   const [stepCSubmitTrigger, setStepCSubmitTrigger] = useState(0);
@@ -87,18 +88,22 @@ const UserDashBoard = () => {
     setCompletedSteps((prev) => prev.includes(stepIndex) ? prev : [...prev, stepIndex]);
   }, []);
 
+  useEffect(() => {
+    setMaxStep((prev) => Math.max(prev, step));
+  }, [step]);
+
   // ✅ Check if a step is completed
   const isStepCompleted = useCallback((stepIndex) => {
     return completedSteps.includes(stepIndex);
   }, [completedSteps]);
 
-  // ✅ Navigate to a completed step
+  // ✅ Navigate to a completed or previously visited step
   const goToStep = useCallback((stepIndex) => {
-    if (isStepCompleted(stepIndex) || stepIndex === step) {
+    if (isStepCompleted(stepIndex) || stepIndex <= maxStep) {
       setStep(stepIndex);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [isStepCompleted, step]);
+  }, [isStepCompleted, maxStep]);
 
   const update = useCallback((event) => {
     const { name, value, type, checked, files } = event.target;
@@ -351,7 +356,7 @@ const UserDashBoard = () => {
             {steps.map((label, index) => {
               const completed = isStepCompleted(index);
               const isCurrent = index === step;
-              const clickable = completed || isCurrent;
+              const clickable = completed || index <= maxStep;
 
               return (
                 <div
@@ -363,7 +368,7 @@ const UserDashBoard = () => {
                   tabIndex={clickable ? 0 : undefined}
                   aria-label={
                     clickable
-                      ? `Step ${index + 1} - पूर्ण, क्लिक करें और देखें`
+                      ? `Step ${index + 1}${completed ? " - पूर्ण" : index <= maxStep ? " - देखें" : ""}, क्लिक करें`
                       : `Step ${index + 1}${completed ? " - पूर्ण" : ""}${isCurrent ? " - वर्तमान" : ""}`
                   }
                   onClick={() => goToStep(index)}
