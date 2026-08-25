@@ -286,9 +286,9 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       applicant_id: applicantId,
       incident_title: actTitle,
       incident_type: incidentType,
-      incident_date: normalizeDate(data.actDate || ""),
+      incident_date: data.actDate ? normalizeDate(data.actDate) : null,
       age_at_incident: data.incidentAge || "",
-      incident_time: normalizeTime(data.actTime || ""),
+      incident_time: data.actTime ? normalizeTime(data.actTime) : null,
       incident_location: data.actPlace || "",
       incident_district: data.actDistrict || "",
       incident_description: data.shortDescription || "",
@@ -298,7 +298,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       fir_status: data.firRegistered || "",
       police_station: data.policeStation || "",
       fir_number: data.firNumber || "",
-      fir_date: normalizeDate(data.firDate || ""),
+      fir_date: data.firDate ? normalizeDate(data.firDate) : null,
       media_report_available: data.mediaPublished || "",
     };
 
