@@ -333,7 +333,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
         {/* ── Footer ── */}
         <div className="nf-pv-footer">
           <label className="nf-pv-accept">
-            <input type="checkbox" checked={topAccepted} onChange={onTopAcceptedChange} />
+            <input type="checkbox" checked={topAccepted} onChange={(e) => onTopAcceptedChange(e.target.checked)} />
             <span>मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे सहमत हूँ।</span>
           </label>
           {topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
