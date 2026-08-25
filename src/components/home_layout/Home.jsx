@@ -281,14 +281,6 @@ function Home() {
     },
     {
       step: "D",
-      title: "आवश्यक अभिलेख अपलोड",
-      subtitle: "Document Upload",
-      icon: FaUpload,
-      description: "आधार कार्ड, जन्म प्रमाण पत्र, FIR/पुलिस रिपोर्ट आदि अपलोड करें",
-      color: "#6f42c1"
-    },
-    {
-      step: "E",
       title: "अतिरिक्त जानकारी",
       subtitle: "Additional Information",
       icon: FaInfoCircle,
@@ -296,11 +288,43 @@ function Home() {
       color: "#20c997"
     },
     {
+  step: "E",
+  title: "आवश्यक अभिलेख अपलोड",
+  subtitle: "Document Upload",
+  icon: FaUpload,
+
+  description: (
+    <div className="document-description">
+      <ul>
+        <li>नामांकनकर्ता का पहचान पत्र</li>
+        <li>बच्चे का आधार कार्ड/पहचान पत्र</li>
+        <li>उत्तराखण्ड का स्थायी निवास प्रमाण पत्र</li>
+        <li>बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र</li>
+        <li>
+          वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत
+          विवरण
+        </li>
+        <li>बच्चे का पासपोर्ट आकार का फोटो</li>
+        <li>FIR/पुलिस रिपोर्ट</li>
+        <li>समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो</li>
+        <li>प्रत्यक्षदर्शियों के बयान/प्रमाण</li>
+        <li>वीडियो/फोटो लिंक</li>
+        <li>विद्यालय का प्रमाण पत्र</li>
+        <li>अन्य सहायक अभिलेख</li>
+      </ul>
+
+      <strong>सभी आवश्यक दस्तावेज़ अपलोड करें।</strong>
+    </div>
+  ),
+
+  color: "#6f42c1"
+},
+    {
       step: "F",
       title: "घोषणा एवं सहमति",
       subtitle: "Declaration",
       icon: FaFileSignature,
-      description: "घोषणा पढ़ें, सहमति दें, OTP सत्यापन और अंतिम प्रस्तुतीकरण",
+      description: "घोषणा पढ़ें, सहमति दें, और अंतिम प्रस्तुतीकरण",
       color: "#dc3545"
     }
   ];
