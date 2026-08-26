@@ -46,7 +46,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const fetchDistrictsRef = useRef(false);
   const dataFetchStarted = useRef(false);
 
-  // ✅ COMBINED ERRORS - merge parent errors with local errors
+  // ✅COMBINED ERRORS - merge parent errors with local errors
   const combinedErrors = { ...error, ...localErrors };
 
   useEffect(() => {
@@ -495,7 +495,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       }
 
       const wasUpdate = isCompleted && isEditing;
-      setAlertInfo({ type: "success", message: wasUpdate ? "Step 2 सफलतापूर्वक अपडेट हो गया! ✅" : "Step 2 सफलतापूर्वक सबमिट हो गया! ✅" });
+      setAlertInfo({ type: "success", message: wasUpdate ? "Step 2 सफलतापूर्वक अपडेट हो गया! " : "Step 2 सफलतापूर्वक सबमिट हो गया! ✅" });
       window.scrollTo({ top: 0, behavior: "smooth" });
       if (wasUpdate) {
         setIsCompleted(true);
@@ -610,7 +610,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
               <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
                 <input ref={customTitleRef} id="nf-actTitle" name="actTitle" type="text" value={data.actTitle || ""} onChange={(e) => {
                   update(e);
-                  // ✅ Clear error on change
+                  //  Clear error on change
                   setLocalErrors(prev => {
                     if (!prev.actTitle) return prev;
                     const next = { ...prev };
@@ -634,7 +634,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
                   } else {
                     update(e);
                   }
-                  // ✅ Clear error on change
+                  //  Clear error on change
                   setLocalErrors(prev => {
                     if (!prev.actTitle) return prev;
                     const next = { ...prev };
