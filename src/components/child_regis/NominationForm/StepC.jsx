@@ -41,9 +41,13 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const [isCompleted, setIsCompleted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editSnapshot, setEditSnapshot] = useState(null);
+  const [localErrors, setLocalErrors] = useState({}); // ✅ ADD LOCAL ERRORS STATE
   const customTitleRef = useRef(null);
   const fetchDistrictsRef = useRef(false);
   const dataFetchStarted = useRef(false);
+
+  // ✅ COMBINED ERRORS - merge parent errors with local errors
+  const combinedErrors = { ...error, ...localErrors };
 
   useEffect(() => {
     if (dataFetchStarted.current) return;
@@ -142,7 +146,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     } else {
       setIsOverAge(false);
     }
-  }, [data.actDate, data.birthDate]);
+  }, [data.actDate, data.birthDate, update]);
 
   useEffect(() => {
     if (alertInfo) {
@@ -151,8 +155,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     }
   }, [alertInfo]);
 
+  // ✅ FIXED: Track previous trigger value to detect actual changes
+  const prevTriggerRef = useRef(0);
   useEffect(() => {
-    if (externalSubmitTrigger) {
+    if (externalSubmitTrigger !== undefined && externalSubmitTrigger !== prevTriggerRef.current) {
+      prevTriggerRef.current = externalSubmitTrigger;
       handleSubmit(true);
     }
   }, [externalSubmitTrigger]);
@@ -164,26 +171,28 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     const wordValidation = options.words || null;
     const isWordValid = wordValidation ? wordCount >= wordValidation.min && wordCount <= wordValidation.max : true;
     const showWordCount = wordValidation && value.trim().length > 0;
+    // ✅ USE combinedErrors instead of error
+    const fieldError = combinedErrors[name];
 
     return (
       <div className={`nf-field ${options.wide ? "nf-wide" : ""} ${options.fieldClassName || ""}`}>
         <label htmlFor={`nf-${name}`}>{label}{options.required && <span> *</span>}</label>
         {options.options ? (
-          <select id={`nf-${name}`} name={name} value={value} onChange={update} disabled={isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled))}>
+          <select id={`nf-${name}`} name={name} value={value} onChange={update} disabled={isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled))} className={fieldError ? "error-style" : ""}>
             <option value="">{options.placeholder || "चयन करें"}</option>
             {options.options.map((option) => <option key={option}>{option}</option>)}
           </select>
         ) : options.textarea ? (
-          <textarea id={`nf-${name}`} name={name} value={value} onChange={update} rows={options.rows || 4} disabled={isFormLocked || isOverAge} />
+          <textarea id={`nf-${name}`} name={name} value={value} onChange={update} rows={options.rows || 4} disabled={isFormLocked || isOverAge} className={fieldError ? "error-style" : ""} />
         ) : (
-          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} onChange={update} disabled={isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled))} />
+          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} onChange={update} disabled={isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled))} className={fieldError ? "error-style" : ""} />
         )}
         {showWordCount && (
           <small className={`nf-word-count ${!isWordValid ? "nf-invalid" : ""}`}>
             {wordCount} शब्द {!isWordValid && `(कम से कम ${wordValidation.min} और अधिकतम ${wordValidation.max} शब्द आवश्यक)`}
           </small>
         )}
-        {error[name] && <small className="nf-error">{error[name]}</small>}
+        {fieldError && <small className="nf-error">{fieldError}</small>}
       </div>
     );
   };
@@ -191,7 +200,8 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const witnessFields = ["नाम", "मोबाइल नंबर", "पता", "बच्चे से संबंध"];
   const rescuedPeopleFields = ["name", "age", "relation"];
   const witnessRowFields = ["name", "mobile", "address", "relation"];
-  const rowError = (group, index, field) => error[`${group}.${index}.${field}`];
+  // ✅ USE combinedErrors for row errors
+  const rowError = (group, index, field) => combinedErrors[`${group}.${index}.${field}`];
   const isFormLocked = isCompleted && !isEditing;
 
   const showCustomTitle = customTitleActive;
@@ -222,6 +232,14 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     const next = rescuedPeople.map((person, i) => (i === index ? { ...person, [field]: value } : person));
     setRescuedPeople(next);
     syncPeople(next);
+    // ✅ Clear error for this field on change
+    setLocalErrors(prev => {
+      const key = `rescuedPeople.${index}.${field}`;
+      if (!prev[key]) return prev;
+      const nextErrors = { ...prev };
+      delete nextErrors[key];
+      return nextErrors;
+    });
   };
 
   const syncWitnesses = (rows) => {
@@ -253,6 +271,14 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     const next = witnesses.map((row, i) => (i === index ? { ...row, [field]: value } : row));
     setWitnesses(next);
     syncWitnesses(next);
+    // ✅ Clear error for this field on change
+    setLocalErrors(prev => {
+      const key = `witnesses.${index}.${field}`;
+      if (!prev[key]) return prev;
+      const nextErrors = { ...prev };
+      delete nextErrors[key];
+      return nextErrors;
+    });
   };
 
   const normalizeTime = (time) => {
@@ -392,8 +418,18 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
 
     setAlertInfo(null);
     const validationErrors = validateBeforeSubmit();
+    
+    // ✅ CRITICAL FIX: Always set local errors AND call onErrorsChange
     if (validationErrors) {
-      if (onErrorsChange) onErrorsChange(validationErrors);
+      console.log("[StepC] Validation errors:", validationErrors);
+      setLocalErrors(validationErrors); // ✅ Set local state immediately
+      
+      // ✅ Also propagate to parent if callback exists
+      if (onErrorsChange) {
+        onErrorsChange(validationErrors);
+      }
+      
+      // ✅ Scroll to first error
       requestAnimationFrame(() => {
         const firstKey = Object.keys(validationErrors)[0];
         let el = document.getElementById(`nf-${firstKey}`);
@@ -406,6 +442,12 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       });
       return;
+    }
+
+    // ✅ Clear errors on successful validation
+    setLocalErrors({});
+    if (onErrorsChange) {
+      onErrorsChange({});
     }
 
     const payload = buildPayload();
@@ -474,7 +516,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       <td>{index + 1}</td>
       {witnessFields.map((field, fieldIndex) => (
         <td key={field}>
-          <input id={`nf-witnesses-${index}-${witnessRowFields[fieldIndex]}`} type="text" value={row[witnessRowFields[fieldIndex]] || ""} onChange={(e) => updateWitness(index, witnessRowFields[fieldIndex], e.target.value)} disabled={isFormLocked || isOverAge} />
+          <input id={`nf-witnesses-${index}-${witnessRowFields[fieldIndex]}`} type="text" value={row[witnessRowFields[fieldIndex]] || ""} onChange={(e) => updateWitness(index, witnessRowFields[fieldIndex], e.target.value)} disabled={isFormLocked || isOverAge} className={rowError("witnesses", index, witnessRowFields[fieldIndex]) ? "error-style" : ""} />
           {rowError("witnesses", index, witnessRowFields[fieldIndex]) && <small className="nf-error">{rowError("witnesses", index, witnessRowFields[fieldIndex])}</small>}
         </td>
       ))}
@@ -487,7 +529,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       <td>{index + 1}</td>
       {rescuedPeopleFields.map((field) => (
         <td key={field}>
-          <input id={`nf-rescuedPeople-${index}-${field}`} type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isFormLocked || isOverAge} />
+          <input id={`nf-rescuedPeople-${index}-${field}`} type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isFormLocked || isOverAge} className={rowError("rescuedPeople", index, field) ? "error-style" : ""} />
           {rowError("rescuedPeople", index, field) && <small className="nf-error">{rowError("rescuedPeople", index, field)}</small>}
         </td>
       ))}
@@ -566,7 +608,16 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
             <label htmlFor="nf-actTitle">1. वीरता की घटना का शीर्षक <span> *</span></label>
             {showCustomTitle ? (
               <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
-                <input ref={customTitleRef} id="nf-actTitle" name="actTitle" type="text" value={data.actTitle || ""} onChange={update} disabled={isOverAge} />
+                <input ref={customTitleRef} id="nf-actTitle" name="actTitle" type="text" value={data.actTitle || ""} onChange={(e) => {
+                  update(e);
+                  // ✅ Clear error on change
+                  setLocalErrors(prev => {
+                    if (!prev.actTitle) return prev;
+                    const next = { ...prev };
+                    delete next.actTitle;
+                    return next;
+                  });
+                }} disabled={isOverAge} className={combinedErrors.actTitle ? "error-style" : ""} />
                 <button type="button" className="nf-reset" onClick={handleResetActTitle} disabled={isOverAge}>रीसेट</button>
               </div>
             ) : (
@@ -583,14 +634,22 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
                   } else {
                     update(e);
                   }
+                  // ✅ Clear error on change
+                  setLocalErrors(prev => {
+                    if (!prev.actTitle) return prev;
+                    const next = { ...prev };
+                    delete next.actTitle;
+                    return next;
+                  });
                 }}
                 disabled={isOverAge}
+                className={combinedErrors.actTitle ? "error-style" : ""}
               >
                 <option value="">चयन करें</option>
                 {natureOptions.map((option) => <option key={option}>{option}</option>)}
               </select>
             )}
-            {error.actTitle && <small className="nf-error">{error.actTitle}</small>}
+            {combinedErrors.actTitle && <small className="nf-error">{combinedErrors.actTitle}</small>}
           </div>
           {input("2. घटना की दिनांक", "actDate", { required: true, type: "date", alwaysEnabled: true })}
           {input("3. घटना के समय आयु", "incidentAge", { type: "text", disabled: true })}

@@ -20,18 +20,23 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   const [currentProjects, setCurrentProjects] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
-  const [loadingData, setLoadingData] = useState(true); // ✅ Loading state for initial data
-  const [selectedDistrict, setSelectedDistrict] = useState(data?.permanentजनपद || "");
-  const [currentSelectedDistrict, setCurrentSelectedDistrict] = useState(data?.currentजनपद || "");
+  const [loadingData, setLoadingData] = useState(true);
+  const [selectedDistrict, setSelectedDistrict] = useState(data?.["permanentजनपद"] || "");
+  const [currentSelectedDistrict, setCurrentSelectedDistrict] = useState(data?.["currentजनपद"] || "");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editSnapshot, setEditSnapshot] = useState(null);
+  // ✅ CRITICAL FIX: Add local errors state
+  const [localErrors, setLocalErrors] = useState({});
   const fetchStarted = useRef(false);
-  const dataFetchStarted = useRef(false); // ✅ Separate ref for data fetch
+  const dataFetchStarted = useRef(false);
 
-  // ✅ Fetch existing part2 data on mount to check if completed
+  // ✅ COMBINED ERRORS - merge parent errors with local errors
+  const combinedErrors = { ...error, ...localErrors };
+
+  // ✅ Fetch existing part2 data on mount
   useEffect(() => {
     if (dataFetchStarted.current) return;
     dataFetchStarted.current = true;
@@ -55,13 +60,11 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         if (result.success && Array.isArray(result.data) && result.data.length > 0) {
           const record = result.data[0];
 
-          // A submitted Part 2 record should open the next step immediately.
           if (isPart2Submitted(record)) {
             console.log("Step B already submitted, skipping to Step C");
             setIsCompleted(true);
             setIsEditing(false);
 
-            // Auto-fill all data from the response
             const fieldMapping = {
               applicant_id: record.applicant_id,
               childName: record.child_full_name,
@@ -87,37 +90,23 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               childMobile: record.child_guardian_mobile,
             };
 
-            // Update all fields
             Object.entries(fieldMapping).forEach(([key, value]) => {
               if (value) {
                 update({ target: { name: key, value: value, type: "text" } });
               }
             });
 
-            // Set local states
-            if (record.applicant_id) {
-              setApplicantId(record.applicant_id);
-            }
-            if (record.permanent_resident_uttarakhand) {
-              setResident(record.permanent_resident_uttarakhand);
-            }
-            if (record.permanent_district) {
-              setSelectedDistrict(record.permanent_district);
-            }
-            if (record.current_district) {
-              setCurrentSelectedDistrict(record.current_district);
-            }
+            if (record.applicant_id) setApplicantId(record.applicant_id);
+            if (record.permanent_resident_uttarakhand) setResident(record.permanent_resident_uttarakhand);
+            if (record.permanent_district) setSelectedDistrict(record.permanent_district);
+            if (record.current_district) setCurrentSelectedDistrict(record.current_district);
 
-            // ✅ Call onCompleted to skip to Step C (only on initial load/login/refresh)
             if (!isStepBChecked) {
               setTimeout(() => {
-                if (onCompleted) {
-                  onCompleted(record);
-                }
+                if (onCompleted) onCompleted(record);
               }, 500);
             }
           } else {
-            // Data exists but not completed, pre-fill the form
             const fieldMapping = {
               applicant_id: record.applicant_id,
               childName: record.child_full_name,
@@ -163,9 +152,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     };
 
     fetchPart2Data();
-  }, [authFetch, update, onCompleted]);
+  }, [authFetch, update, onCompleted, isStepBChecked]);
 
-  // Fetch nominator-part1 data for applicant_id and auto-fill names
+  // Fetch nominator-part1 data
   useEffect(() => {
     if (fetchStarted.current) return;
     fetchStarted.current = true;
@@ -182,7 +171,6 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         if (record) {
           setNominator(record);
 
-          // Only set applicant_id if not already set from part2
           if (record.applicant_id && !applicantId) {
             setApplicantId(record.applicant_id);
             update({ target: { name: "applicant_id", value: record.applicant_id, type: "text" } });
@@ -209,7 +197,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     };
 
     fetchNominator();
-  }, [update, authFetch]);
+  }, [update, authFetch, applicantId, data]);
 
   useEffect(() => {
     const fetchDistricts = async () => {
@@ -300,6 +288,20 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   const nameFields = ["childName", "fatherName", "motherName", "guardianName"];
   const numericPattern = /[0-9]/g;
 
+  // ✅ Helper to clear error for a specific field
+  const clearFieldError = (fieldName) => {
+    setLocalErrors(prev => {
+      if (!prev[fieldName]) return prev;
+      const next = { ...prev };
+      delete next[fieldName];
+      return next;
+    });
+    // Also clear in parent if callback exists
+    if (onErrorsChange) {
+      onErrorsChange({ [fieldName]: undefined });
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "resident") {
@@ -313,6 +315,8 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       } else {
         setChildMobileError("");
       }
+      // ✅ Clear error on change
+      clearFieldError("childMobile");
       return;
     }
     if (name === "permanentजनपद") {
@@ -332,6 +336,8 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     } else {
       update(e);
     }
+    // ✅ Clear error on change for all fields
+    clearFieldError(name);
   };
 
   const handleSameAsPermanent = (e) => {
@@ -359,7 +365,6 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     }
   };
 
-  // Build the payload matching the API structure
   const buildPayload = () => {
     const finalApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id || "";
 
@@ -389,7 +394,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     };
   };
 
-  // Validate form before submission
+  // ✅ IMPROVED: Validate form before submission
   const validateForm = () => {
     const errors = {};
 
@@ -445,9 +450,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     setIsEditing(false);
     setEditSnapshot(null);
     setSubmitError("");
+    setLocalErrors({}); // ✅ Clear local errors on cancel
   };
 
-  // Submit handler for Next and Update buttons.
   const handleSubmit = async (moveToNext = true) => {
     setSubmitError("");
 
@@ -463,14 +468,30 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     }
 
     const validationErrors = validateForm();
+    
+    // ✅ CRITICAL FIX: Set local errors AND call onErrorsChange
     if (Object.keys(validationErrors).length > 0) {
-      if (onErrorsChange) onErrorsChange(validationErrors);
+      console.log("[StepB] Validation errors:", validationErrors);
+      setLocalErrors(validationErrors); // ✅ Set local state immediately
+      
+      // ✅ Also propagate to parent if callback exists
+      if (onErrorsChange) {
+        onErrorsChange(validationErrors);
+      }
+      
+      // ✅ Scroll to first error
       requestAnimationFrame(() => {
         const firstKey = Object.keys(validationErrors)[0];
         const el = document.getElementById(`nf-${firstKey}`);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       });
       return false;
+    }
+
+    // ✅ Clear errors on successful validation
+    setLocalErrors({});
+    if (onErrorsChange) {
+      onErrorsChange({});
     }
 
     setSubmitting(true);
@@ -548,6 +569,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       extraProps.max = today;
     }
 
+    // ✅ USE combinedErrors instead of error
+    const fieldError = combinedErrors[name];
+
     return (
       <div className="nf-field">
         <label htmlFor={`nf-${name}`}>
@@ -561,6 +585,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             value={value}
             onChange={handleChange}
             disabled={disabled}
+            className={fieldError ? "error-style" : ""} // ✅ Apply error style
           >
             <option value="">{options.placeholder || "चयन करें"}</option>
             {options.options.map((option) => (
@@ -578,18 +603,18 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             placeholder={options.placeholder}
             onChange={handleChange}
             disabled={disabled}
+            className={fieldError ? "error-style" : ""} // ✅ Apply error style
             {...extraProps}
           />
         )}
-        {error[name] && <small className="nf-error">{error[name]}</small>}
-        {name === "childMobile" && childMobileError && (
+        {fieldError && <small className="nf-error">{fieldError}</small>}
+        {name === "childMobile" && childMobileError && !fieldError && (
           <small className="nf-error">{childMobileError}</small>
         )}
       </div>
     );
   };
 
-  // ✅ Show loading spinner while fetching initial data
   if (loadingData) {
     return (
       <section className="nf-card nf-step-b">
@@ -804,6 +829,21 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
           border: "1px solid #f5c6cb"
         }}>
           {submitError}
+        </div>
+      )}
+
+      {/* ✅ Show validation error count if there are errors */}
+      {Object.keys(combinedErrors).length > 0 && (
+        <div style={{
+          color: "#dc2626",
+          padding: "12px",
+          marginTop: "16px",
+          backgroundColor: "#fef2f2",
+          borderRadius: "8px",
+          border: "1px solid #fca5a5",
+          fontSize: "14px"
+        }}>
+          ⚠️ कृपया सभी अनिवार्य फ़ील्ड भरें ({Object.keys(combinedErrors).length} त्रुटियाँ)
         </div>
       )}
 
