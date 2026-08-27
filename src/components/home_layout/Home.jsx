@@ -35,12 +35,19 @@ function Home() {
   const [forgotSuccess, setForgotSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Collapsible section state
-  const [openSection, setOpenSection] = useState(null);
+  // Collapsible section state - first section open by default
+  const [openSection, setOpenSection] = useState("schemeInfo");
 
   // Scroll state
   const contentRef = useRef(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
+
+  // Refs for scroll-based auto-expand
+  const schemeInfoHeaderRef = useRef(null);
+  const objectivesHeaderRef = useRef(null);
+  const eligibilityHeaderRef = useRef(null);
+  const nominatorsHeaderRef = useRef(null);
+  const userInteractedRef = useRef(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -70,6 +77,47 @@ function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (userInteractedRef.current) return;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          if (entry.target === schemeInfoHeaderRef.current) {
+            setOpenSection("schemeInfo");
+          } else if (entry.target === objectivesHeaderRef.current) {
+            setOpenSection("objectives");
+          } else if (entry.target === eligibilityHeaderRef.current) {
+            setOpenSection("eligibility");
+          } else if (entry.target === nominatorsHeaderRef.current) {
+            setOpenSection("nominators");
+          }
+        });
+      },
+      {
+        root: container,
+        rootMargin: "0px 0px -75% 0px",
+        threshold: 0,
+      }
+    );
+
+    const headers = [
+      schemeInfoHeaderRef,
+      objectivesHeaderRef,
+      eligibilityHeaderRef,
+      nominatorsHeaderRef,
+    ];
+
+    headers.forEach((ref) => {
+      if (ref.current) observer.observe(ref.current);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const handleContentScroll = () => {
     const el = contentRef.current;
     if (!el) return;
@@ -77,9 +125,16 @@ function Home() {
     setShowScrollHint(!atBottom);
   };
 
-  const toggleSection = (section) => {
-    setOpenSection((prev) => (prev === section ? null : section));
-  };
+  const toggleSection = useCallback(
+    (section) => {
+      userInteractedRef.current = true;
+      setOpenSection((prev) => (prev === section ? null : section));
+      setTimeout(() => {
+        userInteractedRef.current = false;
+      }, 1200);
+    },
+    []
+  );
 
   const handleLogin = useCallback(
     async (e) => {
@@ -515,6 +570,7 @@ function Home() {
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
               <div className="info-section">
                 <button
+                  ref={schemeInfoHeaderRef}
                   className="info-section-header"
                   onClick={() => toggleSection("schemeInfo")}
                   type="button"
@@ -542,6 +598,7 @@ function Home() {
               {/* ── COLLAPSIBLE: OBJECTIVES ── */}
               <div className="info-section">
                 <button
+                  ref={objectivesHeaderRef}
                   className="info-section-header"
                   onClick={() => toggleSection("objectives")}
                   type="button"
@@ -568,6 +625,7 @@ function Home() {
               {/* ── COLLAPSIBLE: ELIGIBILITY ── */}
               <div className="info-section">
                 <button
+                  ref={eligibilityHeaderRef}
                   className="info-section-header"
                   onClick={() => toggleSection("eligibility")}
                   type="button"
@@ -594,6 +652,7 @@ function Home() {
               {/* ── COLLAPSIBLE: WHO CAN NOMINATE ── */}
               <div className="info-section">
                 <button
+                  ref={nominatorsHeaderRef}
                   className="info-section-header"
                   onClick={() => toggleSection("nominators")}
                   type="button"
@@ -790,14 +849,7 @@ function Home() {
               </Card>
 
               <div className="login-footer-info">
-                <div className="security-badges">
-                  <span className="badge">
-                    <FaKey size={12} /> SSL Secured
-                  </span>
-                  <span className="badge">
-                    <FaShieldAlt size={12} /> Govt. Portal
-                  </span>
-                </div>
+                
                 <p className="copyright">
                   © 2026 महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड
                 </p>
