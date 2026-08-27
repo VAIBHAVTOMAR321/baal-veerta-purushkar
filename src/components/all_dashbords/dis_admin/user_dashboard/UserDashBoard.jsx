@@ -11,7 +11,14 @@ import StepD from "../../../child_regis/NominationForm/StepD";
 import StepC from "../../../child_regis/NominationForm/StepC";
 import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
 
-const steps = ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"];
+const steps = [
+  { letter: "A", title: "नामांकित बच्चे का व्यक्तिगत विवरण", subtitle: "Nominee Details" },
+  { letter: "B", title: "वीरता की घटना का विवरण",             subtitle: "Bravery Act Details" },
+  { letter: "C", title: "अतिरिक्त जानकारी",                    subtitle: "Additional Information" },
+  { letter: "D", title: "आवश्यक अभिलेख अपलोड",                subtitle: "Document Upload" },
+  { letter: "E", title: "घोषणा एवं सहमति",                     subtitle: "Declaration" },
+];
+
 const requiredByStep = {
   0: [
     "childName", "fatherName", "motherName", "birthDate",
@@ -23,6 +30,7 @@ const requiredByStep = {
     "actTitle", "actDate", "actPlace", "actDistrict",
     "actNature", "shortDescription", "detailedDescription", "firRegistered", "mediaPublished",
   ],
+   3: ["document0", "document1", "document2", "document3"],
 };
 
 const getTableErrors = (formData) => {
@@ -64,10 +72,10 @@ const UserDashBoard = () => {
   const stepBCheckedRef = useRef(false);
   const stepCCheckedRef = useRef(false);
   const [stepCSubmitTrigger, setStepCSubmitTrigger] = useState(0);
-  const stepECheckedRef = useRef(false);
-  const [stepESubmitTrigger, setStepESubmitTrigger] = useState(0);
   const stepDCheckedRef = useRef(false);
   const [stepDSubmitTrigger, setStepDSubmitTrigger] = useState(0);
+  const stepECheckedRef = useRef(false);
+  const [stepESubmitTrigger, setStepESubmitTrigger] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -83,21 +91,18 @@ const UserDashBoard = () => {
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
-  //  Mark a step as completed
   const markStepCompleted = useCallback((stepIndex) => {
-    setCompletedSteps((prev) => prev.includes(stepIndex) ? prev : [...prev, stepIndex]);
+    setCompletedSteps((prev) => (prev.includes(stepIndex) ? prev : [...prev, stepIndex]));
   }, []);
 
   useEffect(() => {
     setMaxStep((prev) => Math.max(prev, step));
   }, [step]);
 
-  //  Check if a step is completed
   const isStepCompleted = useCallback((stepIndex) => {
     return completedSteps.includes(stepIndex);
   }, [completedSteps]);
 
-  //  Navigate to a completed or previously visited step
   const goToStep = useCallback((stepIndex) => {
     if (isApplicationCompleted) return;
     if (isStepCompleted(stepIndex) || stepIndex <= maxStep) {
@@ -128,8 +133,7 @@ const UserDashBoard = () => {
   const validate = (targetStep) => {
     const nextErrors = {};
     (requiredByStep[targetStep] || []).forEach((field) => {
-      if (!String(data[field] || "").trim())
-        nextErrors[field] = "यह फ़ील्ड आवश्यक है";
+      if (!String(data[field] || "").trim()) nextErrors[field] = "यह फ़ील्ड आवश्यक है";
     });
     if (targetStep === 1) {
       const validateRows = (rows, group, fields) => {
@@ -145,16 +149,18 @@ const UserDashBoard = () => {
       validateRows(data.rescuedDetails?.people, "rescuedPeople", ["name", "age", "relation"]);
       validateRows(data.witnesses, "witnesses", ["name", "mobile", "address", "relation"]);
     }
-    if (targetStep === 3)
-      ["document0", "document1", "document2", "document3"].forEach((field) => {
-        if (!data[field]) nextErrors[field] = "यह दस्तावेज़ अनिवार्य है";
-      });
     setErrors(nextErrors);
     return !Object.keys(nextErrors).length;
   };
 
   const next = () => {
     if (isApplicationCompleted) return;
+    // Step 2 = अतिरिक्त जानकारी (StepE) → trigger its submit
+    if (step === 2) {
+      setStepESubmitTrigger((current) => current + 1);
+      return;
+    }
+    // Step 3 = आवश्यक अभिलेख अपलोड (StepD) → trigger its submit
     if (step === 3) {
       setStepDSubmitTrigger((current) => current + 1);
       return;
@@ -201,7 +207,9 @@ const UserDashBoard = () => {
       topAccepted
   );
 
-  //  Handle Step B completion (after POST success)
+  /* ═══════════════════════════════════════════
+     Step 1 — नामांकित बच्चे का व्यक्तिगत विवरण (StepB)
+     ═══════════════════════════════════════════ */
   const handleStepBNext = (result) => {
     stepBCheckedRef.current = true;
     markStepCompleted(0);
@@ -210,9 +218,7 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  //  Handle Step B already completed (auto-skip to Step C)
   const handleStepBAlreadyCompleted = (record) => {
-    console.log("Step B already completed, auto-skipping to Step C:", record);
     stepBCheckedRef.current = true;
     markStepCompleted(0);
     setNotice("Step 1 पहले ही पूरा हो चुका है, Step 2 पर जा रहे हैं...");
@@ -220,6 +226,9 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  /* ═══════════════════════════════════════════
+     Step 2 — वीरता की घटना का विवरण (StepC)
+     ═══════════════════════════════════════════ */
   const handleStepCSubmitSuccess = () => {
     stepCCheckedRef.current = true;
     markStepCompleted(1);
@@ -236,6 +245,28 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  /* ═══════════════════════════════════════════
+     Step 3 — अतिरिक्त जानकारी (StepE)
+     ═══════════════════════════════════════════ */
+  const handleStepDSubmitSuccess = () => {
+    stepDCheckedRef.current = true;
+    markStepCompleted(3);
+    setNotice("Step 4 सफलतापूर्वक सबमिट हो गया!");
+    setStep(4);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleStepDAlreadyCompleted = (record) => {
+    stepDCheckedRef.current = true;
+    markStepCompleted(3);
+    setNotice("Step 4 पहले ही पूरा हो चुका है, Step 5 पर जा रहे हैं...");
+    setStep(4);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  /* ═══════════════════════════════════════════
+     Step 4 — आवश्यक अभिलेख अपलोड (StepD)
+     ═══════════════════════════════════════════ */
   const handleStepESubmitSuccess = () => {
     stepECheckedRef.current = true;
     markStepCompleted(2);
@@ -252,29 +283,19 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleStepDSubmitSuccess = () => {
-    stepDCheckedRef.current = true;
-    markStepCompleted(3);
-    setNotice("Step 4 सफलतापूर्वक सबमिट हो गया!");
-    setStep(4);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleStepDAlreadyCompleted = (record) => {
-    console.log("Step D already completed, auto-skipping to Step 5:", record);
-    stepDCheckedRef.current = true;
-    markStepCompleted(3);
-    setNotice("Step 4 पहले ही पूरा हो चुका है, Step 5 पर जा रहे हैं...");
-    setStep(4);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
+  /* ═══════════════════════════════════════════
+     Step 5 — घोषणा एवं सहमति (StepF)
+     ═══════════════════════════════════════════ */
   const handleApplicationCompleted = () => {
     setIsApplicationCompleted(true);
     markStepCompleted(4);
   };
 
+  /* ═══════════════════════════════════════════
+     Component mapping — NEW ORDER
+     ═══════════════════════════════════════════ */
   const component = [
+    /* Step 1 → नामांकित बच्चे का व्यक्तिगत विवरण */
     <StepB
       key="step-b"
       data={data}
@@ -284,6 +305,7 @@ const UserDashBoard = () => {
       onCompleted={handleStepBAlreadyCompleted}
       isStepBChecked={stepBCheckedRef.current}
     />,
+    /* Step 2 → वीरता की घटना का विवरण */
     <StepC
       key="step-c"
       data={data}
@@ -294,15 +316,18 @@ const UserDashBoard = () => {
       isStepCChecked={stepCCheckedRef.current}
       externalSubmitTrigger={stepCSubmitTrigger}
     />,
+    /* Step 3 → अतिरिक्त जानकारी */
     <StepE
       key="step-e"
       data={data}
       update={update}
+      error={errors}
       onSubmitSuccess={handleStepESubmitSuccess}
       onCompleted={handleStepEAlreadyCompleted}
       isStepEChecked={stepECheckedRef.current}
       externalSubmitTrigger={stepESubmitTrigger}
     />,
+    /* Step 4 → आवश्यक अभिलेख अपलोड */
     <StepD
       key="step-d"
       data={data}
@@ -313,6 +338,7 @@ const UserDashBoard = () => {
       isStepDChecked={stepDCheckedRef.current}
       externalSubmitTrigger={stepDSubmitTrigger}
     />,
+    /* Step 5 → घोषणा एवं सहमति */
     <StepF
       key="step-f"
       data={data}
@@ -348,13 +374,16 @@ const UserDashBoard = () => {
             <div className="nf-header-text">
               <p className="nf-kicker">ऑनलाइन नामांकन प्रपत्र</p>
               <h1>मुख्यमंत्री राज्य बाल वीरता पुरस्कार</h1>
-              <p className="nf-subtitle">प्रथम स्क्रीन : नामांकनकर्ता का विवरण</p>
+              <p className="nf-subtitle">
+                Step {step + 1} (चरण {steps[step]?.letter}) : {steps[step]?.title}{" "}
+                <span className="nf-subtitle-en">— {steps[step]?.subtitle}</span>
+              </p>
             </div>
           </header>
 
-          {/* ── Stepper (with clickable completed steps) ── */}
+          {/* ── Stepper ── */}
           <nav className="nf-stepper" aria-label="Application steps">
-             {steps.map((label, index) => {
+            {steps.map((s, index) => {
               const completed = isStepCompleted(index);
               const isCurrent = index === step;
               const clickable = !isApplicationCompleted && (completed || index <= maxStep);
@@ -364,14 +393,10 @@ const UserDashBoard = () => {
                   className={`nf-step ${isCurrent ? "current" : ""} ${completed ? "complete" : ""} ${
                     clickable ? "clickable" : ""
                   }`}
-                  key={label}
+                  key={s.letter}
                   role={clickable ? "button" : undefined}
                   tabIndex={clickable ? 0 : undefined}
-                  aria-label={
-                    clickable
-                      ? `Step ${index + 1}${completed ? " - पूर्ण" : index <= maxStep ? " - देखें" : ""}, क्लिक करें`
-                      : `Step ${index + 1}${completed ? " - पूर्ण" : ""}${isCurrent ? " - वर्तमान" : ""}`
-                  }
+                  aria-label={`Step ${index + 1} - चरण ${s.letter}: ${s.title}${completed ? " - पूर्ण" : ""}${isCurrent ? " - वर्तमान" : ""}`}
                   onClick={() => goToStep(index)}
                   onKeyDown={(e) => {
                     if (clickable && (e.key === "Enter" || e.key === " ")) {
@@ -385,7 +410,7 @@ const UserDashBoard = () => {
                     {completed && !isCurrent ? "✓" : index + 1}
                   </span>
                   <strong>Step {index + 1}</strong>
-                  <small>{label}</small>
+                  <small>{s.title}</small>
                 </div>
               );
             })}
@@ -418,10 +443,10 @@ const UserDashBoard = () => {
             className="nf-form-body"
             onSubmit={(event) => {
               event.preventDefault();
-              if (step !== 0) {
-                if (step === 1) setStepCSubmitTrigger((current) => current + 1);
-                else if (step === 2) setStepESubmitTrigger((current) => current + 1);
-                else next();
+              if (step === 1) {
+                setStepCSubmitTrigger((current) => current + 1);
+              } else {
+                next();
               }
             }}
             noValidate
@@ -455,6 +480,7 @@ const UserDashBoard = () => {
           </form>
         </div>
       </div>
+
       {showPreview && (
         <PreviewModal
           data={data}
