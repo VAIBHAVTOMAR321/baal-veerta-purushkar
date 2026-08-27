@@ -20,9 +20,62 @@ const isPart3Submitted = (record) => {
 };
 
 const firstValue = (record, ...keys) => keys.map((key) => record?.[key]).find((value) => value !== undefined && value !== null);
-const normalizePerson = (person) => Array.isArray(person)
-  ? { name: person[0] || "", age: person[1] ?? "", relation: person[2] || "" }
-  : { name: person?.name || "", age: person?.age ?? "", relation: person?.relation || "" };
+const normalizePerson = (person) => {
+  if (Array.isArray(person)) {
+    if (person.length >= 4) {
+      const [name, mobile, ageRaw, relation] = person;
+      const ageStr = String(ageRaw || "");
+      let ageYears = "", ageMonths = "", ageDays = "";
+      if (ageStr) {
+        if (ageStr.includes("/")) {
+          const parts = ageStr.split("/");
+          ageYears = parts[0] || "";
+          ageMonths = parts[1] || "";
+          ageDays = parts[2] || "";
+        } else {
+          ageYears = ageStr;
+        }
+      }
+      return { name: name || "", mobile: mobile || "", ageYears, ageMonths, ageDays, relation: relation || "" };
+    }
+    const [name, ageRaw, relation] = person;
+    const ageStr = String(ageRaw || "");
+    let ageYears = "", ageMonths = "", ageDays = "";
+    if (ageStr) {
+      if (ageStr.includes("/")) {
+        const parts = ageStr.split("/");
+        ageYears = parts[0] || "";
+        ageMonths = parts[1] || "";
+        ageDays = parts[2] || "";
+      } else {
+        ageYears = ageStr;
+      }
+    }
+    return { name: name || "", ageYears, ageMonths, ageDays, relation: relation || "" };
+  }
+  const name = person?.name || "";
+  const relation = person?.relation || "";
+  const mobile = person?.mobile || "";
+  let ageYears = "", ageMonths = "", ageDays = "";
+  if (person?.ageYears !== undefined) {
+    ageYears = String(person.ageYears || "");
+    ageMonths = String(person.ageMonths || "");
+    ageDays = String(person.ageDays || "");
+  } else if (person?.age !== undefined) {
+    const ageStr = String(person.age || "");
+    if (ageStr) {
+      if (ageStr.includes("/")) {
+        const parts = ageStr.split("/");
+        ageYears = parts[0] || "";
+        ageMonths = parts[1] || "";
+        ageDays = parts[2] || "";
+      } else {
+        ageYears = ageStr;
+      }
+    }
+  }
+  return { name, mobile, ageYears, ageMonths, ageDays, relation };
+};
 const normalizeWitness = (witness) => Array.isArray(witness)
   ? { name: witness[0] || "", mobile: witness[1] || "", address: witness[2] || "", relation: witness[3] || "" }
   : { name: witness?.name || "", mobile: witness?.mobile || "", address: witness?.address || "", relation: witness?.relation || "" };
@@ -30,7 +83,9 @@ const normalizeWitness = (witness) => Array.isArray(witness)
 const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCChecked, externalSubmitTrigger, onErrorsChange }) => {
   const { authFetch } = useAuth();
   const [customTitleActive, setCustomTitleActive] = useState(false);
-  const [rescuedPeople, setRescuedPeople] = useState(data.rescuedDetails?.people?.length ? data.rescuedDetails.people : [{ name: "", age: "", relation: "" }]);
+  const [customTitleText, setCustomTitleText] = useState("");
+  const [customTitleError, setCustomTitleError] = useState("");
+  const [rescuedPeople, setRescuedPeople] = useState(data.rescuedDetails?.people?.length ? data.rescuedDetails.people : [{ name: "", mobile: "", ageYears: "", ageMonths: "", ageDays: "", relation: "" }]);
   const [witnesses, setWitnesses] = useState(data.witnesses?.length ? data.witnesses : [{ name: "", mobile: "", address: "", relation: "" }]);
   const [districts, setDistricts] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -48,6 +103,10 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
 
   //  COMBINED ERRORS - merge parent errors with local errors
   const combinedErrors = { ...error, ...localErrors };
+
+  const today = new Date().toISOString().split("T")[0];
+  const minIncidentDate = "2024-01-01";
+  const maxIncidentDate = today;
 
   useEffect(() => {
     if (dataFetchStarted.current) return;
@@ -79,7 +138,13 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
           if (value !== undefined && value !== null) update({ target: { name, value, type: "text" } });
         });
         const fetchedTitle = fieldMapping.actTitle || "";
-        setCustomTitleActive(fetchedTitle !== "" && !natureOptions.includes(fetchedTitle));
+        const isCustomTitle = fetchedTitle !== "" && !natureOptions.includes(fetchedTitle);
+        setCustomTitleActive(isCustomTitle);
+        if (isCustomTitle) {
+          setCustomTitleText(fetchedTitle);
+        } else {
+          setCustomTitleText("");
+        }
         const people = Array.isArray(record.rescued_persons) && record.rescued_persons.length
           ? record.rescued_persons.map(normalizePerson)
           : [{ name: "", age: "", relation: "" }];
@@ -142,11 +207,27 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       }
       const formatted = `${years} वर्ष ${months} महीने ${days} दिन`;
       update({ target: { name: "incidentAge", value: formatted } });
-      setIsOverAge(years > 18);
+      const isOverAge = years > 18 || (years === 18 && (months > 0 || days > 0));
+      setIsOverAge(isOverAge);
     } else {
       setIsOverAge(false);
     }
   }, [data.actDate, data.birthDate, update]);
+
+  useEffect(() => {
+    if (isOverAge) {
+      setLocalErrors((prev) => ({
+        ...prev,
+        incidentAge: "आप 18 वर्ष से अधिक आयु के कारण इस फॉर्म को भरने के लिए पात्र नहीं हैं।",
+      }));
+    } else {
+      setLocalErrors((prev) => {
+        const next = { ...prev };
+        delete next.incidentAge;
+        return next;
+      });
+    }
+  }, [isOverAge]);
 
   useEffect(() => {
     if (alertInfo) {
@@ -174,6 +255,20 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     //   USE combinedErrors instead of error
     const fieldError = combinedErrors[name];
 
+    const inputProps = {
+      id: `nf-${name}`,
+      name,
+      type: options.type || "text",
+      value,
+      onChange: update,
+      disabled: isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled)),
+      className: fieldError ? "error-style" : "",
+    };
+    if (options.type === "date") {
+      inputProps.min = options.min || "";
+      inputProps.max = options.max || "";
+    }
+
     return (
       <div className={`nf-field ${options.wide ? "nf-wide" : ""} ${options.fieldClassName || ""}`}>
         <label htmlFor={`nf-${name}`}>{label}{options.required && <span> *</span>}</label>
@@ -185,7 +280,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         ) : options.textarea ? (
           <textarea id={`nf-${name}`} name={name} value={value} onChange={update} rows={options.rows || 4} disabled={isFormLocked || isOverAge} className={fieldError ? "error-style" : ""} />
         ) : (
-          <input id={`nf-${name}`} name={name} type={options.type || "text"} value={value} onChange={update} disabled={isFormLocked || (options.alwaysEnabled ? false : (isOverAge || options.disabled))} className={fieldError ? "error-style" : ""} />
+          <input {...inputProps} />
         )}
         {showWordCount && (
           <small className={`nf-word-count ${!isWordValid ? "nf-invalid" : ""}`}>
@@ -198,26 +293,18 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   };
 
   const witnessFields = ["नाम", "मोबाइल नंबर", "पता", "बच्चे से संबंध"];
-  const rescuedPeopleFields = ["name", "age", "relation"];
+  const rescuedPeopleFields = ["name", "mobile", "ageYears", "ageMonths", "ageDays", "relation"];
   const witnessRowFields = ["name", "mobile", "address", "relation"];
   //   USE combinedErrors for row errors
   const rowError = (group, index, field) => combinedErrors[`${group}.${index}.${field}`];
   const isFormLocked = isCompleted && !isEditing;
-
-  const showCustomTitle = customTitleActive;
-
-  const handleResetActTitle = () => {
-    setCustomTitleActive(false);
-    const syntheticEvent = { target: { name: "actTitle", value: "" } };
-    update(syntheticEvent);
-  };
 
   const syncPeople = (people) => {
     update({ target: { name: "rescuedDetails", value: { ...(data.rescuedDetails || {}), people } } });
   };
 
   const addPerson = () => {
-    const next = [...rescuedPeople, { name: "", age: "", relation: "" }];
+    const next = [...rescuedPeople, { name: "", mobile: "", ageYears: "", ageMonths: "", ageDays: "", relation: "" }];
     setRescuedPeople(next);
     syncPeople(next);
   };
@@ -302,7 +389,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
 
     const rescuedPersons = rescuedPeople
       .filter((person) => String(person.name || "").trim() !== "")
-      .map((person) => [person.name, Number(person.age) || 0, person.relation || ""]);
+      .map((person) => {
+        const ageParts = [person.ageYears, person.ageMonths, person.ageDays].filter((part) => part !== "" && part !== undefined);
+        const ageStr = ageParts.length > 0 ? ageParts.join("/") : "";
+        return [person.name, person.mobile || "", ageStr, person.relation || ""];
+      });
 
     const eyewitnesses = witnesses
       .filter((witness) => String(witness.name || "").trim() !== "")
@@ -338,6 +429,8 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       ...Object.fromEntries(editableFields.map((field) => [field, data[field] || ""])),
       rescuedPeople,
       witnesses,
+      customTitleActive,
+      customTitleText,
     });
     setIsEditing(true);
   };
@@ -345,7 +438,13 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const handleCancelEdit = () => {
     if (editSnapshot) {
       Object.entries(editSnapshot).forEach(([name, value]) => {
-        if (name !== "rescuedPeople" && name !== "witnesses") update({ target: { name, value, type: "text" } });
+        if (name === "customTitleActive") {
+          setCustomTitleActive(value);
+        } else if (name === "customTitleText") {
+          setCustomTitleText(value || "");
+        } else if (name !== "rescuedPeople" && name !== "witnesses") {
+          update({ target: { name, value, type: "text" } });
+        }
       });
       setRescuedPeople(editSnapshot.rescuedPeople);
       setWitnesses(editSnapshot.witnesses);
@@ -373,8 +472,16 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       errors.shortDescription = "यह फ़ील्ड अनिवार्य है";
     } else {
       const wc = data.shortDescription.trim().split(/\s+/).filter(Boolean).length;
-      if (wc < 250 || wc > 500) {
-        errors.shortDescription = "विवरण कम से कम 250 और अधिकतम 500 शब्दों में होना चाहिए।";
+      if (wc < 100 || wc > 500) {
+        errors.shortDescription = "विवरण कम से कम 100 और अधिकतम 500 शब्दों में होना चाहिए।";
+      }
+    }
+    if (!data.rescuedCount || data.rescuedCount.trim() === "") {
+      errors.rescuedCount = "यह फ़ील्ड अनिवार्य है";
+    } else {
+      const wc = data.rescuedCount.trim().split(/\s+/).filter(Boolean).length;
+      if (wc > 500) {
+        errors.rescuedCount = "विवरण अधिकतम 500 शब्दों में होना चाहिए।";
       }
     }
     if (!data.firRegistered) {
@@ -389,19 +496,33 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       errors.mediaPublished = "यह फ़ील्ड अनिवार्य है";
     }
 
-    const validateRows = (rows, group, fields) => {
+    const validateRescuedRows = (rows) => {
       (rows || []).forEach((row, index) => {
-        if (fields.some((field) => String(row?.[field] || "").trim())) {
-          fields.forEach((field) => {
+        const name = String(row?.name || "").trim();
+        const ageYears = String(row?.ageYears || "").trim();
+        if (name || ageYears) {
+          if (!name) errors[`rescuedPeople.${index}.name`] = "यह फ़ील्ड अनिवार्य है";
+          if (!ageYears) errors[`rescuedPeople.${index}.ageYears`] = "यह फ़ील्ड अनिवार्य है";
+          if (String(row?.relation || "").trim() === "") errors[`rescuedPeople.${index}.relation`] = "यह फ़ील्ड अनिवार्य है";
+          if (String(row?.mobile || "").trim() === "") errors[`rescuedPeople.${index}.mobile`] = "यह फ़ील्ड अनिवार्य है";
+        }
+      });
+    };
+
+    const validateWitnessRows = (rows) => {
+      (rows || []).forEach((row, index) => {
+        if (["name", "mobile", "address", "relation"].some((field) => String(row?.[field] || "").trim())) {
+          ["name", "mobile", "address", "relation"].forEach((field) => {
             if (!String(row?.[field] || "").trim()) {
-              errors[`${group}.${index}.${field}`] = "यह फ़ील्ड अनिवार्य है";
+              errors[`witnesses.${index}.${field}`] = "यह फ़ील्ड अनिवार्य है";
             }
           });
         }
       });
     };
-    validateRows(data.rescuedDetails?.people, "rescuedPeople", ["name", "age", "relation"]);
-    validateRows(data.witnesses, "witnesses", ["name", "mobile", "address", "relation"]);
+
+    validateRescuedRows(data.rescuedDetails?.people);
+    validateWitnessRows(data.witnesses);
 
     return Object.keys(errors).length > 0 ? errors : null;
   };
@@ -527,12 +648,83 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const rescuedPeopleRows = rescuedPeople.map((person, index) => (
     <tr key={index}>
       <td>{index + 1}</td>
-      {rescuedPeopleFields.map((field) => (
-        <td key={field}>
-          <input id={`nf-rescuedPeople-${index}-${field}`} type="text" value={person[field] || ""} onChange={(e) => updatePerson(index, field, e.target.value)} disabled={isFormLocked || isOverAge} className={rowError("rescuedPeople", index, field) ? "error-style" : ""} />
-          {rowError("rescuedPeople", index, field) && <small className="nf-error">{rowError("rescuedPeople", index, field)}</small>}
-        </td>
-      ))}
+      <td>
+        <input
+          id={`nf-rescuedPeople-${index}-name`}
+          type="text"
+          value={person.name || ""}
+          onChange={(e) => updatePerson(index, "name", e.target.value)}
+          disabled={isFormLocked || isOverAge}
+          className={rowError("rescuedPeople", index, "name") ? "error-style" : ""}
+        />
+        {rowError("rescuedPeople", index, "name") && <small className="nf-error">{rowError("rescuedPeople", index, "name")}</small>}
+      </td>
+      <td>
+        <input
+          id={`nf-rescuedPeople-${index}-mobile`}
+          type="text"
+          value={person.mobile || ""}
+          onChange={(e) => updatePerson(index, "mobile", e.target.value)}
+          disabled={isFormLocked || isOverAge}
+          className={rowError("rescuedPeople", index, "mobile") ? "error-style" : ""}
+        />
+        {rowError("rescuedPeople", index, "mobile") && <small className="nf-error">{rowError("rescuedPeople", index, "mobile")}</small>}
+      </td>
+      <td>
+        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+            <small style={{ fontSize: "10px", color: "#536c7d", lineHeight: 1 }}>वर्ष</small>
+            <input
+              id={`nf-rescuedPeople-${index}-ageYears`}
+              type="number"
+              value={person.ageYears || ""}
+              onChange={(e) => updatePerson(index, "ageYears", e.target.value)}
+              disabled={isFormLocked || isOverAge}
+              className={rowError("rescuedPeople", index, "ageYears") ? "error-style" : ""}
+              style={{ width: "60px" }}
+              min="0"
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+            <small style={{ fontSize: "10px", color: "#536c7d", lineHeight: 1 }}>महीना</small>
+            <input
+              id={`nf-rescuedPeople-${index}-ageMonths`}
+              type="number"
+              value={person.ageMonths || ""}
+              onChange={(e) => updatePerson(index, "ageMonths", e.target.value)}
+              disabled={isFormLocked || isOverAge}
+              style={{ width: "50px" }}
+              min="0"
+              max="11"
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+            <small style={{ fontSize: "10px", color: "#536c7d", lineHeight: 1 }}>दिन</small>
+            <input
+              id={`nf-rescuedPeople-${index}-ageDays`}
+              type="number"
+              value={person.ageDays || ""}
+              onChange={(e) => updatePerson(index, "ageDays", e.target.value)}
+              disabled={isFormLocked || isOverAge}
+              style={{ width: "50px" }}
+              min="0"
+              max="31"
+            />
+          </div>
+        </div>
+        {rowError("rescuedPeople", index, "ageYears") && <small className="nf-error">{rowError("rescuedPeople", index, "ageYears")}</small>}
+      </td>
+      <td>
+        <input
+          id={`nf-rescuedPeople-${index}-relation`}
+          type="text"
+          value={person.relation || ""}
+          onChange={(e) => updatePerson(index, "relation", e.target.value)}
+          disabled={isFormLocked || isOverAge}
+          className={rowError("rescuedPeople", index, "relation") ? "error-style" : ""}
+        />
+        {rowError("rescuedPeople", index, "relation") && <small className="nf-error">{rowError("rescuedPeople", index, "relation")}</small>}
+      </td>
       <td><button type="button" className="nf-remove" onClick={() => removePerson(index)} disabled={isFormLocked || isOverAge}>हटाएं</button></td>
     </tr>
   ));
@@ -606,66 +798,85 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         <div className="nf-grid nf-grid-3">
           <div className="nf-field">
             <label htmlFor="nf-actTitle">1. वीरता की घटना का शीर्षक <span> *</span></label>
-            {showCustomTitle ? (
-              <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
-                <input ref={customTitleRef} id="nf-actTitle" name="actTitle" type="text" value={data.actTitle || ""} onChange={(e) => {
+            <select
+              id="nf-actTitle"
+              name="actTitle"
+              value={customTitleActive ? "अन्य असाधारण साहसिक कार्य" : (data.actTitle || "")}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCustomTitleActive(value === "अन्य असाधारण साहसिक कार्य");
+                if (value === "अन्य असाधारण साहसिक कार्य") {
+                  update({ target: { name: "actTitle", value: "" } });
+                  setCustomTitleText("");
+                  setCustomTitleError("");
+                  setTimeout(() => customTitleRef.current?.focus(), 0);
+                } else {
                   update(e);
-                  //  Clear error on change
-                  setLocalErrors(prev => {
-                    if (!prev.actTitle) return prev;
-                    const next = { ...prev };
-                    delete next.actTitle;
-                    return next;
-                  });
-                }} disabled={isOverAge} className={combinedErrors.actTitle ? "error-style" : ""} />
-                <button type="button" className="nf-reset" onClick={handleResetActTitle} disabled={isOverAge}>रीसेट</button>
+                  setCustomTitleText("");
+                  setCustomTitleError("");
+                }
+                setLocalErrors(prev => {
+                  if (!prev.actTitle) return prev;
+                  const next = { ...prev };
+                  delete next.actTitle;
+                  return next;
+                });
+              }}
+              disabled={isFormLocked || isOverAge}
+              className={combinedErrors.actTitle ? "error-style" : ""}
+            >
+              <option value="">चयन करें</option>
+              {natureOptions.map((option) => <option key={option}>{option}</option>)}
+            </select>
+            {customTitleActive && (
+              <div style={{ marginTop: "0.5rem" }}>
+                <textarea
+                  ref={customTitleRef}
+                  id="nf-actTitle-custom"
+                  name="actTitle"
+                  value={customTitleText}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setCustomTitleText(value);
+                    const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
+                    if (wordCount > 20) {
+                      setCustomTitleError(`अधिकतम 20 शब्द हो सकते हैं। आपने ${wordCount} शब्द लिखे हैं।`);
+                    } else {
+                      setCustomTitleError("");
+                    }
+                    update({ target: { name: "actTitle", value, type: "text" } });
+                  }}
+                  disabled={isFormLocked || isOverAge}
+                  className={combinedErrors.actTitle || customTitleError ? "error-style" : ""}
+                  rows={3}
+                  placeholder="कृपया अपना स्वयं का शीर्षक लिखें (अधिकतम 20 शब्द)"
+                />
+                {customTitleText.trim().length > 0 && (
+                  <small className={`nf-word-count ${customTitleError ? "nf-invalid" : ""}`}>
+                    {customTitleText.trim().split(/\s+/).filter(Boolean).length} / 20 शब्द
+                  </small>
+                )}
+                {customTitleError && <small className="nf-error">{customTitleError}</small>}
               </div>
-            ) : (
-              <select
-                id="nf-actTitle"
-                name="actTitle"
-                value={data.actTitle || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setCustomTitleActive(value === "अन्य असाधारण साहसिक कार्य");
-                  if (value === "अन्य असाधारण साहसिक कार्य") {
-                    update({ target: { name: "actTitle", value: "" } });
-                    setTimeout(() => customTitleRef.current?.focus(), 0);
-                  } else {
-                    update(e);
-                  }
-                  //  Clear error on change
-                  setLocalErrors(prev => {
-                    if (!prev.actTitle) return prev;
-                    const next = { ...prev };
-                    delete next.actTitle;
-                    return next;
-                  });
-                }}
-                disabled={isOverAge}
-                className={combinedErrors.actTitle ? "error-style" : ""}
-              >
-                <option value="">चयन करें</option>
-                {natureOptions.map((option) => <option key={option}>{option}</option>)}
-              </select>
             )}
             {combinedErrors.actTitle && <small className="nf-error">{combinedErrors.actTitle}</small>}
           </div>
-          {input("2. घटना की दिनांक", "actDate", { required: true, type: "date", alwaysEnabled: true })}
+          {input("2. घटना की दिनांक", "actDate", { required: true, type: "date", alwaysEnabled: true, min: minIncidentDate, max: maxIncidentDate })}
           {input("3. घटना के समय आयु", "incidentAge", { type: "text", disabled: true })}
         </div>
 
         <div className="nf-grid nf-grid-3">
           {input("4. घटना का समय", "actTime", { type: "time" })}
-          {input("5. घटना का स्थान", "actPlace", { required: true })}
-          {input("6. घटना का जनपद", "actDistrict", { required: true, options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts })}
+          {input("5. घटना का जनपद", "actDistrict", { required: true, options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts })}
+          {input("6. घटना का स्थान", "actPlace", { required: true })}
         </div>
 
-        {input("7. घटना का संक्षिप्त विवरण", "shortDescription", { required: true, textarea: true, wide: true, words: { min: 250, max: 500 } })}
-        <p className="nf-hint">(अधिकतम 500 शब्द)</p>
+        {input("7. घटना का संक्षिप्त विवरण", "shortDescription", { required: true, textarea: true, wide: true, words: { min: 100, max: 500 } })}
+        <p className="nf-hint">(कम से कम 100 और अधिकतम 500 शब्द)</p>
         <div className="nf-grid">
-          {input("8. घटना के दौरान बच्चे द्वारा बचाये गये व्यक्ति/व्यक्तियों/संस्थानों का संक्षिप्त विवरण", "rescuedCount", { textarea: true, wide: true })}
+          {input("8. घटना के दौरान बच्चे द्वारा बचाये गये व्यक्ति/व्यक्तियों/संस्थानों का संक्षिप्त विवरण", "rescuedCount", { required: true, textarea: true, wide: true, words: { min: 0, max: 500 } })}
         </div>
+        <p className="nf-hint">(अधिकतम 500 शब्द)</p>
       </div>
 
       <div className="nf-block">
@@ -678,13 +889,14 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
             <table className="nf-table">
               <colgroup>
                 <col style={{ width: "6%" }} />
-                <col style={{ width: "24%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "24%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "14%" }} />
+                <col style={{ width: "22%" }} />
+                <col style={{ width: "22%" }} />
                 <col style={{ width: "10%" }} />
               </colgroup>
               <thead>
-                <tr>{["क्र.सं.", "नाम", "आयु", "बच्चे से संबंध", "क्रिया"].map((field) => <th key={field}>{field}</th>)}</tr>
+                <tr>{["क्र.सं.", "नाम", "मोबाइल नंबर", "आयु", "बच्चे से संबंध", "क्रिया"].map((field) => <th key={field}>{field}</th>)}</tr>
               </thead>
               <tbody>{rescuedPeopleRows}</tbody>
             </table>

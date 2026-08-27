@@ -16,6 +16,8 @@ const StepE = ({ data, update, onSubmitSuccess, onCompleted, isStepEChecked, ext
     const [isCompleted, setIsCompleted] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editSnapshot, setEditSnapshot] = useState(null);
+    const [otherAwardDetailsError, setOtherAwardDetailsError] = useState("");
+    const [additionalInformationError, setAdditionalInformationError] = useState("");
     const dataFetchStarted = useRef(false);
 
     useEffect(() => {
@@ -56,6 +58,32 @@ const StepE = ({ data, update, onSubmitSuccess, onCompleted, isStepEChecked, ext
     }, [externalSubmitTrigger]);
 
     const isFormLocked = isCompleted && !isEditing;
+
+    const countWords = (value) => {
+        const trimmed = String(value || "").trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).filter(Boolean).length;
+    };
+
+    const handleOtherAwardDetailsChange = (e) => {
+        update(e);
+        const wordCount = countWords(e.target.value);
+        if (wordCount > 200) {
+            setOtherAwardDetailsError(`अधिकतम 200 शब्द हो सकते हैं। आपने ${wordCount} शब्द लिखे हैं।`);
+        } else {
+            setOtherAwardDetailsError("");
+        }
+    };
+
+    const handleAdditionalInformationChange = (e) => {
+        update(e);
+        const wordCount = countWords(e.target.value);
+        if (wordCount > 250) {
+            setAdditionalInformationError(`अधिकतम 250 शब्द हो सकते हैं। आपने ${wordCount} शब्द लिखे हैं।`);
+        } else {
+            setAdditionalInformationError("");
+        }
+    };
 
     const handleEdit = () => {
         setEditSnapshot({
@@ -126,12 +154,12 @@ const StepE = ({ data, update, onSubmitSuccess, onCompleted, isStepEChecked, ext
 
 
          <div className="nf-grid">
-            <div className="nf-field"><label>1. क्या इस घटना के संबंध में कोई अन्य पुरस्कार/सम्मान प्राप्त हुआ है?</label><div className="nf-radio-group">{["हाँ", "नहीं"].map((option) => <label key={option}><input type="radio" name="otherAward" value={option} checked={data.otherAward === option} onChange={update} disabled={isFormLocked} /> {option}</label>)}</div></div>
-            {data.otherAward === "हाँ" && <div className="nf-field"><label htmlFor="nf-otherAwardDetails">विवरण:</label><textarea id="nf-otherAwardDetails" name="otherAwardDetails" value={data.otherAwardDetails || ""} onChange={update} rows={3} disabled={isFormLocked} /></div>}
-        </div>
-       
+             <div className="nf-field"><label>1. क्या इस घटना के संबंध में कोई अन्य पुरस्कार/सम्मान प्राप्त हुआ है?</label><div className="nf-radio-group">{["हाँ", "नहीं"].map((option) => <label key={option}><input type="radio" name="otherAward" value={option} checked={data.otherAward === option} onChange={update} disabled={isFormLocked} /> {option}</label>)}</div></div>
+             {data.otherAward === "हाँ" && <div className="nf-field"><label htmlFor="nf-otherAwardDetails">विवरण:</label><textarea id="nf-otherAwardDetails" name="otherAwardDetails" value={data.otherAwardDetails || ""} onChange={handleOtherAwardDetailsChange} rows={6} disabled={isFormLocked} />{countWords(data.otherAwardDetails || "") > 0 && <small className={`nf-word-count ${otherAwardDetailsError ? "nf-invalid" : ""}`}>{countWords(data.otherAwardDetails || "")} / 200 शब्द</small>}{otherAwardDetailsError && <small className="nf-error">{otherAwardDetailsError}</small>}</div>}
+         </div>
+        
 
-        <div className="nf-field nf-wide"><label htmlFor="nf-additionalInformation">2. अतिरिक्त टिप्पणी/अन्य महत्वपूर्ण जानकारी</label><textarea id="nf-additionalInformation" name="additionalInformation" value={data.additionalInformation || ""} onChange={update} rows={6} disabled={isFormLocked} /></div>
+         <div className="nf-field nf-wide"><label htmlFor="nf-additionalInformation">2. अतिरिक्त टिप्पणी/अन्य महत्वपूर्ण जानकारी</label><textarea id="nf-additionalInformation" name="additionalInformation" value={data.additionalInformation || ""} onChange={handleAdditionalInformationChange} rows={8} disabled={isFormLocked} />{countWords(data.additionalInformation || "") > 0 && <small className={`nf-word-count ${additionalInformationError ? "nf-invalid" : ""}`}>{countWords(data.additionalInformation || "")} / 250 शब्द</small>}{additionalInformationError && <small className="nf-error">{additionalInformationError}</small>}</div>
     </section>;
 };
 
