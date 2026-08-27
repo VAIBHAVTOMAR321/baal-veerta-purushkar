@@ -474,7 +474,7 @@ function Home() {
 
                     {success && (
                       <div className="login-success" role="alert" style={{ color: "green", textAlign: "center", marginBottom: "1rem" }}>
-                        ✅ {success}
+                          {success}
                       </div>
                     )}
 
@@ -553,7 +553,7 @@ function Home() {
 
               {forgotSuccess && (
                 <div className="modal-success" role="alert">
-                  ✅ {forgotSuccess}
+                    {forgotSuccess}
                 </div>
               )}
 

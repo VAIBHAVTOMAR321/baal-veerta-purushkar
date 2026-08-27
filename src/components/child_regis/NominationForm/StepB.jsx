@@ -28,15 +28,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   const [isCompleted, setIsCompleted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editSnapshot, setEditSnapshot] = useState(null);
-  //  CRITICAL FIX: Add local errors state
+  //   CRITICAL FIX: Add local errors state
   const [localErrors, setLocalErrors] = useState({});
   const fetchStarted = useRef(false);
   const dataFetchStarted = useRef(false);
 
-  //  COMBINED ERRORS - merge parent errors with local errors
+  //   COMBINED ERRORS - merge parent errors with local errors
   const combinedErrors = { ...error, ...localErrors };
 
-  //  Fetch existing part2 data on mount
+  //   Fetch existing part2 data on mount
   useEffect(() => {
     if (dataFetchStarted.current) return;
     dataFetchStarted.current = true;
@@ -288,7 +288,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   const nameFields = ["childName", "fatherName", "motherName", "guardianName"];
   const numericPattern = /[0-9]/g;
 
-  //  Helper to clear error for a specific field
+  //   Helper to clear error for a specific field
   const clearFieldError = (fieldName) => {
     setLocalErrors(prev => {
       if (!prev[fieldName]) return prev;
@@ -315,7 +315,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       } else {
         setChildMobileError("");
       }
-      //  Clear error on change
+      //   Clear error on change
       clearFieldError("childMobile");
       return;
     }
@@ -336,7 +336,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     } else {
       update(e);
     }
-    //  Clear error on change for all fields
+    //   Clear error on change for all fields
     clearFieldError(name);
   };
 
@@ -394,7 +394,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     };
   };
 
-  //  IMPROVED: Validate form before submission
+  //   IMPROVED: Validate form before submission
   const validateForm = () => {
     const errors = {};
 
@@ -450,7 +450,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     setIsEditing(false);
     setEditSnapshot(null);
     setSubmitError("");
-    setLocalErrors({}); //  Clear local errors on cancel
+    setLocalErrors({}); //   Clear local errors on cancel
   };
 
   const handleSubmit = async (moveToNext = true) => {
@@ -469,17 +469,17 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
 
     const validationErrors = validateForm();
     
-    //  CRITICAL FIX: Set local errors AND call onErrorsChange
+    //   CRITICAL FIX: Set local errors AND call onErrorsChange
     if (Object.keys(validationErrors).length > 0) {
       console.log("[StepB] Validation errors:", validationErrors);
-      setLocalErrors(validationErrors); // Set local state immediately
+      setLocalErrors(validationErrors); //   Set local state immediately
       
-      //  Also propagate to parent if callback exists
+      //   Also propagate to parent if callback exists
       if (onErrorsChange) {
         onErrorsChange(validationErrors);
       }
       
-      //  Scroll to first error
+      //   Scroll to first error
       requestAnimationFrame(() => {
         const firstKey = Object.keys(validationErrors)[0];
         const el = document.getElementById(`nf-${firstKey}`);
@@ -488,7 +488,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       return false;
     }
 
-    //  Clear errors on successful validation
+    //   Clear errors on successful validation
     setLocalErrors({});
     if (onErrorsChange) {
       onErrorsChange({});
@@ -569,7 +569,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       extraProps.max = today;
     }
 
-    //  USE combinedErrors instead of error
+    //   USE combinedErrors instead of error
     const fieldError = combinedErrors[name];
 
     return (
@@ -585,7 +585,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             value={value}
             onChange={handleChange}
             disabled={disabled}
-            className={fieldError ? "error-style" : ""} //  Apply error style
+            className={fieldError ? "error-style" : ""} //   Apply error style
           >
             <option value="">{options.placeholder || "चयन करें"}</option>
             {options.options.map((option) => (
@@ -603,7 +603,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             placeholder={options.placeholder}
             onChange={handleChange}
             disabled={disabled}
-            className={fieldError ? "error-style" : ""} //  Apply error style
+            className={fieldError ? "error-style" : ""} //   Apply error style
             {...extraProps}
           />
         )}
@@ -832,7 +832,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         </div>
       )}
 
-      {/*  Show validation error count if there are errors */}
+      {/*   Show validation error count if there are errors */}
       {Object.keys(combinedErrors).length > 0 && (
         <div style={{
           color: "#dc2626",
