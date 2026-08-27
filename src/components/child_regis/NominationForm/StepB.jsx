@@ -74,6 +74,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               birthDate: record.date_of_birth,
               gender: record.gender,
               resident: record.permanent_resident_uttarakhand,
+              residence_certificate_number: record.residence_certificate_number,
               "permanentग्राम/मोहल्ला": record.permanent_village,
               "permanentडाकघर": record.permanent_post_office,
               "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
@@ -116,6 +117,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               birthDate: record.date_of_birth,
               gender: record.gender,
               resident: record.permanent_resident_uttarakhand,
+              residence_certificate_number: record.residence_certificate_number,
               "permanentग्राम/मोहल्ला": record.permanent_village,
               "permanentडाकघर": record.permanent_post_office,
               "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
@@ -377,6 +379,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       date_of_birth: data.birthDate || "",
       gender: data.gender || "",
       permanent_resident_uttarakhand: data.resident || "",
+      residence_certificate_number: data.residence_certificate_number || "",
       permanent_village: data["permanentग्राम/मोहल्ला"] || "",
       permanent_post_office: data["permanentडाकघर"] || "",
       permanent_block_local_body: data["permanentविकासखण्ड/नगर निकाय"] || "",
@@ -416,17 +419,27 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       if (!data["permanentजनपद"]) errors["permanentजनपद"] = "यह फ़ील्ड अनिवार्य है";
       if (!data["permanentविकासखण्ड/नगर निकाय"]) errors["permanentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
       if (!data["permanentपिन कोड"]?.trim()) errors["permanentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["residence_certificate_number"]?.trim()) errors["residence_certificate_number"] = "यह फ़ील्ड अनिवार्य है";
     }
 
-    if (data.childMobile && data.childMobile.length !== 10) {
+    if (!data.childMobile?.trim()) {
+      errors.childMobile = "यह फ़ील्ड अनिवार्य है";
+    } else if (data.childMobile.length !== 10) {
       errors.childMobile = "मोबाइल नंबर 10 अंकों का होना चाहिए";
     }
+
+    if (!data["currentग्राम/मोहल्ला"]?.trim()) errors["currentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentडाकघर"]?.trim()) errors["currentडाकघर"] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentजनपद"]) errors["currentजनपद"] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentविकासखण्ड/नगर निकाय"]) errors["currentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentपिन कोड"]?.trim()) errors["currentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
 
     return errors;
   };
 
   const editableFields = [
     "childName", "fatherName", "motherName", "guardianName", "childMobile", "birthDate", "gender", "resident",
+    "residence_certificate_number",
     "permanentग्राम/मोहल्ला", "permanentडाकघर", "permanentजनपद", "permanentविकासखण्ड/नगर निकाय", "permanentपिन कोड",
     "currentग्राम/मोहल्ला", "currentडाकघर", "currentजनपद", "currentविकासखण्ड/नगर निकाय", "currentपिन कोड",
     "schoolName", "schoolAddress", "currentClass",
@@ -713,6 +726,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
           disabled: isLegalGuardian,
         })}
         {input("5. बच्चे/अभिभावक का मोबाइल नंबर", "childMobile", {
+          required: true,
           type: "tel",
           placeholder: "10 अंकों का मोबाइल नंबर",
         })}
@@ -730,10 +744,14 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
           options: ["हाँ", "नहीं"],
           placeholder: "चुनें",
         })}
+        {input("9. स्थायी निवास प्रमाण पत्र संख्या", "residence_certificate_number", {
+          required: true,
+          placeholder: "प्रमाण पत्र संख्या दर्ज करें",
+        })}
       </div>
       <fieldset className="nf-subsection nf-subsection-left">
         <legend>
-          9. स्थायी निवास का पता <span>*</span>
+          10. स्थायी निवास का पता <span>*</span>
         </legend>
         <div className="nf-grid nf-address-grid">
           {addressFields.map((field) => {
@@ -778,11 +796,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         </label>
       </div>
       <fieldset className="nf-subsection nf-subsection-left">
-        <legend>10. वर्तमान पता (यदि स्थायी पते से भिन्न हो)</legend>
+        <legend>11. वर्तमान पता (यदि स्थायी पते से भिन्न हो)</legend>
         <div className="nf-grid nf-address-grid">
           {addressFields.map((field) => {
             if (field === "जनपद") {
               return input("जनपद", `current${field}`, {
+                required: true,
                 options: districts,
                 placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें",
                 disabled: loadingDistricts,
@@ -790,6 +809,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             }
             if (field === "विकासखण्ड/नगर निकाय") {
               return input("विकासखण्ड/नगर निकाय", `current${field}`, {
+                required: true,
                 options: currentProjects,
                 placeholder: !currentSelectedDistrict
                   ? "पहले जनपद चुनें"
@@ -802,19 +822,20 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               });
             }
             return input(field, `current${field}`, {
+              required: true,
               placeholder: `${field} दर्ज करें`,
             });
           })}
         </div>
       </fieldset>
       <div className="nf-grid">
-        {input("11. विद्यालय का नाम", "schoolName", {
+        {input("12. विद्यालय का नाम", "schoolName", {
           placeholder: "विद्यालय का नाम",
         })}
-        {input("12. विद्यालय का पता", "schoolAddress", {
+        {input("13. विद्यालय का पता", "schoolAddress", {
           placeholder: "विद्यालय का पता",
         })}
-        {input("13. वर्तमान कक्षा", "currentClass", {
+        {input("14. वर्तमान कक्षा", "currentClass", {
           placeholder: "कक्षा दर्ज करें",
         })}
       </div>
