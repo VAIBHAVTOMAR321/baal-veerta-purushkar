@@ -3,6 +3,10 @@ import { useAuth } from "../../login/AuthContext";
 
 const addressFields = ["ग्राम/मोहल्ला", "डाकघर", "जनपद", "विकासखण्ड/नगर निकाय", "पिन कोड"];
 
+const hasSchoolDetails = (formData) =>
+  [formData?.schoolName, formData?.schoolAddress, formData?.currentClass]
+    .every((value) => String(value || "").trim());
+
 const isPart2Submitted = (record) => {
   const status = String(record?.status || record?.submission_status || "").toLowerCase();
   return ["completed", "submitted"].includes(status) || record?.submitted === true || record?.is_submitted === true;
@@ -88,6 +92,11 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               schoolName: record.school_name,
               schoolAddress: record.school_address,
               currentClass: record.current_class,
+              schoolEnrollmentStatus: hasSchoolDetails({
+                schoolName: record.school_name,
+                schoolAddress: record.school_address,
+                currentClass: record.current_class,
+              }) ? "हाँ" : "नहीं",
               childMobile: record.child_guardian_mobile,
             };
 
@@ -131,6 +140,11 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               schoolName: record.school_name,
               schoolAddress: record.school_address,
               currentClass: record.current_class,
+              schoolEnrollmentStatus: hasSchoolDetails({
+                schoolName: record.school_name,
+                schoolAddress: record.school_address,
+                currentClass: record.current_class,
+              }) ? "हाँ" : "नहीं",
               childMobile: record.child_guardian_mobile,
             };
 
@@ -309,6 +323,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     if (name === "resident") {
       setResident(value);
     }
+    if (name === "schoolEnrollmentStatus" && value === "नहीं") {
+      ["schoolName", "schoolAddress", "currentClass"].forEach((field) => {
+        update({ target: { name: field, value: "", type: "text" } });
+        clearFieldError(field);
+      });
+    }
     if (name === "childMobile") {
       const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 10);
       update({ target: { name, value: numericOnly, type: "text" } });
@@ -393,6 +413,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       school_name: data.schoolName || "",
       school_address: data.schoolAddress || "",
       current_class: data.currentClass || "",
+      school_enrolled: schoolEnrollmentStatus,
       child_guardian_mobile: data.childMobile || "",
     };
   };
@@ -412,6 +433,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     if (!data.birthDate) errors.birthDate = "यह फ़ील्ड अनिवार्य है";
     if (!data.gender) errors.gender = "यह फ़ील्ड अनिवार्य है";
     if (!data.resident) errors.resident = "यह फ़ील्ड अनिवार्य है";
+
+    if (schoolEnrollmentStatus === "हाँ") {
+      if (!data.schoolName?.trim()) errors.schoolName = "यह फ़ील्ड अनिवार्य है";
+      if (!data.schoolAddress?.trim()) errors.schoolAddress = "यह फ़ील्ड अनिवार्य है";
+      if (!data.currentClass?.trim()) errors.currentClass = "यह फ़ील्ड अनिवार्य है";
+    }
 
     if (data.resident === "हाँ") {
       if (!data["permanentग्राम/मोहल्ला"]?.trim()) errors["permanentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
@@ -442,7 +469,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     "residence_certificate_number",
     "permanentग्राम/मोहल्ला", "permanentडाकघर", "permanentजनपद", "permanentविकासखण्ड/नगर निकाय", "permanentपिन कोड",
     "currentग्राम/मोहल्ला", "currentडाकघर", "currentजनपद", "currentविकासखण्ड/नगर निकाय", "currentपिन कोड",
-    "schoolName", "schoolAddress", "currentClass",
+    "schoolName", "schoolAddress", "currentClass", "schoolEnrollmentStatus",
   ];
 
   const handleEdit = () => {
@@ -562,6 +589,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   };
 
   const isNotUttarakhand = resident === "नहीं";
+  const schoolEnrollmentStatus = data.schoolEnrollmentStatus || (hasSchoolDetails(data) ? "हाँ" : "नहीं");
 
   const input = (label, name, options = {}) => {
     const isSelect = Array.isArray(options.options);
@@ -829,15 +857,27 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         </div>
       </fieldset>
       <div className="nf-grid">
-        {input("12. विद्यालय का नाम", "schoolName", {
-          placeholder: "विद्यालय का नाम",
+        {input("विद्यालय में नामांकित है या नहीं?", "schoolEnrollmentStatus", {
+          required: true,
+          options: ["हाँ", "नहीं"],
+          placeholder: "चयन करें",
         })}
-        {input("13. विद्यालय का पता", "schoolAddress", {
-          placeholder: "विद्यालय का पता",
-        })}
-        {input("14. वर्तमान कक्षा", "currentClass", {
-          placeholder: "कक्षा दर्ज करें",
-        })}
+        {schoolEnrollmentStatus === "हाँ" && (
+          <>
+            {input("12. विद्यालय का नाम", "schoolName", {
+              required: true,
+              placeholder: "विद्यालय का नाम",
+            })}
+            {input("13. विद्यालय का पता", "schoolAddress", {
+              required: true,
+              placeholder: "विद्यालय का पता",
+            })}
+            {input("14. वर्तमान कक्षा", "currentClass", {
+              required: true,
+              placeholder: "कक्षा दर्ज करें",
+            })}
+          </>
+        )}
       </div>
 
       {submitError && (
@@ -856,10 +896,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       {/*   Show validation error count if there are errors */}
       {Object.keys(combinedErrors).length > 0 && (
         <div style={{
+          color: "#dc2626",
           padding: "12px",
           marginTop: "16px",
+          backgroundColor: "#fef2f2",
+          borderRadius: "8px",
+          border: "1px solid #fca5a5",
           fontSize: "14px"
         }}>
+          ⚠️ कृपया सभी अनिवार्य फ़ील्ड भरें ({Object.keys(combinedErrors).length} त्रुटियाँ)
         </div>
       )}
 
