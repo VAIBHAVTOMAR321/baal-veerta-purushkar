@@ -99,11 +99,12 @@ const UserDashBoard = () => {
 
   //  Navigate to a completed or previously visited step
   const goToStep = useCallback((stepIndex) => {
+    if (isApplicationCompleted) return;
     if (isStepCompleted(stepIndex) || stepIndex <= maxStep) {
       setStep(stepIndex);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [isStepCompleted, maxStep]);
+  }, [isStepCompleted, maxStep, isApplicationCompleted]);
 
   const update = useCallback((event) => {
     const { name, value, type, checked, files } = event.target;
@@ -353,10 +354,10 @@ const UserDashBoard = () => {
 
           {/* ── Stepper (with clickable completed steps) ── */}
           <nav className="nf-stepper" aria-label="Application steps">
-            {steps.map((label, index) => {
+             {steps.map((label, index) => {
               const completed = isStepCompleted(index);
               const isCurrent = index === step;
-              const clickable = completed || index <= maxStep;
+              const clickable = !isApplicationCompleted && (completed || index <= maxStep);
 
               return (
                 <div
