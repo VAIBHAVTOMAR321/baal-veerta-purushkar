@@ -333,7 +333,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
               </p>
               {data?.declarationDocument && (
                 <div className="nf-pv-decl-view">
-                  <span className="nf-pv-dstatus has">view</span>
+                  <a href={getFileSrc(data?.declarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
                 </div>
               )}
               <div className="nf-pv-decl-sign">
@@ -364,7 +364,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
               </p>
               {data?.parentDeclarationDocument && (
                 <div className="nf-pv-decl-view">
-                  <span className="nf-pv-dstatus has">view</span>
+                  <a href={getFileSrc(data?.parentDeclarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
                 </div>
               )}
               <div className="nf-pv-decl-sign">
