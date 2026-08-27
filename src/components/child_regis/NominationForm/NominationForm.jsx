@@ -244,7 +244,7 @@ const NominationForm = () => {
           </fieldset>
         </form>
       </div>
-      {showPreview && <PreviewModal data={data} onClose={closePreview} topAccepted={topAccepted} onTopAcceptedChange={setTopAccepted} />}
+      {showPreview && <PreviewModal data={data} onClose={closePreview} topAccepted={topAccepted} onTopAcceptedChange={setTopAccepted} isApplicationCompleted={isApplicationCompleted} />}
     </main>
   );
 };

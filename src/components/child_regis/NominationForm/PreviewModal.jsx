@@ -141,7 +141,7 @@ const DocNameCell = ({ label, file }) => {
 };
 
 /* ════════════════════════════════════════════════ */
-const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
+const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isApplicationCompleted }) => {
   const applicationNumber = data?.applicant_id || "System Generated";
   const district = data?.["permanentजनपद"] || data?.district || "-";
 
@@ -385,10 +385,10 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
         {/* ── Footer ── */}
         <div className="nf-pv-footer">
           <label className="nf-pv-accept">
-            <input type="checkbox" checked={topAccepted} onChange={(e) => onTopAcceptedChange(e.target.checked)} />
+            <input type="checkbox" checked={isApplicationCompleted ? true : topAccepted} onChange={(e) => onTopAcceptedChange?.(e.target.checked)} disabled={isApplicationCompleted} />
             <span>मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे सहमत हूँ।</span>
           </label>
-          {topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
+          {!isApplicationCompleted && topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
           <button type="button" className="nf-pv-closebtn" onClick={onClose}>Close</button>
         </div>
       </div>

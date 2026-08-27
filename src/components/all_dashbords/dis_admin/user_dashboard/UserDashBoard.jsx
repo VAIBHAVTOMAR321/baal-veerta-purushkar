@@ -461,6 +461,7 @@ const UserDashBoard = () => {
           onClose={closePreview}
           topAccepted={topAccepted}
           onTopAcceptedChange={setTopAccepted}
+          isApplicationCompleted={isApplicationCompleted}
         />
       )}
     </div>
