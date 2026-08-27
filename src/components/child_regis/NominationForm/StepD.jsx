@@ -21,7 +21,7 @@ const documents = [
 ];
 
 const documentHints = {
-  10: "विद्यालय द्वारा जारी प्रमाण पत्र, जिसमें विद्यार्थी का नाम, कक्षा और विद्यालय का नाम हो।",
+  10: "* विद्यालय द्वारा जारी प्रमाण पत्र, जिसमें विद्यार्थी का नाम, कक्षा और विद्यालय का नाम हो।",
 };
 
 const documentFieldMap = [
@@ -40,6 +40,10 @@ const documentFieldMap = [
 ];
 
 const hasValue = (value) => String(value || "").trim() !== "";
+const hasWitnessData = (witnesses) => {
+  const rows = Array.isArray(witnesses) ? witnesses : [];
+  return rows.some((row) => ["name", "mobile", "address", "relation"].some((field) => hasValue(row?.[field])));
+};
 const getDocumentUrl = (value) => {
   if (!hasValue(value)) return "";
   if (/^https?:\/\//i.test(String(value))) return String(value);
@@ -205,11 +209,20 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
     return formData;
   };
 
-  const validateDocuments = () => {
+   const validateDocuments = () => {
     const errors = {};
     visibleDocumentIndices.forEach((index) => {
       const applicability = documents[index][1];
       if (index !== 7 && applicability === "अनिवार्य" && !data[`document${index}`]) {
+        errors[`document${index}`] = "यह दस्तावेज़ अनिवार्य है";
+      }
+      if (index === 6 && String(data.firRegistered || "").trim() === "हाँ" && !data[`document${index}`]) {
+        errors[`document${index}`] = "यह दस्तावेज़ अनिवार्य है";
+      }
+      if (index === 8 && hasWitnessData(data.witnesses) && !data[`document${index}`]) {
+        errors[`document${index}`] = "यह दस्तावेज़ अनिवार्य है";
+      }
+      if (index === 10 && hasValue(data.currentClass) && !data[`document${index}`]) {
         errors[`document${index}`] = "यह दस्तावेज़ अनिवार्य है";
       }
     });
@@ -375,6 +388,9 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
           const isCombinedMedia = index === 7;
           const mediaRequired = String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
           const isSchoolCertificate = index === 10;
+          const isSchoolRequired = index === 10 && hasValue(data.currentClass);
+          const isFirRequired = index === 6 && String(data.firRegistered || "").trim() === "हाँ";
+          const isWitnessRequired = index === 8 && hasWitnessData(data.witnesses);
           const file = data[`document${index}`];
           const pendingFile = pendingDocuments[index];
           const isSubmitting = submittingIndex === index;
@@ -386,13 +402,13 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                   <strong>
                     {displayIndex + 1}. {label}
                   </strong>
-                  <span
-                    className={`nf-tag ${
-                      applicability === "अनिवार्य" || (isCombinedMedia && mediaRequired) ? "required" : ""
-                    }`}
-                  >
-                    {isCombinedMedia && mediaRequired ? "अनिवार्य" : applicability}
-                  </span>
+                   <span
+                     className={`nf-tag ${
+                       applicability === "अनिवार्य" || (isCombinedMedia && mediaRequired) || isFirRequired || isSchoolRequired || isWitnessRequired ? "required" : ""
+                     }`}
+                   >
+                     {(isCombinedMedia && mediaRequired) || isFirRequired || isSchoolRequired || isWitnessRequired ? "अनिवार्य" : applicability}
+                   </span>
                 </div>
 
                 {file && (
@@ -499,6 +515,9 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                 <>
                   <div className="nf-upload-body">
                     <div className="nf-upload-input">
+                      {isSchoolCertificate && documentHints[10] && (
+                        <small className="nf-hint-note"> {documentHints[10]}</small>
+                      )}
                       <input
                         id={`nf-document-${index}`}
                         name={`document${index}`}
@@ -527,12 +546,6 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                         </small>
                       )}
                     </div>
-
-                    {isSchoolCertificate && documentHints[10] && (
-                      <div className="nf-upload-hint">
-                        {documentHints[10]}
-                      </div>
-                    )}
                   </div>
 
                   <small id={`nf-document-help-${index}`}>
