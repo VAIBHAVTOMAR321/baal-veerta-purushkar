@@ -68,6 +68,7 @@ function Login() {
       }
 
       try {
+        const isITCell = loginType === "it_cell";
         const response = await fetch(
           "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/login/",
           {
@@ -75,11 +76,11 @@ function Login() {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              phone,
-              role: loginType,
-              password,
-            }),
+            body: JSON.stringify(
+              isITCell
+                ? { username: phone, password, role: "IT-Cell" }
+                : { phone, password, role: loginType }
+            ),
           }
         );
 
@@ -87,14 +88,12 @@ function Login() {
 
         if (!response.ok) {
           throw new Error(
-            data.detail || "Login failed. Please check your credentials."
+            data.detail || data.message || "Login failed. Please check your credentials."
           );
         }
 
-        // Store user data and tokens
         login(data);
 
-        // Redirect based on role
         const path = roleConfig[data.role]?.path || roleConfig[loginType].path;
         navigate(path, { replace: true });
       } catch (err) {
