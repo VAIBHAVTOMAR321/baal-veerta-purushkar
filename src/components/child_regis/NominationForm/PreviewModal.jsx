@@ -42,7 +42,13 @@ const getFileType = (file) => {
 
 const getFileSrc = (file) => {
   if (!file) return null;
-  if (typeof file === "string") return file;
+  const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
+  if (typeof file === "string") {
+    const trimmed = String(file).trim();
+    if (!trimmed) return null;
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `${mediaBaseUrl}/${trimmed.replace(/^\/+/, "")}`;
+  }
   if (file instanceof File) return URL.createObjectURL(file);
   return null;
 };
