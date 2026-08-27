@@ -1,138 +1,557 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../login/AuthContext";
+import { FaEye } from "react-icons/fa";
 
-const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part4/";
+const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/";
+const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
 
-const isPart4Submitted = (record) => {
-    const status = String(record?.status || record?.submission_status || "").toLowerCase();
-    return ["completed", "submitted"].includes(status) || record?.submitted === true || record?.is_submitted === true;
+const documents = [
+  ["नामांकनकर्ता का पहचान पत्र", "अनिवार्य"],
+  ["बच्चे का आधार कार्ड/पहचान पत्र", "अनिवार्य"],
+  ["उत्तराखण्ड का स्थायी निवास प्रमाण पत्र", "अनिवार्य"],
+  ["बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र", "अनिवार्य"],
+  ["वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण", "अनिवार्य"],
+  ["बच्चे का पासपोर्ट आकार का फोटो", "अनिवार्य"],
+  ["FIR/पुलिस रिपोर्ट", "जहां लागू हो"],
+  ["घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक", "जहां लागू हो"],
+  ["प्रत्यक्षदर्शियों के बयान/प्रमाण", "यदि लागू हो"],
+  ["घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक", "जहां लागू हो"],
+  ["विद्यालय का प्रमाण पत्र", "यदि लागू हो"],
+  ["अन्य सहायक अभिलेख", "यदि लागू हो"],
+];
+
+const documentHints = {
+  10: "विद्यालय द्वारा जारी प्रमाण पत्र, जिसमें विद्यार्थी का नाम, कक्षा और विद्यालय का नाम हो।",
 };
 
-const StepE = ({ data, update, onSubmitSuccess, onCompleted, isStepEChecked, externalSubmitTrigger }) => {
-    const { authFetch } = useAuth();
-    const [loadingData, setLoadingData] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [alertInfo, setAlertInfo] = useState(null);
-    const [isCompleted, setIsCompleted] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editSnapshot, setEditSnapshot] = useState(null);
-    const dataFetchStarted = useRef(false);
+const documentFieldMap = [
+  "nominator_id_proof",
+  "child_aadhaar_identity",
+  "permanent_residence_certificate",
+  "child_birth_age_certificate",
+  "bravery_incident_description",
+  "child_passport_photo",
+  "fir_police_report",
+  "media_report",
+  "eyewitness_statements",
+  "incident_photo_video_url",
+  "school_certificate",
+  "otherSupporting_documents",
+];
 
-    useEffect(() => {
-        if (dataFetchStarted.current) return;
-        dataFetchStarted.current = true;
-        const fetchPart4Data = async () => {
-            try {
-                const response = await authFetch(endpoint);
-                if (!response.ok) return;
-                const result = await response.json();
-                const record = result.success && (Array.isArray(result.data) ? result.data[0] : result.data);
-                if (!record) return;
+const hasValue = (value) => String(value || "").trim() !== "";
+const getDocumentUrl = (value) => {
+  if (!hasValue(value)) return "";
+  if (/^https?:\/\//i.test(String(value))) return String(value);
+  return `${mediaBaseUrl}/${String(value).replace(/^\/+/, "")}`;
+};
+const normalizeVideoUrl = (value) => {
+  const trimmedValue = String(value || "").trim();
+  if (!trimmedValue) return "";
+  return /^https?:\/\//i.test(trimmedValue) ? trimmedValue : `https://${trimmedValue}`;
+};
 
-                const values = {
-                    applicant_id: record.applicant_id,
-                    otherAward: record.other_award,
-                    otherAwardDetails: record.other_award_details,
-                    additionalInformation: record.additional_information,
-                };
-                Object.entries(values).forEach(([name, value]) => {
-                    if (value !== undefined && value !== null) update({ target: { name, value, type: "text" } });
-                });
-                if (isPart4Submitted(record)) {
-                    setIsCompleted(true);
-                    if (!isStepEChecked) onCompleted?.(record);
-                }
-            } catch (fetchError) {
-                console.error("Failed to fetch Part 4 data:", fetchError);
-            } finally {
-                setLoadingData(false);
-            }
-        };
-        fetchPart4Data();
-    }, [authFetch, isStepEChecked, onCompleted, update]);
+const StepE = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDChecked, externalSubmitTrigger, onErrorsChange }) => {
+  const { authFetch } = useAuth();
+  const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
+  const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
 
-    useEffect(() => {
-        if (externalSubmitTrigger) handleSubmit(true);
-    }, [externalSubmitTrigger]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [submittingIndex, setSubmittingIndex] = useState(null);
+  const [alertInfo, setAlertInfo] = useState(null);
+  const [pendingDocuments, setPendingDocuments] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [hasPart5Record, setHasPart5Record] = useState(false);
+  const dataFetchStarted = useRef(false);
 
-    const isFormLocked = isCompleted && !isEditing;
+  // ★ FIX: Track previous trigger value to only respond to CHANGES, not stale mount value
+  const prevTriggerRef = useRef(externalSubmitTrigger);
 
-    const handleEdit = () => {
-        setEditSnapshot({
-            otherAward: data.otherAward || "",
-            otherAwardDetails: data.otherAwardDetails || "",
-            additionalInformation: data.additionalInformation || "",
+  const visibleDocumentIndices = documents.reduce((indices, _, index) => {
+    if (index === 9) return indices;
+    const isFirApplicable = index !== 6 || String(data.firRegistered || "").trim() === "हाँ";
+    const isSchoolApplicable = index !== 10 || hasValue(data.currentClass);
+    const isMediaApplicable = index !== 7 || String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+    if (isFirApplicable && isSchoolApplicable && isMediaApplicable) indices.push(index);
+    return indices;
+  }, []);
+
+  useEffect(() => {
+    if (dataFetchStarted.current) return;
+    dataFetchStarted.current = true;
+    const fetchPart5Data = async () => {
+      try {
+        const response = await authFetch(endpoint);
+        if (!response.ok) return;
+        const result = await response.json();
+        const responseData = result?.data ?? result;
+        const record = Array.isArray(responseData) ? responseData[0] : responseData;
+        if (!record) return;
+
+        const applicantId = data.applicant_id || localStorage.getItem("applicantId") || "";
+        const isMatchingRecord = hasValue(record.applicant_id)
+          && (!applicantId || String(record.applicant_id) === String(applicantId));
+        if (isMatchingRecord) {
+          setHasPart5Record(true);
+        }
+
+        const fieldMapping = {};
+        documentFieldMap.forEach((field, index) => {
+          if (record[field] !== undefined && record[field] !== null && String(record[field]).trim() !== "") {
+            fieldMapping[`document${index}`] = record[field];
+          }
         });
-        setIsEditing(true);
-    };
 
-    const handleCancelEdit = () => {
-        Object.entries(editSnapshot || {}).forEach(([name, value]) => update({ target: { name, value, type: "text" } }));
-        setIsEditing(false);
-        setEditSnapshot(null);
-        setAlertInfo(null);
-    };
+        Object.entries(fieldMapping).forEach(([name, value]) => {
+          update({ target: { name, value, type: "text" } });
+        });
 
-    const handleSubmit = async (moveToNext = true) => {
-        if (isCompleted && !isEditing) {
-            onSubmitSuccess?.();
-            return;
+        if (isMatchingRecord && !isStepDChecked && String(record.status || "").trim().toLowerCase() === "completed") {
+          onCompleted?.(record);
         }
-        const applicantId = data.applicant_id || data.applicantId || localStorage.getItem("applicantId") || "";
-        if (!applicantId) {
-            setAlertInfo({ type: "error", message: "आवेदक ID नहीं मिली। कृपया पहले Step 1 पूरा करें।" });
-            return;
-        }
-        setSubmitting(true);
-        try {
-            const response = await authFetch(endpoint, {
-                method: isCompleted && isEditing ? "PUT" : "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    applicant_id: applicantId,
-                    other_award: data.otherAward || "",
-                    other_award_details: data.otherAwardDetails || "",
-                    additional_information: data.additionalInformation || "",
-                }),
-            });
-            const result = await response.json();
-            if (!response.ok || result.success !== true) throw new Error(result.message || "सबमिशन में त्रुटि हुई।");
 
-            const wasUpdate = isCompleted && isEditing;
-            setAlertInfo({ type: "success", message: wasUpdate ? "Step 3 सफलतापूर्वक अपडेट हो गया!" : "Step 3 सफलतापूर्वक सबमिट हो गया!" });
-            if (wasUpdate) {
-                setIsEditing(false);
-                setEditSnapshot(null);
-            }
-            if (moveToNext) onSubmitSuccess?.();
-        } catch (submitError) {
-            console.error("Part 4 submit error:", submitError);
-            setAlertInfo({ type: "error", message: submitError.message || "सबमिशन में त्रुटि हुई।" });
-        } finally {
-            setSubmitting(false);
-        }
+      } catch (fetchError) {
+        console.error("Failed to fetch Part 5 data:", fetchError);
+      } finally {
+        setLoadingData(false);
+      }
     };
+    fetchPart5Data();
+  }, [authFetch, data.applicant_id, isStepDChecked, onCompleted, update]);
 
-    if (loadingData) return <section className="nf-card"><div className="nf-card-heading"><span>Step 3</span><h2>अतिरिक्त जानकारी</h2></div><p>डेटा लोड हो रहा है...</p></section>;
+  // ★ FIX: Only fire handleNext when trigger CHANGES, not on mount with stale value
+  useEffect(() => {
+    if (externalSubmitTrigger !== prevTriggerRef.current) {
+      prevTriggerRef.current = externalSubmitTrigger;
+      if (externalSubmitTrigger) handleNext();
+    }
+  }, [externalSubmitTrigger]);
 
-    return <section className="nf-card">
-        {alertInfo && <div className={`nf-alert ${alertInfo.type === "success" ? "nf-alert-success" : "nf-alert-error"}`} role="alert">{alertInfo.message}</div>}
+  const handleFileChange = (e, index) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const mimeType = file.type.toLowerCase();
+
+    const isExtensionAllowed = allowedExtensions.includes(extension);
+    const isMimeTypeAllowed = allowedMimeTypes.includes(mimeType);
+
+    if (!isExtensionAllowed || !isMimeTypeAllowed) {
+      e.target.value = "";
+      update({
+        target: {
+          name: `document${index}`,
+          value: null,
+        },
+      });
+      alert(
+        `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल PDF, JPG, JPEG, PNG फ़ाइलें अपलोड करें।\nHEIC/HEIF और अन्य फॉर्मेट स्वीकार नहीं हैं।`
+      );
+      return;
+    }
+
+    update(e);
+    setPendingDocuments((prev) => ({ ...prev, [index]: file }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[`document${index}`];
+      return next;
+    });
+  };
+
+  const handleRemoveDocument = (index) => {
+    const confirmed = window.confirm("क्या आप यह दस्तावेज़ हटाना चाहते हैं?");
+    if (!confirmed) return;
+    update({ target: { name: `document${index}`, value: null, type: "text" } });
+    setPendingDocuments((prev) => ({ ...prev, [index]: null }));
+    if (!hasPart5Record) return;
+    handleDocumentSubmit(index, null);
+  };
+
+  const handleUrlChange = (e, index) => {
+    update(e);
+    setPendingDocuments((prev) => ({ ...prev, [index]: e.target.value }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[`document${index}`];
+      return next;
+    });
+  };
+
+  const handleViewFile = (file) => {
+    if (!file) return;
+    if (file instanceof File) {
+      const fileUrl = URL.createObjectURL(file);
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => {
+        URL.revokeObjectURL(fileUrl);
+      }, 10000);
+    } else if (typeof file === "string") {
+      window.open(getDocumentUrl(file), "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const buildFormData = (index, value) => {
+    const formData = new FormData();
+    const applicantId = data.applicant_id || localStorage.getItem("applicantId") || "";
+
+    if (!applicantId) return null;
+
+    formData.append("applicant_id", applicantId);
+    if (index === 9) formData.append(documentFieldMap[index], String(value));
+    else formData.append(documentFieldMap[index], value);
+
+    return formData;
+  };
+
+  const validateDocuments = () => {
+    const errors = {};
+    visibleDocumentIndices.forEach((index) => {
+      const applicability = documents[index][1];
+      if (index !== 7 && applicability === "अनिवार्य" && !data[`document${index}`]) {
+        errors[`document${index}`] = "यह दस्तावेज़ अनिवार्य है";
+      }
+    });
+    const mediaRequired = String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+    if (mediaRequired && !hasValue(data.document7) && !hasValue(data.document9)) {
+      errors.document7 = "समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक में से कोई एक आवश्यक है";
+      errors.document9 = errors.document7;
+    }
+    return errors;
+  };
+
+  const handleDocumentSubmit = async (index, valueOverride) => {
+    const value = valueOverride === undefined ? pendingDocuments[index] : valueOverride;
+    if (value === undefined || (typeof value === "string" && !hasValue(value))) return;
+    if (index === 9) {
+      try {
+        new URL(normalizeVideoUrl(value));
+      } catch {
+        setAlertInfo({ type: "error", message: "कृपया मान्य वीडियो लिंक दर्ज करें।" });
+        return;
+      }
+    }
+
+    setSubmittingIndex(index);
+    setAlertInfo(null);
+    try {
+      const applicantId = data.applicant_id || localStorage.getItem("applicantId") || "";
+      if (!applicantId) throw new Error("Applicant ID नहीं मिला। कृपया पहले Step 1 पूरा करें।");
+
+      const method = hasPart5Record ? "PUT" : "POST";
+      const requestOptions = value === null
+        ? {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              applicant_id: applicantId,
+              [documentFieldMap[index]]: null,
+            }),
+          }
+        : index === 9
+        ? {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              applicant_id: applicantId,
+              [documentFieldMap[index]]: normalizeVideoUrl(value),
+            }),
+          }
+        : { method, body: buildFormData(index, value) };
+      const response = await authFetch(endpoint, requestOptions);
+
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (response.ok && (result.success === true || result.success === undefined)) {
+        setAlertInfo({ type: "success", message: "दस्तावेज़ सफलतापूर्वक सेव हो गया! ✅" });
+        setPendingDocuments((prev) => ({ ...prev, [index]: undefined }));
+        setHasPart5Record(true);
+      } else {
+        const errorMsg = (typeof result === "object" ? (result.detail || result.message || result.error) : result) || "सबमिशन में त्रुटि हुई।";
+        setAlertInfo({ type: "error", message: typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg) });
+      }
+    } catch (err) {
+      console.error("Document submit error:", err);
+      setAlertInfo({ type: "error", message: err.message || "सबमिशन में त्रुटि हुई। कृपया पुनः प्रयास करें।" });
+    } finally {
+      setSubmittingIndex(null);
+    }
+  };
+
+  const handleNext = () => {
+    setAlertInfo(null);
+    const validationErrors = validateDocuments();
+    setFieldErrors(validationErrors);
+    if (onErrorsChange) onErrorsChange(validationErrors);
+    if (Object.keys(validationErrors).length) {
+      requestAnimationFrame(() => {
+        const firstKey = Object.keys(validationErrors)[0];
+        let el = null;
+        if (firstKey === "document7") {
+          el = document.getElementById("nf-document-7-file");
+        } else if (firstKey === "document9") {
+          el = document.getElementById("nf-document-9-url");
+        } else if (firstKey.startsWith("document")) {
+          const index = firstKey.replace("document", "");
+          el = document.getElementById(`nf-document-${index}`);
+        }
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return;
+    }
+    onSubmitSuccess?.();
+  };
+
+  if (loadingData) {
+    return (
+      <section className="nf-card">
         <div className="nf-card-heading">
-            <span>Step 3</span><h2>अतिरिक्त जानकारी</h2>
-            {isCompleted && <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-                {!isEditing ? <button type="button" className="nf-secondary" onClick={handleEdit}>Edit / संपादित करें</button> : <><button type="button" className="nf-secondary" onClick={handleCancelEdit} disabled={submitting}>Cancel / रद्द करें</button><button type="button" className="nf-primary" onClick={() => handleSubmit(false)} disabled={submitting}>{submitting ? "अपडेट हो रहा है..." : "Update / अपडेट करें"}</button></>}
-            </div>}
+          <span>Step 4</span>
+          <h2>आवश्यक अभिलेख अपलोड (Document Upload)</h2>
         </div>
+        <p>डेटा लोड हो रहा है...</p>
+      </section>
+    );
+  }
 
-
-         <div className="nf-grid">
-            <div className="nf-field"><label>1. क्या इस घटना के संबंध में कोई अन्य पुरस्कार/सम्मान प्राप्त हुआ है?</label><div className="nf-radio-group">{["हाँ", "नहीं"].map((option) => <label key={option}><input type="radio" name="otherAward" value={option} checked={data.otherAward === option} onChange={update} disabled={isFormLocked} /> {option}</label>)}</div></div>
-            {data.otherAward === "हाँ" && <div className="nf-field"><label htmlFor="nf-otherAwardDetails">विवरण:</label><textarea id="nf-otherAwardDetails" name="otherAwardDetails" value={data.otherAwardDetails || ""} onChange={update} rows={3} disabled={isFormLocked} /></div>}
+  return (
+    <section className="nf-card">
+      {alertInfo && (
+        <div
+          className="nf-alert"
+          style={{
+            padding: "1rem 1.25rem",
+            marginBottom: "1.5rem",
+            borderRadius: "8px",
+            border: alertInfo.type === "success"
+              ? "1px solid #22c55e"
+              : "1px solid #ef4444",
+            backgroundColor: alertInfo.type === "success"
+              ? "#f0fdf4"
+              : "#fef2f2",
+            color: alertInfo.type === "success" ? "#166534" : "#991b1b",
+            fontSize: "1rem",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            animation: "nfFadeIn 0.3s ease",
+          }}
+        >
+          <span>{alertInfo.message}</span>
+          <button
+            type="button"
+            onClick={() => setAlertInfo(null)}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "1.25rem",
+              cursor: "pointer",
+              color: alertInfo.type === "success" ? "#166534" : "#991b1b",
+              fontWeight: "bold",
+              lineHeight: 1,
+              padding: "0 0.25rem",
+            }}
+          >
+            ✕
+          </button>
         </div>
-       
+      )}
 
-        <div className="nf-field nf-wide"><label htmlFor="nf-additionalInformation">2. अतिरिक्त टिप्पणी/अन्य महत्वपूर्ण जानकारी</label><textarea id="nf-additionalInformation" name="additionalInformation" value={data.additionalInformation || ""} onChange={update} rows={6} disabled={isFormLocked} /></div>
-    </section>;
+      <div className="nf-card-heading">
+        <span>Step 4</span>
+        <h2>आवश्यक अभिलेख अपलोड (Document Upload)</h2>
+      </div>
+
+      <div className="nf-upload-list">
+        {visibleDocumentIndices.map((index, displayIndex) => {
+          const [label, applicability] = documents[index];
+          const isPhotoVideoLink = index === 9;
+          const isCombinedMedia = index === 7;
+          const mediaRequired = String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+          const isSchoolCertificate = index === 10;
+          const file = data[`document${index}`];
+          const pendingFile = pendingDocuments[index];
+          const isSubmitting = submittingIndex === index;
+
+          return (
+            <div className="nf-upload" key={label}>
+              <div className="nf-upload-header">
+                <div>
+                  <strong>
+                    {displayIndex + 1}. {label}
+                  </strong>
+                  <span
+                    className={`nf-tag ${
+                      applicability === "अनिवार्य" || (isCombinedMedia && mediaRequired) ? "required" : ""
+                    }`}
+                  >
+                    {isCombinedMedia && mediaRequired ? "अनिवार्य" : applicability}
+                  </span>
+                </div>
+
+                {file && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {!isPhotoVideoLink && (
+                      <button
+                        type="button"
+                        className="nf-view-file"
+                        onClick={() => handleViewFile(file)}
+                        title="View Document"
+                      >
+                        <FaEye />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="nf-secondary"
+                      onClick={() => handleRemoveDocument(index)}
+                      disabled={isSubmitting}
+                    >
+                      हटाएं
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {isCombinedMedia ? (
+                <div className="nf-field">
+                  <label htmlFor="nf-document-7-file">समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो</label>
+                  <input
+                    id="nf-document-7-file"
+                    name="document7"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => handleFileChange(e, 7)}
+                    disabled={isSubmitting}
+                  />
+                  {data.document7 && <small className="nf-file-name">{typeof data.document7 === "string" ? data.document7 : data.document7.name}</small>}
+                  {data.document7 && (
+                    <button type="button" className="nf-secondary" onClick={() => handleRemoveDocument(7)} disabled={isSubmitting}>हटाएं</button>
+                  )}
+                  <label htmlFor="nf-document-9-url">वीडियो लिंक</label>
+                  <input
+                    id="nf-document-9-url"
+                    name="document9"
+                    type="url"
+                    placeholder="https://example.com/photo-or-video-link"
+                    value={data.document9 || ""}
+                    onChange={(e) => handleUrlChange(e, 9)}
+                    disabled={submittingIndex === 9}
+                  />
+                  {data.document9 && (
+                    <button type="button" className="nf-secondary" onClick={() => handleRemoveDocument(9)} disabled={submittingIndex === 9}>हटाएं</button>
+                  )}
+                   <small>कम से कम एक विकल्प अपलोड करना अनिवार्य है।</small>
+                   {(fieldErrors.document7 || error.document7) && (
+                    <small className="nf-error">
+                      {fieldErrors.document7 || error.document7}
+                    </small>
+                  )}
+                   {(fieldErrors.document9 || error.document9) && (
+                    <small className="nf-error">
+                      {fieldErrors.document9 || error.document9}
+                    </small>
+                  )}
+                   {pendingDocuments[7] && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(7)} disabled={isSubmitting}>
+                      {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
+                  {pendingDocuments[9] && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(9)} disabled={submittingIndex === 9}>
+                      {submittingIndex === 9 ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
+                </div>
+              ) : isPhotoVideoLink ? (
+                <div className="nf-field">
+                  <input
+                    id={`nf-document-${index}`}
+                    name={`document${index}`}
+                    type="url"
+                    placeholder="https://example.com/photo-or-video-link"
+                    value={file || ""}
+                    onChange={(e) => handleUrlChange(e, index)}
+                    disabled={isSubmitting}
+                    aria-describedby={`nf-document-help-${index}`}
+                  />
+                  {error[`document${index}`] && (
+                    <small className="nf-error">
+                      {fieldErrors[`document${index}`] || error[`document${index}`]}
+                    </small>
+                  )}
+                  <small id={`nf-document-help-${index}`}>
+                    कृपया फोटो/वीडियो का लिंक दर्ज करें
+                  </small>
+                  {pendingFile && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(index)} disabled={isSubmitting}>
+                      {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
+                </div>
+               ) : (
+                <>
+                  <div className="nf-upload-body">
+                    <div className="nf-upload-input">
+                      <input
+                        id={`nf-document-${index}`}
+                        name={`document${index}`}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleFileChange(e, index)}
+                        disabled={isSubmitting}
+                        aria-describedby={`nf-document-help-${index}`}
+                      />
+
+                      {file && (
+                        <small className="nf-file-name">
+                          {typeof file === "string" ? file : file.name}
+                        </small>
+                      )}
+
+                      {fieldErrors[`document${index}`] && (
+                        <small className="nf-error">
+                          {fieldErrors[`document${index}`]}
+                        </small>
+                      )}
+
+                      {error[`document${index}`] && (
+                        <small className="nf-error">
+                          {error[`document${index}`]}
+                        </small>
+                      )}
+                    </div>
+
+                    {isSchoolCertificate && documentHints[10] && (
+                      <div className="nf-upload-hint">
+                        {documentHints[10]}
+                      </div>
+                    )}
+                  </div>
+
+                  <small id={`nf-document-help-${index}`}>
+                    File Format: PDF/JPG/JPEG/PNG only | Max Size: 5MB प्रति दस्तावेज
+                  </small>
+                  {pendingFile && (
+                    <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(index)} disabled={isSubmitting}>
+                      {isSubmitting ? "सेव हो रहा है..." : "सेव करें"}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+    </section>
+  );
 };
 
 export default StepE;

@@ -83,7 +83,7 @@ const UserDashBoard = () => {
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
-  // ✅ Mark a step as completed
+  //  Mark a step as completed
   const markStepCompleted = useCallback((stepIndex) => {
     setCompletedSteps((prev) => prev.includes(stepIndex) ? prev : [...prev, stepIndex]);
   }, []);
@@ -92,12 +92,12 @@ const UserDashBoard = () => {
     setMaxStep((prev) => Math.max(prev, step));
   }, [step]);
 
-  // ✅ Check if a step is completed
+  //  Check if a step is completed
   const isStepCompleted = useCallback((stepIndex) => {
     return completedSteps.includes(stepIndex);
   }, [completedSteps]);
 
-  // ✅ Navigate to a completed or previously visited step
+  //  Navigate to a completed or previously visited step
   const goToStep = useCallback((stepIndex) => {
     if (isStepCompleted(stepIndex) || stepIndex <= maxStep) {
       setStep(stepIndex);
@@ -200,7 +200,7 @@ const UserDashBoard = () => {
       topAccepted
   );
 
-  // ✅ Handle Step B completion (after POST success)
+  //  Handle Step B completion (after POST success)
   const handleStepBNext = (result) => {
     stepBCheckedRef.current = true;
     markStepCompleted(0);
@@ -209,7 +209,7 @@ const UserDashBoard = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ✅ Handle Step B already completed (auto-skip to Step C)
+  //  Handle Step B already completed (auto-skip to Step C)
   const handleStepBAlreadyCompleted = (record) => {
     console.log("Step B already completed, auto-skipping to Step C:", record);
     stepBCheckedRef.current = true;

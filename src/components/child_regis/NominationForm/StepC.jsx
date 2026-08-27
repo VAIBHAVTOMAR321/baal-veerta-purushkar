@@ -41,12 +41,12 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const [isCompleted, setIsCompleted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editSnapshot, setEditSnapshot] = useState(null);
-  const [localErrors, setLocalErrors] = useState({}); // ✅ ADD LOCAL ERRORS STATE
+  const [localErrors, setLocalErrors] = useState({}); //  ADD LOCAL ERRORS STATE
   const customTitleRef = useRef(null);
   const fetchDistrictsRef = useRef(false);
   const dataFetchStarted = useRef(false);
 
-  // ✅COMBINED ERRORS - merge parent errors with local errors
+  // COMBINED ERRORS - merge parent errors with local errors
   const combinedErrors = { ...error, ...localErrors };
 
   useEffect(() => {
@@ -155,7 +155,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     }
   }, [alertInfo]);
 
-  // ✅ FIXED: Track previous trigger value to detect actual changes
+  //  FIXED: Track previous trigger value to detect actual changes
   const prevTriggerRef = useRef(0);
   useEffect(() => {
     if (externalSubmitTrigger !== undefined && externalSubmitTrigger !== prevTriggerRef.current) {
@@ -171,7 +171,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     const wordValidation = options.words || null;
     const isWordValid = wordValidation ? wordCount >= wordValidation.min && wordCount <= wordValidation.max : true;
     const showWordCount = wordValidation && value.trim().length > 0;
-    // ✅ USE combinedErrors instead of error
+    //  USE combinedErrors instead of error
     const fieldError = combinedErrors[name];
 
     return (
@@ -200,7 +200,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const witnessFields = ["नाम", "मोबाइल नंबर", "पता", "बच्चे से संबंध"];
   const rescuedPeopleFields = ["name", "age", "relation"];
   const witnessRowFields = ["name", "mobile", "address", "relation"];
-  // ✅ USE combinedErrors for row errors
+  //  USE combinedErrors for row errors
   const rowError = (group, index, field) => combinedErrors[`${group}.${index}.${field}`];
   const isFormLocked = isCompleted && !isEditing;
 
@@ -232,7 +232,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     const next = rescuedPeople.map((person, i) => (i === index ? { ...person, [field]: value } : person));
     setRescuedPeople(next);
     syncPeople(next);
-    // ✅ Clear error for this field on change
+    //  Clear error for this field on change
     setLocalErrors(prev => {
       const key = `rescuedPeople.${index}.${field}`;
       if (!prev[key]) return prev;
@@ -271,7 +271,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     const next = witnesses.map((row, i) => (i === index ? { ...row, [field]: value } : row));
     setWitnesses(next);
     syncWitnesses(next);
-    // ✅ Clear error for this field on change
+    //  Clear error for this field on change
     setLocalErrors(prev => {
       const key = `witnesses.${index}.${field}`;
       if (!prev[key]) return prev;
@@ -419,17 +419,17 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     setAlertInfo(null);
     const validationErrors = validateBeforeSubmit();
     
-    // ✅ CRITICAL FIX: Always set local errors AND call onErrorsChange
+    //  CRITICAL FIX: Always set local errors AND call onErrorsChange
     if (validationErrors) {
       console.log("[StepC] Validation errors:", validationErrors);
-      setLocalErrors(validationErrors); // ✅ Set local state immediately
+      setLocalErrors(validationErrors); //  Set local state immediately
       
-      // ✅ Also propagate to parent if callback exists
+      //  Also propagate to parent if callback exists
       if (onErrorsChange) {
         onErrorsChange(validationErrors);
       }
       
-      // ✅ Scroll to first error
+      //  Scroll to first error
       requestAnimationFrame(() => {
         const firstKey = Object.keys(validationErrors)[0];
         let el = document.getElementById(`nf-${firstKey}`);
@@ -444,7 +444,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       return;
     }
 
-    // ✅ Clear errors on successful validation
+    //  Clear errors on successful validation
     setLocalErrors({});
     if (onErrorsChange) {
       onErrorsChange({});
