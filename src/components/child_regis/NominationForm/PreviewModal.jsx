@@ -159,7 +159,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
   const allDocs = [
     { label: "नामांकनकर्ता का पहचान पत्र", key: "document0" },
     { label: "बच्चे का आधार कार्ड/पहचान पत्र", key: "document1" },
-    { label: "उत्तराखण्ड का स्थायी निवास प्रमाण पत्र", key: "document2" },
+    { label: " बालक / बालिका  का  उत्तराखण्ड का स्थायी निवास प्रमाण पत्र", key: "document2" },
     { label: "बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र", key: "document3" },
     { label: "वीरता घटना का विस्तृत विवरण", key: "document4" },
     { label: "बच्चे का पासपोर्ट आकार फोटो", key: "document5" },

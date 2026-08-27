@@ -8,7 +8,7 @@ const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaaward
 const documents = [
   ["नामांकनकर्ता का पहचान पत्र", "अनिवार्य"],
   ["बच्चे का आधार कार्ड/पहचान पत्र", "अनिवार्य"],
-  ["उत्तराखण्ड का स्थायी निवास प्रमाण पत्र", "अनिवार्य"],
+  [" बालक / बालिका  का  उत्तराखण्ड का स्थायी निवास प्रमाण पत्र", "अनिवार्य"],
   ["बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र", "अनिवार्य"],
   ["वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण", "अनिवार्य"],
   ["बच्चे का पासपोर्ट आकार का फोटो", "अनिवार्य"],
@@ -443,6 +443,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
 
               {isCombinedMedia ? (
                 <div className="nf-field">
+                  <small className="nf-hint-note">* यदि एक से अधिक दस्तावेज़ हैं, तो सभी दस्तावेज़ों को एक ही PDF में मर्ज (संयोजित) करके अपलोड करें</small>
                   <label htmlFor="nf-document-7-file">समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो</label>
                   <input
                     id="nf-document-7-file"

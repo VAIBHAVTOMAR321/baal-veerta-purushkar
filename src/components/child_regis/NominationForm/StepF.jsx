@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../login/AuthContext";
+import { FaEye } from "react-icons/fa";
 
 const declaration = "मैं/हम यह प्रमाणित करते हैं कि इस ऑनलाइन नामांकन प्रपत्र में मेरे/हमारे द्वारा उपलब्ध कराई गई समस्त जानकारी एवं संलग्न अभिलेख मेरे/हमारे ज्ञान एवं विश्वास के अनुसार सत्य एवं सही हैं। उपरोक्त आवेदन में मेरे/हमारे द्वारा कोई महत्वपूर्ण तथ्य छिपाया नहीं गया है। तथा मुख्यमंत्री राज्य बाल पुरुष्कार हेतु नामांकन योग्य है।";
-const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवश्यक कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
+const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवेदन की कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
 const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/declaration/";
+const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
+
+const getDocumentUrl = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    if (/^https?:\/\//i.test(value)) return value;
+    return `${mediaBaseUrl}/${value.replace(/^\/+/, "")}`;
+  }
+  return "";
+};
+
 const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccepted, onApplicationCompleted }) => {
   const { user, authFetch } = useAuth();
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
@@ -99,6 +111,19 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
     update({ target: { name: "parentDeclarationDocument", value: file } });
   };
 
+  const handleViewFile = (file) => {
+    if (!file) return;
+    if (file instanceof File) {
+      const fileUrl = URL.createObjectURL(file);
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => {
+        URL.revokeObjectURL(fileUrl);
+      }, 10000);
+    } else if (typeof file === "string") {
+      window.open(getDocumentUrl(file), "_blank", "noopener,noreferrer");
+    }
+  };
+
   const handleFinalSubmit = async () => {
     if (!canSubmit || isCompleted || submitting) return;
 
@@ -184,15 +209,21 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               <span className="nf-document-dropzone-text">
                 {data.declarationDocument ? (typeof data.declarationDocument === "string" ? data.declarationDocument : data.declarationDocument.name) : "No file chosen"}
               </span>
+              {data.declarationDocument && (
+                <button
+                  type="button"
+                  className="nf-view-file"
+                  onClick={() => handleViewFile(data.declarationDocument)}
+                  title="View Document"
+                  style={{ marginLeft: "8px" }}
+                >
+                  <FaEye />
+                </button>
+              )}
             </label>
             <span className="nf-document-upload-hint">PDF, DOC, JPG, PNG (अधिकतम 5MB)</span>
           </div>
         )}
-        {/* <div className="nf-signature-text">
-          <span>नामांकनकर्ता</span>
-          <span>द्वारा</span>
-          <span>हस्ताक्षर</span>
-        </div> */}
       </div>
       <div className="nf-declaration">
         <h3 className="nf-declaration-heading">अभिभावक की सहमति </h3>
@@ -226,15 +257,21 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               <span className="nf-document-dropzone-text">
                 {data.parentDeclarationDocument ? (typeof data.parentDeclarationDocument === "string" ? data.parentDeclarationDocument : data.parentDeclarationDocument.name) : "No file chosen"}
               </span>
+              {data.parentDeclarationDocument && (
+                <button
+                  type="button"
+                  className="nf-view-file"
+                  onClick={() => handleViewFile(data.parentDeclarationDocument)}
+                  title="View Document"
+                  style={{ marginLeft: "8px" }}
+                >
+                  <FaEye />
+                </button>
+              )}
             </label>
             <span className="nf-document-upload-hint">PDF, DOC, JPG, PNG (अधिकतम 5MB)</span>
           </div>
         )}
-        {/* <div className="nf-signature-text">
-          <span>अभिभावक </span>
-          <span>द्वारा</span>
-          <span>हस्ताक्षर</span>
-        </div> */}
       </div>
       <div className="nf-final">
         <h3>अंतिम प्रस्तुतीकरण (Final Submission)</h3>
