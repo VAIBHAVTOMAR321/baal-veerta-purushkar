@@ -47,6 +47,11 @@ const StudentRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const today = new Date().toISOString().split("T")[0];
+  const idTypeRef = React.useRef(form.idType);
+
+  React.useEffect(() => {
+    idTypeRef.current = form.idType;
+  }, [form.idType]);
 
   /* ---------- जनपद (District) list from API ---------- */
   useEffect(() => {
@@ -100,6 +105,10 @@ const StudentRegistration = () => {
     if ((name === "name" || name === "relation") && /[0-9]/.test(value)) {
       hadNumbers = true;
       value = value.replace(/[0-9]/g, "");
+    }
+
+    if (name === "idNumber" && idTypeRef.current === "आधार कार्ड") {
+      value = value.replace(/[^0-9]/g, "").slice(0, 12);
     }
 
     if (name.startsWith("address.")) {
@@ -158,6 +167,15 @@ const StudentRegistration = () => {
       if (name === "confirmPassword" && value && form.password && value !== form.password) {
         next.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होने चाहिए";
       }
+      if (name === "idNumber" && idTypeRef.current === "आधार कार्ड") {
+        const aadhaarValue = String(value || "").trim();
+        if (aadhaarValue && !/^[0-9]{12}$/.test(aadhaarValue)) {
+          next.idNumber = "आधार कार्ड संख्या 12 अंकों की होनी चाहिए";
+        }
+      }
+      if (name === "idType" && value !== "आधार कार्ड") {
+        next.idNumber = "";
+      }
       return next;
     });
   };
@@ -181,6 +199,9 @@ const StudentRegistration = () => {
     }
     if (form.password && form.password !== form.confirmPassword) {
       nextErrors.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होने चाहिए";
+    }
+    if (form.idType === "आधार कार्ड" && form.idNumber && !/^[0-9]{12}$/.test(form.idNumber.trim())) {
+      nextErrors.idNumber = "आधार कार्ड संख्या 12 अंकों की होनी चाहिए";
     }
     setErrors(nextErrors);
     if (!Object.keys(nextErrors).length) {
@@ -411,13 +432,27 @@ const StudentRegistration = () => {
               {errors.idType && <span className="sr-error" role="alert">{errors.idType}</span>}
             </div>
 
-            {field("7. पहचान पत्र संख्या", "idNumber", { required: true, placeholder: "पहचान पत्र संख्या दर्ज करें" })}
+            <div className="sr-field">
+              <label htmlFor="sr-idNumber">7. पहचान पत्र संख्या <span aria-hidden="true"> *</span></label>
+              <input
+                id="sr-idNumber"
+                name="idNumber"
+                type="text"
+                value={form.idNumber}
+                onChange={update}
+                maxLength={form.idType === "आधार कार्ड" ? 12 : undefined}
+                placeholder="पहचान पत्र संख्या दर्ज करें"
+                disabled={form.idType === "अन्य सरकारी पहचान पत्र" ? false : !form.idType}
+                aria-invalid={Boolean(errors.idNumber)}
+              />
+              {errors.idNumber && <span className="sr-error" role="alert">{errors.idNumber}</span>}
+            </div>
           </div>
 
           <fieldset className="sr-address">
             <legend>8. नामांकनकर्ता का पता <span aria-hidden="true">*</span></legend>
             <div className="sr-grid">
-              {field("ग्राम/मोहल्ला", "address.ग्राम/मोहल्ला", { required: true, placeholder: "ग्राम/मोहल्ला का नाम" })}
+              {field("ग्राम/मोहल्ला/घर का पूरा पता", "address.ग्राम/मोहल्ला", { required: true, placeholder: "ग्राम/मोहल्ला/घर का पूरा पता" })}
               {field("डाकघर", "address.डाकघर", { required: true, placeholder: "डाकघर का नाम" })}
 
               {field("जनपद", "address.जनपद", {
