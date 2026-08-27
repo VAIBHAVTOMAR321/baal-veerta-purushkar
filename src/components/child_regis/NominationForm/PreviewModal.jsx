@@ -42,7 +42,13 @@ const getFileType = (file) => {
 
 const getFileSrc = (file) => {
   if (!file) return null;
-  if (typeof file === "string") return file;
+  const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
+  if (typeof file === "string") {
+    const trimmed = String(file).trim();
+    if (!trimmed) return null;
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `${mediaBaseUrl}/${trimmed.replace(/^\/+/, "")}`;
+  }
   if (file instanceof File) return URL.createObjectURL(file);
   return null;
 };
@@ -327,7 +333,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
               </p>
               {data?.declarationDocument && (
                 <div className="nf-pv-decl-view">
-                  <span className="nf-pv-dstatus has">view</span>
+                  <a href={getFileSrc(data?.declarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
                 </div>
               )}
               <div className="nf-pv-decl-sign">
@@ -358,7 +364,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange }) => {
               </p>
               {data?.parentDeclarationDocument && (
                 <div className="nf-pv-decl-view">
-                  <span className="nf-pv-dstatus has">view</span>
+                  <a href={getFileSrc(data?.parentDeclarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
                 </div>
               )}
               <div className="nf-pv-decl-sign">
