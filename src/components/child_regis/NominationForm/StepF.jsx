@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../login/AuthContext";
 import { FaEye, FaFileAlt } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const declaration = "मैं/हम यह प्रमाणित करते हैं कि इस ऑनलाइन नामांकन प्रपत्र में मेरे/हमारे द्वारा उपलब्ध कराई गई समस्त जानकारी एवं संलग्न अभिलेख मेरे/हमारे ज्ञान एवं विश्वास के अनुसार सत्य एवं सही हैं। उपरोक्त आवेदन में मेरे/हमारे द्वारा कोई महत्वपूर्ण तथ्य छिपाया नहीं गया है। तथा मुख्यमंत्री राज्य बाल पुरुष्कार हेतु नामांकन योग्य है।";
 const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवेदन की कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
@@ -194,7 +195,11 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
 
   return (
     <section className="nf-card">
-      {submitError && <div className="nf-error" role="alert">{submitError}</div>}
+      {submitError && (
+        <div className="nf-error" role="alert">
+          {submitError}
+        </div>
+      )}
       <div className="nf-card-heading">
         <span>Step 5</span>
         <h2>घोषणा एवं सहमति (Declaration)</h2>
@@ -210,26 +215,37 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               checked={Boolean(data.declarationAccepted)}
               onChange={handleCheckboxChange}
               disabled={isCompleted}
-            /> <span>मैंने उपर्युक्त घोषणा को पढ़ लिया है तथा मैं इससे सहमत हूँ।</span>
+            />{" "}
+            <span>
+              मैंने उपर्युक्त घोषणा को पढ़ लिया है तथा मैं इससे सहमत हूँ।
+            </span>
           </label>
         </div>
         <div className="nf-template-link-row">
-          <a
-            href="/declaration1.pdf"
+          <Link
+            to="/declaration1.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="nf-template-pdf-link"
           >
             <FaFileAlt className="pdf-icon" />
             टेम्पलेट डाउनलोड करें
-          </a>
+          </Link>
         </div>
         {showDocumentUpload && (
-          <div className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}>
-            <label htmlFor="nf-declarationDocument" className="nf-document-upload-label">
+          <div
+            className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}
+          >
+            <label
+              htmlFor="nf-declarationDocument"
+              className="nf-document-upload-label"
+            >
               अभिलेख अपलोड करें
             </label>
-            <label htmlFor="nf-declarationDocument" className="nf-document-dropzone">
+            <label
+              htmlFor="nf-declarationDocument"
+              className="nf-document-dropzone"
+            >
               <input
                 id="nf-declarationDocument"
                 type="file"
@@ -238,9 +254,11 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 className="nf-document-input"
                 disabled={topAccepted || isCompleted}
               />
-               <span className="nf-document-dropzone-text">
-                 {data.declarationDocument ? getFileName(data.declarationDocument) : "No file chosen"}
-               </span>
+              <span className="nf-document-dropzone-text">
+                {data.declarationDocument
+                  ? getFileName(data.declarationDocument)
+                  : "No file chosen"}
+              </span>
               {data.declarationDocument && (
                 <button
                   type="button"
@@ -253,7 +271,9 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 </button>
               )}
             </label>
-            <span className="nf-document-upload-hint">PDF, DOC, JPG, PNG (अधिकतम 5MB)</span>
+            <span className="nf-document-upload-hint">
+              PDF, DOC, JPG, PNG (अधिकतम 5MB)
+            </span>
           </div>
         )}
       </div>
@@ -269,26 +289,36 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               onChange={handleParentCheckboxChange}
               disabled={isCompleted}
             />
-            <span>मैंने उपर्युक्त सहमति को पढ़ लिया है तथा मैं इससे सहमत हूँ।</span>
+            <span>
+              मैंने उपर्युक्त सहमति को पढ़ लिया है तथा मैं इससे सहमत हूँ।
+            </span>
           </label>
         </div>
         <div className="nf-template-link-row">
-          <a
-            href="/declaration2.pdf"
+          <Link
+            to="/declaration2.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="nf-template-pdf-link"
           >
             <FaFileAlt className="pdf-icon" />
             टेम्पलेट डाउनलोड करें
-          </a>
+          </Link>
         </div>
         {showParentDocumentUpload && (
-          <div className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}>
-            <label htmlFor="nf-parentDeclarationDocument" className="nf-document-upload-label">
+          <div
+            className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}
+          >
+            <label
+              htmlFor="nf-parentDeclarationDocument"
+              className="nf-document-upload-label"
+            >
               अभिलेख अपलोड करें
             </label>
-            <label htmlFor="nf-parentDeclarationDocument" className="nf-document-dropzone">
+            <label
+              htmlFor="nf-parentDeclarationDocument"
+              className="nf-document-dropzone"
+            >
               <input
                 id="nf-parentDeclarationDocument"
                 type="file"
@@ -298,7 +328,9 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 disabled={topAccepted || isCompleted}
               />
               <span className="nf-document-dropzone-text">
-                {data.parentDeclarationDocument ? getFileName(data.parentDeclarationDocument) : "No file chosen"}
+                {data.parentDeclarationDocument
+                  ? getFileName(data.parentDeclarationDocument)
+                  : "No file chosen"}
               </span>
               {data.parentDeclarationDocument && (
                 <button
@@ -312,7 +344,9 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 </button>
               )}
             </label>
-            <span className="nf-document-upload-hint">PDF, DOC, JPG, PNG (अधिकतम 5MB)</span>
+            <span className="nf-document-upload-hint">
+              PDF, DOC, JPG, PNG (अधिकतम 5MB)
+            </span>
           </div>
         )}
       </div>
@@ -339,7 +373,8 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
       </div>
       <div className="nf-system">
         <p>
-          <strong>Application Number:</strong> {applicantId || "System Generated"}
+          <strong>Application Number:</strong>{" "}
+          {applicantId || "System Generated"}
         </p>
         <p>
           <strong>Application Submission Date:</strong> {submissionDate}
