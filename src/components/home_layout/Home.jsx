@@ -384,7 +384,7 @@ function Home() {
         <Row className="g-0 home-row">
 
           {/* ═══════════ LEFT COLUMN ═══════════ */}
-          <Col lg={6} className="home-left-col d-flex">
+          <Col lg={8} className="home-left-col d-flex">
             <div
               className="home-left-content"
               ref={contentRef}
@@ -578,7 +578,7 @@ function Home() {
 
           {/* ═══════════ RIGHT COLUMN ═══════════ */}
           <Col
-            lg={6}
+            lg={4}
             className="home-right-col d-flex align-items-start justify-content-center"
           >
             <div className="login-wrapper">
