@@ -372,8 +372,31 @@ function Home() {
       title: "घोषणा एवं सहमति",
       subtitle: "Declaration",
       icon: FaFileSignature,
-      description:
-        "घोषणा पढ़ें, सहमति दें, और अंतिम प्रस्तुतीकरण करें",
+      description: (
+        <div>
+          <p>घोषणा पढ़ें, सहमति दें, और अंतिम प्रस्तुतीकरण करें</p>
+          <div className="step-f-pdf-links">
+            <Link
+              to="/declaration1.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="step-f-pdf-link"
+            >
+              <FaFileAlt className="pdf-icon" />
+              घोषणा 1 डाउनलोड करें
+            </Link>
+            <Link
+              to="/declaration2.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="step-f-pdf-link"
+            >
+              <FaFileAlt className="pdf-icon" />
+              घोषणा 2 डाउनलोड करें
+            </Link>
+          </div>
+        </div>
+      ),
       color: "#dc3545",
     },
   ];
@@ -436,36 +459,69 @@ function Home() {
                   </Link>
                 </div>
 
-                <div className="registration-steps">
-                  {registrationSteps.map((step, index) => {
-                    const IconComponent = step.icon;
-                    return (
-                      <div
-                        key={step.step}
-                        className="step-item"
-                        style={{ "--step-color": step.color }}
-                      >
-                        <div className="step-number">{step.step}</div>
-                        <div className="step-icon-wrapper">
-                          <IconComponent className="step-icon" />
-                        </div>
-                        <div className="step-content">
-                          <div className="step-title-row">
-                            <h5 className="step-title">{step.title}</h5>
-                            <span className="step-subtitle">
-                              {step.subtitle}
-                            </span>
+                <div className="registration-steps-grid">
+                  <div className="registration-steps-col">
+                    {registrationSteps.slice(0, 4).map((step, index) => {
+                      const IconComponent = step.icon;
+                      return (
+                        <div
+                          key={step.step}
+                          className="step-item"
+                          style={{ "--step-color": step.color }}
+                        >
+                          <div className="step-number">{step.step}</div>
+                          <div className="step-icon-wrapper">
+                            <IconComponent className="step-icon" />
                           </div>
-                          <p className="step-description">
-                            {step.description}
-                          </p>
+                          <div className="step-content">
+                            <div className="step-title-row">
+                              <h5 className="step-title">{step.title}</h5>
+                              <span className="step-subtitle">
+                                {step.subtitle}
+                              </span>
+                            </div>
+                            <p className="step-description">
+                              {step.description}
+                            </p>
+                          </div>
+                          {index < 3 && (
+                            <div className="step-connector" />
+                          )}
                         </div>
-                        {index < registrationSteps.length - 1 && (
-                          <div className="step-connector" />
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                  <div className="registration-steps-col">
+                    {registrationSteps.slice(4).map((step, index) => {
+                      const IconComponent = step.icon;
+                      return (
+                        <div
+                          key={step.step}
+                          className="step-item"
+                          style={{ "--step-color": step.color }}
+                        >
+                          <div className="step-number">{step.step}</div>
+                          <div className="step-icon-wrapper">
+                            <IconComponent className="step-icon" />
+                          </div>
+                          <div className="step-content">
+                            <div className="step-title-row">
+                              <h5 className="step-title">{step.title}</h5>
+                              <span className="step-subtitle">
+                                {step.subtitle}
+                              </span>
+                            </div>
+                            <p className="step-description">
+                              {step.description}
+                            </p>
+                          </div>
+                          {index < registrationSteps.slice(4).length - 1 && (
+                            <div className="step-connector" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
