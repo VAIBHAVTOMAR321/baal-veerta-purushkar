@@ -420,3 +420,35 @@
   animation: nfFadeIn .3s ease;
   text-align: center;
 }
+
+.nf-template-link-row {
+  display: flex;
+  justify-content: center;
+  margin-top: .85rem;
+}
+
+.nf-template-pdf-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem 1.1rem;
+  background: #16715b;
+  color: #fff;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: .82rem;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+
+.nf-template-pdf-link:hover {
+  background: #105944;
+  transform: translateY(-1px);
+}
+
+.nf-template-pdf-link .pdf-icon {
+  font-size: 1rem;
+  color: #fff;
+  flex-shrink: 0;
+}

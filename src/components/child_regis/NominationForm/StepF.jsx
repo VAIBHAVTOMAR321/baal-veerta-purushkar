@@ -213,22 +213,22 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
             /> <span>मैंने उपर्युक्त घोषणा को पढ़ लिया है तथा मैं इससे सहमत हूँ।</span>
           </label>
         </div>
+        <div className="nf-template-link-row">
+          <a
+            href="/declaration1.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nf-template-pdf-link"
+          >
+            <FaFileAlt className="pdf-icon" />
+            टेम्पलेट डाउनलोड करें
+          </a>
+        </div>
         {showDocumentUpload && (
           <div className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}>
-            <div className="nf-document-upload-header">
-              <label htmlFor="nf-declarationDocument" className="nf-document-upload-label">
-                अभिलेख अपलोड करें
-              </label>
-              <a
-                href="/declaration1.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="nf-template-pdf-link"
-              >
-                <FaFileAlt className="pdf-icon" />
-                टेम्पलेट डाउनलोड करें
-              </a>
-            </div>
+            <label htmlFor="nf-declarationDocument" className="nf-document-upload-label">
+              अभिलेख अपलोड करें
+            </label>
             <label htmlFor="nf-declarationDocument" className="nf-document-dropzone">
               <input
                 id="nf-declarationDocument"
@@ -272,22 +272,22 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
             <span>मैंने उपर्युक्त सहमति को पढ़ लिया है तथा मैं इससे सहमत हूँ।</span>
           </label>
         </div>
+        <div className="nf-template-link-row">
+          <a
+            href="/declaration2.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nf-template-pdf-link"
+          >
+            <FaFileAlt className="pdf-icon" />
+            टेम्पलेट डाउनलोड करें
+          </a>
+        </div>
         {showParentDocumentUpload && (
           <div className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}>
-            <div className="nf-document-upload-header">
-              <label htmlFor="nf-parentDeclarationDocument" className="nf-document-upload-label">
-                अभिलेख अपलोड करें
-              </label>
-              <a
-                href="/declaration2.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="nf-template-pdf-link"
-              >
-                <FaFileAlt className="pdf-icon" />
-                टेम्पलेट डाउनलोड करें
-              </a>
-            </div>
+            <label htmlFor="nf-parentDeclarationDocument" className="nf-document-upload-label">
+              अभिलेख अपलोड करें
+            </label>
             <label htmlFor="nf-parentDeclarationDocument" className="nf-document-dropzone">
               <input
                 id="nf-parentDeclarationDocument"
