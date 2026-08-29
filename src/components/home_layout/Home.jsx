@@ -584,9 +584,7 @@ function Home() {
                       <FaUserShield size={26} />
                     </div>
                     <h2 className="login-title">लॉगिन</h2>
-                    <p className="login-subtitle">
-                      अपने खाते में सुरक्षित लॉगिन करें
-                    </p>
+                   
                   </div>
 
                   <Form className="login-form" onSubmit={handleLogin}>
