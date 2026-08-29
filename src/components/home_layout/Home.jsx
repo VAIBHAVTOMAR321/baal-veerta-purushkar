@@ -285,39 +285,7 @@ function Home() {
 
   /* ========== DATA FROM GOVERNMENT ORDER ========== */
 
-  const awardDetails = [
-    {
-      icon: FaRupeeSign,
-      value: "₹51,000/-",
-      label: "पुरस्कार राशि (DBT)",
-      color: "#198754",
-    },
-    {
-      icon: FaMedal,
-      value: "मेडल / पदक",
-      label: "सम्मान प्रतीक",
-      color: "#0d6efd",
-    },
-    {
-      icon: FaFileContract,
-      value: "प्रशस्ति पत्र",
-      label: "आधिकारिक सम्मान पत्र",
-      color: "#fd7e14",
-    },
-  ];
 
-  const importantDates = [
-    { date: "10 – 30 सितंबर", text: "ऑनलाइन आवेदन / नामांकन", color: "#0d6efd" },
-    { date: "15 अक्टूबर", text: "जिला स्तरीय जांच एवं सत्यापन", color: "#198754" },
-    { date: "25 अक्टूबर", text: "राज्य स्तरीय चयन समिति का परीक्षण", color: "#fd7e14" },
-    { date: "31 अक्टूबर", text: "मुख्य सचिव का अंतिम अनुमोदन", color: "#dc3545" },
-    { date: "05 नवंबर", text: "चयनित बच्चों की आधिकारिक घोषणा", color: "#6f42c1" },
-    {
-      date: "09 नवंबर",
-      text: "राज्य स्थापना दिवस पर पुरस्कार वितरण",
-      color: "#20c997",
-    },
-  ];
 
   const objectives = [
     "बच्चों में साहस, आत्मविश्वास, परोपकार एवं मानवीय मूल्यों की भावना को प्रोत्साहित करना।",
@@ -327,14 +295,6 @@ function Home() {
     "बाल प्रतिभाओं एवं उनके साहसिक कार्यों को उचित पहचान एवं सम्मान प्रदान करना।",
   ];
 
-  const eligibilityCriteria = [
-    "आवेदक / नामांकित बच्चा उत्तराखण्ड राज्य का मूल / स्थायी निवासी होना अनिवार्य है।",
-    "वीरता की घटना के समय बच्चे की आयु 5 वर्ष से अधिक एवं 18 वर्ष से कम होनी चाहिए।",
-    "प्रथम पुरस्कारों हेतु वीरता / साहस का कार्य आवेदन की अन्तिम तिथि से पूर्व अधिकतम 2 वर्ष की अवधि के भीतर का होना चाहिए।",
-    "एक ही घटना के लिए एक बच्चे को एक से अधिक बार यह पुरस्कार प्रदान नहीं किया जाएगा। किन्तु राष्ट्रीय या अन्य राज्य पुरस्कार हेतु अर्ह होंगे।",
-    "वीर बालक / बालिका की मृत्यु होने पर पुरस्कार परिजनों (माता / पिता / अभिभावक) को प्रदान किया जाएगा।",
-    "एक से अधिक बालक / बालिका सम्मिलित हों तो प्रत्येक को प्रशस्ति पत्र एवं मेडल, धनराशि समान अनुपात में।",
-  ];
 
   const schemeInfo = [
     "मुख्यमंत्री राज्य बाल वीरता पुरस्कार का उद्देश्य बच्चों में साहस, आत्मविश्वास, परोपकार एवं मानवीय मूल्यों की भावना को प्रोत्साहित करना है।",
@@ -342,13 +302,6 @@ function Home() {
     "पुरस्कार में ₹51,000/- की धनराशि (DBT माध्यम से), प्रशस्ति पत्र, मेडल/पदक एवं राज्य स्तरीय सम्मान सहित कई सम्मानित स्तंभ शामिल हैं।",
     "नामांकन प्रक्रिया पूरी ऑनलाइन है। नामांकनकर्ता बच्चे की विस्तृत जानकारी, वीरता की घटना का विवरण, सभी आवश्यक दस्तावेज अपलोड करके पंजीकरण पूरा कर सकता है।",
     "प्रत्येक जनपद से एक बच्चा (कुल अधिकतम 13 बच्चे) को राज्य स्तरीय चयन समिति द्वारा चयन किया जाता है और मुख्य सचिव का अंतिम अनुमोदन प्राप्त होने पर पुरस्कार वितरण कार्यक्रम में सम्मानित किया जाता है।",
-  ];
-
-  const nominators = [
-    { label: "स्वयं बालक / बालिका", icon: FaUserShield },
-    { label: "माता / पिता / अभिभावक", icon: FaUsers },
-    { label: "प्रधानाचार्य / प्रधानाध्यापक", icon: FaFileAlt },
-    { label: "जिलाधिकारी (संबंधित जनपद)", icon: FaStar },
   ];
 
   const registrationSteps = [
@@ -516,56 +469,9 @@ function Home() {
                 </div>
               </div>
 
-              {/* ── AWARD DETAILS ── */}
-              <div className="award-section">
-                <h4 className="section-title-sm">
-                  <FaTrophy className="section-title-icon" />
-                  पुरस्कार स्वरूप
-                </h4>
-                <div className="award-cards-grid">
-                  {awardDetails.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <div
-                        key={i}
-                        className="award-card"
-                        style={{ "--award-color": item.color }}
-                      >
-                        <div className="award-card-icon">
-                          <Icon />
-                        </div>
-                        <div className="award-card-value">{item.value}</div>
-                        <div className="award-card-label">{item.label}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="award-note">
-                  प्रत्येक जनपद से एक बच्चा (कुल अधिकतम 13 बच्चे) को
-                  सम्मानित किया जाएगा।
-                </p>
-              </div>
 
-              {/* ── IMPORTANT DATES ── */}
-              <div className="dates-section">
-                <h4 className="section-title-sm">
-                  <FaCalendarAlt className="section-title-icon" />
-                  महत्वपूर्ण तिथियां
-                </h4>
-                <div className="dates-list">
-                  {importantDates.map((d, i) => (
-                    <div key={i} className="date-item">
-                      <span
-                        className="date-badge"
-                        style={{ background: d.color }}
-                      >
-                        {d.date}
-                      </span>
-                      <span className="date-text">{d.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+
+
 
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
               <div className="info-section">
@@ -622,65 +528,9 @@ function Home() {
                 </div>
               </div>
 
-              {/* ── COLLAPSIBLE: ELIGIBILITY ── */}
-              <div className="info-section">
-                <button
-                  ref={eligibilityHeaderRef}
-                  className="info-section-header"
-                  onClick={() => toggleSection("eligibility")}
-                  type="button"
-                >
-                  <span className="info-section-title">
-                    <FaCheckCircle className="info-section-icon" />
-                    पात्रता
-                  </span>
-                  <FaChevronUp
-                    className={`info-section-chevron ${openSection === "eligibility" ? "rotated" : ""}`}
-                  />
-                </button>
-                <div
-                  className={`info-section-body ${openSection === "eligibility" ? "open" : ""}`}
-                >
-                  <ul className="eligibility-list">
-                    {eligibilityCriteria.map((item, i) => (
-                      <li key={i}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
 
-              {/* ── COLLAPSIBLE: WHO CAN NOMINATE ── */}
-              <div className="info-section">
-                <button
-                  ref={nominatorsHeaderRef}
-                  className="info-section-header"
-                  onClick={() => toggleSection("nominators")}
-                  type="button"
-                >
-                  <span className="info-section-title">
-                    <FaUsers className="info-section-icon" />
-                    नामांकन कौन कर सकता है?
-                  </span>
-                  <FaChevronUp
-                    className={`info-section-chevron ${openSection === "nominators" ? "rotated" : ""}`}
-                  />
-                </button>
-                <div
-                  className={`info-section-body ${openSection === "nominators" ? "open" : ""}`}
-                >
-                  <div className="nominator-chips">
-                    {nominators.map((n, i) => {
-                      const Icon = n.icon;
-                      return (
-                        <div key={i} className="nominator-chip">
-                          <Icon className="nominator-chip-icon" />
-                          {n.label}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+
+
 
               {/* ── BOTTOM PDF LINK ── */}
               <div className="scheme-pdf-link">
