@@ -353,6 +353,7 @@ function Home() {
       subtitle: "Declaration",
       icon: FaFileSignature,
       description: (
+        
         <div>
           <p>घोषणा पढ़ें, सहमति दें, और अंतिम प्रस्तुतीकरण करें</p>
           <div className="step-f-pdf-links">
@@ -464,6 +465,7 @@ function Home() {
                               {step.description}
                             </p>
                           </div>
+                          
                           {index < 3 && (
                             <div className="step-connector" />
                           )}
@@ -498,7 +500,9 @@ function Home() {
                           {index < registrationSteps.slice(4).length - 1 && (
                             <div className="step-connector" />
                           )}
+                          
                         </div>
+                        
                       );
                     })}
                   </div>
