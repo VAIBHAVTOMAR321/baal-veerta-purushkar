@@ -455,15 +455,15 @@ function Home() {
             >
 
               {/* Mobile-only PDF link */}
-              <a
-                href="/CM Rajya baal veerta purskar.pdf"
+              <Link
+                to="/CM.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mobile-pdf-link"
               >
                 <FaFileAlt className="pdf-icon" />
                 योजना की पूरी जानकारी / Scheme Details (PDF)
-              </a>
+              </Link>
 
               {/* ── REGISTRATION STEPS ── */}
               <div className="steps-section">
@@ -472,15 +472,15 @@ function Home() {
                     <FaClipboardList className="steps-heading-icon" />
                     नामांकन प्रक्रिया
                   </h3>
-                  <a
-                    href="/CM Rajya baal veerta purskar.pdf"
+                  <Link
+                    to="/CM.pdf"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="steps-pdf-link"
                   >
                     <FaFileAlt className="pdf-icon" />
                     योजना की पूरी जानकारी (PDF)
-                  </a>
+                  </Link>
                 </div>
 
                 <div className="registration-steps">
@@ -684,14 +684,14 @@ function Home() {
 
               {/* ── BOTTOM PDF LINK ── */}
               <div className="scheme-pdf-link">
-                <a
-                  href="/CM Rajya baal veerta purskar.pdf"
+                <Link
+                  to="/CM.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <FaFileAlt className="pdf-icon" />
                   योजना की पूरी जानकारी / Scheme Details (PDF)
-                </a>
+                </Link>
               </div>
 
             </div>
