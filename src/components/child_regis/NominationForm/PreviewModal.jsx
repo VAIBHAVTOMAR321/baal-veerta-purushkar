@@ -40,6 +40,28 @@ const getFileType = (file) => {
   return null;
 };
 
+const getFileName = (file) => {
+  if (!file) return null;
+  if (file instanceof File) return file.name;
+  if (typeof file === "string") {
+    const trimmed = String(file).trim();
+    if (!trimmed) return null;
+    if (/^https?:\/\//i.test(trimmed)) {
+      try {
+        const url = new URL(trimmed);
+        const parts = url.pathname.split("/").filter(Boolean);
+        return parts.pop() || trimmed;
+      } catch {
+        const parts = trimmed.split("/").filter(Boolean);
+        return parts.pop() || trimmed;
+      }
+    }
+    const parts = trimmed.split("/").filter(Boolean);
+    return parts.pop() || trimmed;
+  }
+  return null;
+};
+
 const getFileSrc = (file) => {
   if (!file) return null;
   const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
@@ -131,7 +153,7 @@ const ExpandText = ({ text, maxWords = 20 }) => {
 
 /* ── Single doc cell (name + filename) ── */
 const DocNameCell = ({ label, file }) => {
-  const fname = file && typeof file === "object" ? file.name : null;
+  const fname = getFileName(file);
   return (
     <td className="nf-pv-l4 nf-pv-docname">
       <span>{label}</span>

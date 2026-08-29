@@ -49,6 +49,27 @@ const getDocumentUrl = (value) => {
   if (/^https?:\/\//i.test(String(value))) return String(value);
   return `${mediaBaseUrl}/${String(value).replace(/^\/+/, "")}`;
 };
+const getFileName = (value) => {
+  if (!value) return "";
+  if (value instanceof File) return value.name;
+  if (typeof value === "string") {
+    const trimmed = String(value).trim();
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) {
+      try {
+        const url = new URL(trimmed);
+        const parts = url.pathname.split("/").filter(Boolean);
+        return parts.pop() || trimmed;
+      } catch {
+        const parts = trimmed.split("/").filter(Boolean);
+        return parts.pop() || trimmed;
+      }
+    }
+    const parts = trimmed.split("/").filter(Boolean);
+    return parts.pop() || trimmed;
+  }
+  return "";
+};
 const normalizeVideoUrl = (value) => {
   const trimmedValue = String(value || "").trim();
   if (!trimmedValue) return "";
@@ -453,7 +474,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                     onChange={(e) => handleFileChange(e, 7)}
                     disabled={isSubmitting}
                   />
-                  {data.document7 && <small className="nf-file-name">{typeof data.document7 === "string" ? data.document7 : data.document7.name}</small>}
+                  {data.document7 && <small className="nf-file-name">{getFileName(data.document7)}</small>}
                   {data.document7 && (
                     <button type="button" className="nf-secondary" onClick={() => handleRemoveDocument(7)} disabled={isSubmitting}>हटाएं</button>
                   )}
@@ -535,11 +556,11 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                         aria-describedby={`nf-document-help-${index}`}
                       />
 
-                      {file && (
-                        <small className="nf-file-name">
-                          {typeof file === "string" ? file : file.name}
-                        </small>
-                      )}
+                       {file && (
+                         <small className="nf-file-name">
+                           {getFileName(file)}
+                         </small>
+                       )}
 
                       {fieldErrors[`document${index}`] && (
                         <small className="nf-error">

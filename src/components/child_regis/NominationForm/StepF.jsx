@@ -15,6 +15,27 @@ const getDocumentUrl = (value) => {
   }
   return "";
 };
+const getFileName = (value) => {
+  if (!value) return "";
+  if (value instanceof File) return value.name;
+  if (typeof value === "string") {
+    const trimmed = String(value).trim();
+    if (!trimmed) return "";
+    if (/^https?:\/\//i.test(trimmed)) {
+      try {
+        const url = new URL(trimmed);
+        const parts = url.pathname.split("/").filter(Boolean);
+        return parts.pop() || trimmed;
+      } catch {
+        const parts = trimmed.split("/").filter(Boolean);
+        return parts.pop() || trimmed;
+      }
+    }
+    const parts = trimmed.split("/").filter(Boolean);
+    return parts.pop() || trimmed;
+  }
+  return "";
+};
 
 const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccepted, onApplicationCompleted }) => {
   const { user, authFetch } = useAuth();
@@ -206,9 +227,9 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 className="nf-document-input"
                 disabled={topAccepted || isCompleted}
               />
-              <span className="nf-document-dropzone-text">
-                {data.declarationDocument ? (typeof data.declarationDocument === "string" ? data.declarationDocument : data.declarationDocument.name) : "No file chosen"}
-              </span>
+               <span className="nf-document-dropzone-text">
+                 {data.declarationDocument ? getFileName(data.declarationDocument) : "No file chosen"}
+               </span>
               {data.declarationDocument && (
                 <button
                   type="button"
@@ -255,7 +276,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 disabled={topAccepted || isCompleted}
               />
               <span className="nf-document-dropzone-text">
-                {data.parentDeclarationDocument ? (typeof data.parentDeclarationDocument === "string" ? data.parentDeclarationDocument : data.parentDeclarationDocument.name) : "No file chosen"}
+                {data.parentDeclarationDocument ? getFileName(data.parentDeclarationDocument) : "No file chosen"}
               </span>
               {data.parentDeclarationDocument && (
                 <button
