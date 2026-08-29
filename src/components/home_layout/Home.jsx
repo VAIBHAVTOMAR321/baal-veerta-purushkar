@@ -5,11 +5,9 @@ import {
 import {
   FaUserShield, FaKey, FaClipboardList, FaAddressCard,
   FaPhone, FaMapMarkerAlt, FaEnvelope, FaFileAlt,
-  FaCheckCircle, FaEdit, FaUpload, FaInfoCircle,
+  FaEdit, FaUpload, FaInfoCircle,
   FaFileSignature, FaChevronDown, FaChevronUp,
-  FaEye, FaEyeSlash, FaTrophy, FaCalendarAlt,
-  FaUsers, FaBullseye, FaMedal, FaFileContract,
-  FaRupeeSign, FaStar,
+  FaEye, FaEyeSlash,
   FaShieldAlt,
   FaBookOpen
 } from "react-icons/fa";
@@ -36,7 +34,7 @@ function Home() {
   const [loading, setLoading] = useState(false);
 
   // Collapsible section state - first section open by default
-  const [openSection, setOpenSection] = useState("schemeInfo");
+  const [openSection, setOpenSection] = useState(null);
 
   // Scroll state
   const contentRef = useRef(null);
@@ -44,9 +42,6 @@ function Home() {
 
   // Refs for scroll-based auto-expand
   const schemeInfoHeaderRef = useRef(null);
-  const objectivesHeaderRef = useRef(null);
-  const eligibilityHeaderRef = useRef(null);
-  const nominatorsHeaderRef = useRef(null);
   const userInteractedRef = useRef(false);
 
   const navigate = useNavigate();
@@ -88,12 +83,6 @@ function Home() {
           if (!entry.isIntersecting) return;
           if (entry.target === schemeInfoHeaderRef.current) {
             setOpenSection("schemeInfo");
-          } else if (entry.target === objectivesHeaderRef.current) {
-            setOpenSection("objectives");
-          } else if (entry.target === eligibilityHeaderRef.current) {
-            setOpenSection("eligibility");
-          } else if (entry.target === nominatorsHeaderRef.current) {
-            setOpenSection("nominators");
           }
         });
       },
@@ -106,9 +95,6 @@ function Home() {
 
     const headers = [
       schemeInfoHeaderRef,
-      objectivesHeaderRef,
-      eligibilityHeaderRef,
-      nominatorsHeaderRef,
     ];
 
     headers.forEach((ref) => {
@@ -287,13 +273,7 @@ function Home() {
 
 
 
-  const objectives = [
-    "बच्चों में साहस, आत्मविश्वास, परोपकार एवं मानवीय मूल्यों की भावना को प्रोत्साहित करना।",
-    "असाधारण साहस एवं वीरता का प्रदर्शन करने वाले बच्चों को राज्य स्तर पर सम्मानित एवं प्रोत्साहित करना।",
-    "बच्चों द्वारा किये गये अनुकरणीय एवं वीरतापूर्ण कार्यों को समाज के समक्ष प्रेरणादायी उदाहरण के रूप में प्रस्तुत करना।",
-    "संकट, आपदा एवं विपरीत परिस्थितियों में साहसपूर्वक कार्य करने की प्रवृत्ति को प्रोत्साहित करना।",
-    "बाल प्रतिभाओं एवं उनके साहसिक कार्यों को उचित पहचान एवं सम्मान प्रदान करना।",
-  ];
+
 
 
   const schemeInfo = [
@@ -557,32 +537,7 @@ function Home() {
                 </div>
               </div>
 
-              {/* ── COLLAPSIBLE: OBJECTIVES ── */}
-              <div className="info-section">
-                <button
-                  ref={objectivesHeaderRef}
-                  className="info-section-header"
-                  onClick={() => toggleSection("objectives")}
-                  type="button"
-                >
-                  <span className="info-section-title">
-                    <FaBullseye className="info-section-icon" />
-                    योजना के उद्देश्य
-                  </span>
-                  <FaChevronUp
-                    className={`info-section-chevron ${openSection === "objectives" ? "rotated" : ""}`}
-                  />
-                </button>
-                <div
-                  className={`info-section-body ${openSection === "objectives" ? "open" : ""}`}
-                >
-                  <ol className="objectives-list">
-                    {objectives.map((obj, i) => (
-                      <li key={i}>{obj}</li>
-                    ))}
-                  </ol>
-                </div>
-              </div>
+
 
 
 
