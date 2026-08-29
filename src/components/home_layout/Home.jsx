@@ -356,26 +356,6 @@ function Home() {
         
         <div>
           <p>घोषणा पढ़ें, सहमति दें, और अंतिम प्रस्तुतीकरण करें</p>
-          <div className="step-f-pdf-links">
-            <Link
-              to="/declaration1.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="step-f-pdf-link"
-            >
-              <FaFileAlt className="pdf-icon" />
-              घोषणा 1 डाउनलोड करें
-            </Link>
-            <Link
-              to="/declaration2.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="step-f-pdf-link"
-            >
-              <FaFileAlt className="pdf-icon" />
-              घोषणा 2 डाउनलोड करें
-            </Link>
-          </div>
         </div>
       ),
       color: "#dc3545",
@@ -495,6 +475,7 @@ function Home() {
                             </div>
                             <p className="step-description">
                               {step.description}
+                              
                             </p>
                           </div>
                           {index < registrationSteps.slice(4).length - 1 && (
@@ -505,6 +486,26 @@ function Home() {
                         
                       );
                     })}
+                    <div className="step-f-pdf-links">
+            <Link
+              to="/declaration1.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="step-f-pdf-link"
+            >
+              <FaFileAlt className="pdf-icon" />
+              घोषणा 1 डाउनलोड करें
+            </Link>
+            <Link
+              to="/declaration2.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="step-f-pdf-link"
+            >
+              <FaFileAlt className="pdf-icon" />
+              घोषणा 2 डाउनलोड करें
+            </Link>
+          </div>
                   </div>
                 </div>
               </div>
