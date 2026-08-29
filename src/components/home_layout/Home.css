@@ -537,7 +537,7 @@
 .document-description ul {
   margin: 6px 0;
   padding-left: 0;
-  list-style-position: inside;
+  /* list-style-position: inside; */
 }
 
 .document-description li {
