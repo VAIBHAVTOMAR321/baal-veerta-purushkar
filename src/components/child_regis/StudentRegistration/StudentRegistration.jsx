@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentRegistration.css";
 import { SendOTP } from "../../otpsendverify/SendOTP";
@@ -46,12 +46,47 @@ const StudentRegistration = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [phoneCheckError, setPhoneCheckError] = useState("");
+  const [checkingPhone, setCheckingPhone] = useState(false);
   const today = new Date().toISOString().split("T")[0];
   const idTypeRef = React.useRef(form.idType);
+  const phoneCheckTimerRef = useRef(null);
 
   React.useEffect(() => {
     idTypeRef.current = form.idType;
   }, [form.idType]);
+
+  useEffect(() => {
+    return () => {
+      if (phoneCheckTimerRef.current) clearTimeout(phoneCheckTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (phoneCheckTimerRef.current) clearTimeout(phoneCheckTimerRef.current);
+    const mobile = form.mobile.trim();
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      setPhoneCheckError("");
+      return;
+    }
+    phoneCheckTimerRef.current = setTimeout(async () => {
+      setCheckingPhone(true);
+      setPhoneCheckError("");
+      try {
+        const response = await fetch(`https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/check-phone/?phone=${encodeURIComponent(mobile)}`);
+        const data = await response.json();
+        if (data.success && data.registered) {
+          setPhoneCheckError(data.message || "फ़ोन नंबर पहले से पंजीकृत है। कृपया लॉगिन करें।");
+        } else {
+          setPhoneCheckError("");
+        }
+      } catch (err) {
+        setPhoneCheckError("");
+      } finally {
+        setCheckingPhone(false);
+      }
+    }, 600);
+  }, [form.mobile]);
 
   /* ---------- जनपद (District) list from API ---------- */
   useEffect(() => {
@@ -401,7 +436,16 @@ const StudentRegistration = () => {
               if (isSelf || !isParent) relationOpts.required = true;
               return field("3. बच्चे से संबंध", "relation", relationOpts);
             })()}
-            {field("4. मोबाइल नंबर", "mobile", { required: true, type: "tel", maxLength: 10, placeholder: "10 अंकों का मोबाइल नंबर" })}
+            {(() => {
+              const mobileField = field("4. मोबाइल नंबर", "mobile", { required: true, type: "tel", maxLength: 10, placeholder: "10 अंकों का मोबाइल नंबर" });
+              return (
+                <div>
+                  {mobileField}
+                  {phoneCheckError && <span className="sr-error" role="alert">{phoneCheckError}</span>}
+                  {checkingPhone && <span className="sr-error" role="alert" style={{ color: "#217193" }}>जांच रहे हैं...</span>}
+                </div>
+              );
+            })()}
             {field("5. ई-मेल आईडी", "email", { type: "email", placeholder: "ई-मेल आईडी दर्ज करें" })}
 
             <div className="sr-field">
