@@ -249,39 +249,39 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
   <title>Print - ${applicationNumber}</title>
   ${styleSheetsHTML}
   <style type="text/css">
+    /* ═════════════════ PAGE SETUP ═══════════════ */
     @page {
       size: 297mm 420mm;
-      margin: 2mm 3mm;
+      margin: 2mm;
     }
+
+    /* ═══════════════ COLOR FIX ═══════════════ */
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
     }
+
+    /* ═══════════════ BASE RESET ═══════════════ */
     html, body {
       margin: 0;
       padding: 0;
       background: #fff !important;
       font-family: "Noto Sans Devanagari", "Mangal", "Kokila", "Arial Unicode MS", sans-serif;
-      -webkit-font-smoothing: antialiased;
     }
+
+    /* ═══════════════ SHEET — match screen height flow ═══════════════ */
     .nf-pv-sheet {
       width: 100% !important;
       max-width: 100% !important;
       min-height: auto !important;
+      height: auto !important;
       box-shadow: none !important;
       overflow: visible !important;
       position: static !important;
     }
-    .nf-pv-x,
-    .nf-pv-print-bar,
-    .nf-pv-footer,
-    .nf-pv-more-btn {
-      display: none !important;
-    }
-    .nf-pv-decl-box p {
-      margin: 0 0 4px !important;
-    }
+
+    /* ═══════════════ OVERLAY — remove fixed positioning ═══════════════ */
     .nf-pv-overlay {
       position: static !important;
       background: #fff !important;
@@ -289,44 +289,69 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
       display: block !important;
       overflow: visible !important;
       animation: none !important;
+      width: 100% !important;
+      height: auto !important;
     }
+
+    /* ═══════════════ HIDE non-printable ═══════════════ */
+    .nf-pv-x,
+    .nf-pv-print-bar,
+    .nf-pv-footer,
+    .nf-pv-more-btn {
+      display: none !important;
+    }
+
+    /* ═══════════════ HEADER — same left/right as screen ═══════════════ */
+    .nf-pv-dept-header {
+      padding: 14px 20mm 10px !important;
+    }
+
+    /* ═══════════════ BODY — same left/right as screen ═══════════════ */
     .nf-pv-body {
       overflow: visible !important;
-      padding: 4px 3mm 2px !important;
+      padding: 12px 15mm 16px !important;
     }
-    .nf-pv-dept-header {
-      padding: 6px 3mm 4px !important;
-    }
+
+    /* ═══════════════ BLOCKS — same spacing as screen ═══════════════ */
     .nf-pv-block {
-      margin-bottom: 4px !important;
+      margin-bottom: 8px !important;
     }
     .nf-pv-block-label {
-      margin-top: 8px !important;
-      margin-bottom: 1px !important;
+      margin-top: 22px !important;
+      margin-bottom: 3px !important;
     }
-    .nf-pv-dprev {
-      cursor: default !important;
-      box-shadow: none !important;
+    .nf-pv-form-id {
+      margin-bottom: 4px !important;
     }
+
+    /* ═══════════════ TABLE — same cell padding as screen ═══════════════ */
     .nf-pv-t4 td {
       border-color: #000 !important;
-      padding: 2px 5px !important;
-    }
-    .nf-pv-photo-row {
-      border-color: #000 !important;
-    }
-    .nf-pv-photo-box {
-      border-color: #000 !important;
-    }
-    .nf-pv-decl-box {
-      border-color: #000 !important;
-      padding: 6px 8px !important;
+      padding: 3px 7px !important;
     }
     .nf-pv-l4 {
       background: #f0f4f8 !important;
     }
     .nf-pv-sub4 {
       background: #fafbfc !important;
+    }
+    .nf-pv-sep4 {
+      border-top-color: #000 !important;
+    }
+
+    /* ═══════════════ PHOTO ROW ═══════════════ */
+    .nf-pv-photo-row {
+      border-color: #000 !important;
+    }
+    .nf-pv-photo-box {
+      border-color: #000 !important;
+      background: #f7f8fa !important;
+    }
+
+    /* ═══════════════ DOC PREVIEW BOXES ═══════════════ */
+    .nf-pv-dprev {
+      cursor: default !important;
+      box-shadow: none !important;
     }
     .nf-pv-dprev-na {
       background: #fafafa !important;
@@ -338,26 +363,28 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
     .nf-pv-dprev-doc {
       background: #f0f7fa !important;
     }
-    .nf-pv-photo-box {
-      background: #f7f8fa !important;
+
+    /* ═══════════════ DECLARATION BOX — same padding as screen ═══════════════ */
+    .nf-pv-decl-box {
+      border-color: #000 !important;
+      padding: 10px 12px !important;
+    }
+    .nf-pv-decl-box p {
+      margin: 0 0 6px !important;
+    }
+    .nf-pv-decl-sign {
+      margin-bottom: 8px !important;
     }
     .nf-pv-sign-name {
       border-top-color: #000 !important;
     }
-    .nf-pv-sep4 {
-      border-top-color: #000 !important;
-    }
-    .nf-pv-decl-sign {
-      margin-bottom: 4px !important;
+    .nf-pv-dstatus.has {
+      color: #0d47a1 !important;
     }
 
-    /* ═══════════ PAGE BREAK RULES ═══════════ */
-    .nf-pv-block:not(.nf-pv-page2-start) {
-      page-break-inside: avoid;
-    }
+    /* ═══════════════ PAGE BREAK — only force page 2 start ═══════════════ */
     .nf-pv-page2-start {
       page-break-before: always !important;
-      page-break-inside: avoid !important;
     }
   </style>
 </head>
