@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import "./PreviewModal.css";
 
 const yesNo = (val) =>
@@ -164,6 +164,7 @@ const DocNameCell = ({ label, file }) => {
 
 /* ════════════════════════════════════════════════ */
 const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isApplicationCompleted }) => {
+  const printRef = useRef(null);
   const applicationNumber = data?.applicant_id || "System Generated";
   const district = data?.["permanentजनपद"] || data?.district || "-";
 
@@ -195,214 +196,406 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
     { label: "अभिभावक घोषणा अभिलेख", key: "parentDeclarationDocument" },
   ];
 
-  /* pair documents: 2 per row */
   const docPairs = [];
   for (let i = 0; i < allDocs.length; i += 2) {
     docPairs.push({ left: allDocs[i], right: allDocs[i + 1] || null });
   }
 
+  /* ── Print handler with auto-expand ── */
+  const handlePrint = () => {
+    const printContent = printRef.current;
+    if (!printContent) return;
+
+    const expandButtons = printContent.querySelectorAll(".nf-pv-more-btn");
+    const collapsedBtns = [];
+
+    expandButtons.forEach((btn) => {
+      if (btn.textContent.includes("और पढ़ें")) {
+        collapsedBtns.push(btn);
+        btn.click();
+      }
+    });
+
+    setTimeout(() => {
+      const fullHTML = printContent.innerHTML;
+      collapsedBtns.forEach((btn) => btn.click());
+
+      const printWindow = window.open("", "_blank", "width=1100,height=700");
+      if (!printWindow) {
+        alert("Pop-up blocked! Please allow pop-ups for this site to print.");
+        return;
+      }
+
+      let styleSheetsHTML = "";
+      for (let i = 0; i < document.styleSheets.length; i++) {
+        try {
+          const sheet = document.styleSheets[i];
+          if (sheet.href) {
+            styleSheetsHTML += `<link rel="stylesheet" href="${sheet.href}" type="text/css" />`;
+          } else if (sheet.cssRules) {
+            let css = "";
+            for (let j = 0; j < sheet.cssRules.length; j++) {
+              css += sheet.cssRules[j].cssText + "\n";
+            }
+            styleSheetsHTML += `<style type="text/css">${css}</style>`;
+          }
+        } catch (e) { /* skip cross-origin */ }
+      }
+
+      printWindow.document.write(`<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Print - ${applicationNumber}</title>
+  ${styleSheetsHTML}
+  <style type="text/css">
+    @page {
+      size: 297mm 420mm;
+      margin: 2mm 3mm;
+    }
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff !important;
+      font-family: "Noto Sans Devanagari", "Mangal", "Kokila", "Arial Unicode MS", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .nf-pv-sheet {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-height: auto !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      position: static !important;
+    }
+    .nf-pv-x,
+    .nf-pv-print-bar,
+    .nf-pv-footer,
+    .nf-pv-more-btn {
+      display: none !important;
+    }
+    .nf-pv-decl-box p {
+      margin: 0 0 4px !important;
+    }
+    .nf-pv-overlay {
+      position: static !important;
+      background: #fff !important;
+      padding: 0 !important;
+      display: block !important;
+      overflow: visible !important;
+      animation: none !important;
+    }
+    .nf-pv-body {
+      overflow: visible !important;
+      padding: 4px 3mm 2px !important;
+    }
+    .nf-pv-dept-header {
+      padding: 6px 3mm 4px !important;
+    }
+    .nf-pv-block {
+      margin-bottom: 4px !important;
+    }
+    .nf-pv-block-label {
+      margin-top: 8px !important;
+      margin-bottom: 1px !important;
+    }
+    .nf-pv-dprev {
+      cursor: default !important;
+      box-shadow: none !important;
+    }
+    .nf-pv-t4 td {
+      border-color: #000 !important;
+      padding: 2px 5px !important;
+    }
+    .nf-pv-photo-row {
+      border-color: #000 !important;
+    }
+    .nf-pv-photo-box {
+      border-color: #000 !important;
+    }
+    .nf-pv-decl-box {
+      border-color: #000 !important;
+      padding: 6px 8px !important;
+    }
+    .nf-pv-l4 {
+      background: #f0f4f8 !important;
+    }
+    .nf-pv-sub4 {
+      background: #fafbfc !important;
+    }
+    .nf-pv-dprev-na {
+      background: #fafafa !important;
+      border-color: #ccc !important;
+    }
+    .nf-pv-dprev-pdf {
+      background: #fdf2f2 !important;
+    }
+    .nf-pv-dprev-doc {
+      background: #f0f7fa !important;
+    }
+    .nf-pv-photo-box {
+      background: #f7f8fa !important;
+    }
+    .nf-pv-sign-name {
+      border-top-color: #000 !important;
+    }
+    .nf-pv-sep4 {
+      border-top-color: #000 !important;
+    }
+    .nf-pv-decl-sign {
+      margin-bottom: 4px !important;
+    }
+
+    /* ═══════════ PAGE BREAK RULES ═══════════ */
+    .nf-pv-block:not(.nf-pv-page2-start) {
+      page-break-inside: avoid;
+    }
+    .nf-pv-page2-start {
+      page-break-before: always !important;
+      page-break-inside: avoid !important;
+    }
+  </style>
+</head>
+<body>
+  ${fullHTML}
+  <script type="text/javascript">
+    window.onload = function() {
+      window.print();
+      window.onafterprint = function() { window.close(); };
+    };
+  </script>
+</body>
+</html>`);
+
+      printWindow.document.close();
+    }, 80);
+  };
+
   return (
     <div className="nf-pv-overlay" onClick={onClose}>
       <div className="nf-pv-sheet" onClick={(e) => e.stopPropagation()}>
 
+        {/* ── Print Bar ── */}
+        <div className="nf-pv-print-bar">
+          <button type="button" className="nf-pv-printbtn" onClick={handlePrint}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            <span>Print</span>
+          </button>
+        </div>
+
         <button type="button" className="nf-pv-x" onClick={onClose} aria-label="Close">×</button>
 
-        {/* ── Header ── */}
-        <div className="nf-pv-dept-header">
-          <h1>महिला सशक्तिकरण एवं बाल विकास विभाग</h1>
-          <p>उत्तराखण्ड सरकार</p>
-        </div>
+        {/* ── Printable area ── */}
+        <div ref={printRef} className="nf-pv-printable">
 
-        {/* ── Body ── */}
-        <div className="nf-pv-body">
+          <div className="nf-pv-dept-header">
+            <h1>महिला सशक्तिकरण एवं बाल विकास विभाग</h1>
+            <p>उत्तराखण्ड सरकार</p>
+          </div>
 
-          {/* ═══ 1. आवेदक + पता (4-COL + PHOTO) ═══ */}
-          <div className="nf-pv-block">
-            <div className="nf-pv-block-label">आवेदक का विवरण:</div>
-            <div className="nf-pv-form-id">
-              Form ID: {applicationNumber} (Final Submitted on {submissionDate})
+          <div className="nf-pv-body">
+
+            {/* ═══════════════════════════════════════
+                 PAGE 1 — आवेदक + वीरता
+                 ═══════════════════════════════════════ */}
+
+            {/* ── 1. आवेदक का विवरण ── */}
+            <div className="nf-pv-block">
+              <div className="nf-pv-block-label">आवेदक का विवरण:</div>
+              <div className="nf-pv-form-id">
+                Form ID: {applicationNumber} (Final Submitted on {submissionDate})
+              </div>
+              <div className="nf-pv-photo-row">
+                <table className="nf-pv-t4">
+                  <tbody>
+                    <Row4 l1="बच्चे का पूरा नाम" v1={data?.childName} l2="पिता का नाम" v2={data?.fatherName} />
+                    <Row4 l1="माता का नाम" v1={data?.motherName} l2="अभिभावक का नाम" v2={data?.guardianName} />
+                    <Row4 l1="मोबाइल नंबर" v1={data?.childMobile} l2="लिंग" v2={data?.gender} />
+                    <Row4 l1="जन्म तिथि" v1={data?.birthDate} l2="आयु" v2={calcAge(data?.birthDate)} />
+                    <Row4 l1="उत्तराखण्ड का स्थायी निवासी" v1={yesNo(data?.resident)} l2="वर्तमान कक्षा" v2={data?.currentClass} />
+                    <Row4Full label="विद्यालय का नाम" value={data?.schoolName} />
+                    <Row4Full label="विद्यालय का पता" value={data?.schoolAddress} />
+                    <tr><td colSpan="4" className="nf-pv-sep4" /></tr>
+                    <Row4 l1="वर्तमान पता" v1={curAddr} l2="स्थायी पता" v2={perAddr} />
+                    <Row4 l1="वर्तमान विकासखण्ड / नगर निकाय" v1={data?.["currentविकासखण्ड/नगर निकाय"]} l2="स्थायी विकासखण्ड / नगर निकाय" v2={data?.["permanentविकासखण्ड/नगर निकाय"]} />
+                    <Row4 l1="वर्तमान जनपद" v1={data?.["currentजनपद"]} l2="स्थायी जनपद" v2={district} />
+                    <Row4 l1="वर्तमान पिन कोड" v1={data?.["currentपिन कोड"]} l2="स्थायी पिन कोड" v2={data?.["permanentपिन कोड"]} />
+                  </tbody>
+                </table>
+                <div className="nf-pv-photo-wrap">
+                  <div className="nf-pv-photo-box">
+                    {photoSrc ? <img src={photoSrc} alt="फोटो" className="nf-pv-photo-img" /> : <span className="nf-pv-photo-ph">फोटो</span>}
+                  </div>
+                  <span className="nf-pv-photo-label">पासपोर्ट फोटो</span>
+                </div>
+              </div>
             </div>
-            <div className="nf-pv-photo-row">
+
+            {/* ── 2. वीरता की घटना का विवरण ── */}
+            <div className="nf-pv-block">
+              <div className="nf-pv-block-label">वीरता की घटना का विवरण:</div>
               <table className="nf-pv-t4">
                 <tbody>
-                  <Row4 l1="बच्चे का पूरा नाम" v1={data?.childName} l2="पिता का नाम" v2={data?.fatherName} />
-                  <Row4 l1="माता का नाम" v1={data?.motherName} l2="अभिभावक का नाम" v2={data?.guardianName} />
-                  <Row4 l1="मोबाइल नंबर" v1={data?.childMobile} l2="लिंग" v2={data?.gender} />
-                  <Row4 l1="जन्म तिथि" v1={data?.birthDate} l2="आयु" v2={calcAge(data?.birthDate)} />
-                  <Row4 l1="उत्तराखण्ड का स्थायी निवासी" v1={yesNo(data?.resident)} l2="वर्तमान कक्षा" v2={data?.currentClass} />
-                  <Row4Full label="विद्यालय का नाम" value={data?.schoolName} />
-                  <Row4Full label="विद्यालय का पता" value={data?.schoolAddress} />
-                  <tr><td colSpan="4" className="nf-pv-sep4" /></tr>
-                  <Row4 l1="वर्तमान पता" v1={curAddr} l2="स्थायी पता" v2={perAddr} />
-                  <Row4 l1="वर्तमान विकासखण्ड / नगर निकाय" v1={data?.["currentविकासखण्ड/नगर निकाय"]} l2="स्थायी विकासखण्ड / नगर निकाय" v2={data?.["permanentविकासखण्ड/नगर निकाय"]} />
-                  <Row4 l1="वर्तमान जनपद" v1={data?.["currentजनपद"]} l2="स्थायी जनपद" v2={district} />
-                  <Row4 l1="वर्तमान पिन कोड" v1={data?.["currentपिन कोड"]} l2="स्थायी पिन कोड" v2={data?.["permanentपिन कोड"]} />
+                  <Row4Full label="घटना का शीर्षक" value={data?.actTitle} />
+                  <Row4 l1="घटना की दिनांक" v1={data?.actDate} l2="घटना का समय" v2={data?.actTime} />
+                  <Row4 l1="घटना का स्थान" v1={data?.actPlace} l2="घटना का जनपद" v2={data?.actDistrict} />
+                  <tr>
+                    <td className="nf-pv-l4">संक्षिप्त विवरण</td>
+                    <td className="nf-pv-v4" colSpan="3">
+                      <ExpandText text={data?.shortDescription} maxWords={20} />
+                    </td>
+                  </tr>
+                  <Row4Full label="बचाए गये व्यक्तियों का विवरण" value={data?.rescuedCount} />
                 </tbody>
               </table>
-              <div className="nf-pv-photo-wrap">
-                <div className="nf-pv-photo-box">
-                  {photoSrc ? <img src={photoSrc} alt="फोटो" className="nf-pv-photo-img" /> : <span className="nf-pv-photo-ph">फोटो</span>}
-                </div>
-                <span className="nf-pv-photo-label">पासपोर्ट फोटो</span>
-              </div>
             </div>
-          </div>
 
-          {/* ═══ 2. वीरता (4-COL + EXPAND) ═══ */}
-          <div className="nf-pv-block">
-            <div className="nf-pv-block-label">वीरता की घटना का विवरण:</div>
-            <table className="nf-pv-t4">
-              <tbody>
-                <Row4Full label="घटना का शीर्षक" value={data?.actTitle} />
-                <Row4 l1="घटना की दिनांक" v1={data?.actDate} l2="घटना का समय" v2={data?.actTime} />
-                <Row4 l1="घटना का स्थान" v1={data?.actPlace} l2="घटना का जनपद" v2={data?.actDistrict} />
-                <tr>
-                  <td className="nf-pv-l4">संक्षिप्त विवरण</td>
-                  <td className="nf-pv-v4" colSpan="3">
-                    <ExpandText text={data?.shortDescription} maxWords={20} />
-                  </td>
-                </tr>
-                <Row4Full label="बचाए गये व्यक्तियों का विवरण" value={data?.rescuedCount} />
-              </tbody>
-            </table>
-          </div>
+            {/* ═══════════════════════════════════════
+                 PAGE 2 — अतिरिक्त जानकारी + घोषणा
+                 ═══════════════════════════════════════ */}
 
-          {/* ═══ 3. अतिरिक्त जानकारी + दस्तावेज़ (ONE SECTION, 4-COL) ═══ */}
-          <div className="nf-pv-block">
-            <div className="nf-pv-block-label">अतिरिक्त जानकारी एवं अपलोड दस्तावेजों का विवरण:</div>
-            <table className="nf-pv-t4">
-              <tbody>
-                {/* ── Yes/No: question colSpan 3, answer col 4 ── */}
-                <tr>
-                  <td className="nf-pv-l4" colSpan="3">1. क्या पुलिस रिपोर्ट / FIR दर्ज है ?</td>
-                  <td className="nf-pv-v4 nf-pv-ynv4">{yesNo(data?.firRegistered)}</td>
-                </tr>
-                {data?.firRegistered === "हाँ" && (
-                  <>
-                    <tr>
-                      <td className="nf-pv-sub4" colSpan="3">थाना</td>
-                      <td className="nf-pv-v4">{data?.policeStation || "-"}</td>
-                    </tr>
-                    <tr>
-                      <td className="nf-pv-sub4" colSpan="3">FIR संख्या</td>
-                      <td className="nf-pv-v4">{data?.firNumber || "-"}</td>
-                    </tr>
-                    <tr>
-                      <td className="nf-pv-sub4" colSpan="3">FIR दिनांक</td>
-                      <td className="nf-pv-v4">{data?.firDate || "-"}</td>
-                    </tr>
-                  </>
-                )}
-                <tr>
-                  <td className="nf-pv-l4" colSpan="3">2. क्या समाचार पत्र / मीडिया रिपोर्ट प्रकाशित हुई ?</td>
-                  <td className="nf-pv-v4 nf-pv-ynv4">{data?.mediaPublished || "-"}</td>
-                </tr>
-                <tr>
-                  <td className="nf-pv-l4" colSpan="3">3. क्या कोई अन्य पुरस्कार / सम्मान प्राप्त हुआ है ?</td>
-                  <td className="nf-pv-v4 nf-pv-ynv4">{yesNo(data?.otherAward)}</td>
-                </tr>
-                {data?.otherAward === "हाँ" && (
+            {/* ── 3. अतिरिक्त जानकारी ── */}
+            <div className="nf-pv-block nf-pv-page2-start">
+              <div className="nf-pv-block-label">अतिरिक्त जानकारी एवं अपलोड दस्तावेजों का विवरण:</div>
+              <table className="nf-pv-t4">
+                <tbody>
                   <tr>
-                    <td className="nf-pv-sub4" colSpan="3">अन्य पुरस्कार का विवरण</td>
-                    <td className="nf-pv-v4">{data?.otherAwardDetails || "-"}</td>
+                    <td className="nf-pv-l4" colSpan="3">1. क्या पुलिस रिपोर्ट / FIR दर्ज है ?</td>
+                    <td className="nf-pv-v4 nf-pv-ynv4">{yesNo(data?.firRegistered)}</td>
                   </tr>
+                  {data?.firRegistered === "हाँ" && (
+                    <>
+                      <tr>
+                        <td className="nf-pv-sub4" colSpan="3">थाना</td>
+                        <td className="nf-pv-v4">{data?.policeStation || "-"}</td>
+                      </tr>
+                      <tr>
+                        <td className="nf-pv-sub4" colSpan="3">FIR संख्या</td>
+                        <td className="nf-pv-v4">{data?.firNumber || "-"}</td>
+                      </tr>
+                      <tr>
+                        <td className="nf-pv-sub4" colSpan="3">FIR दिनांक</td>
+                        <td className="nf-pv-v4">{data?.firDate || "-"}</td>
+                      </tr>
+                    </>
+                  )}
+                  <tr>
+                    <td className="nf-pv-l4" colSpan="3">2. क्या समाचार पत्र / मीडिया रिपोर्ट प्रकाशित हुई ?</td>
+                    <td className="nf-pv-v4 nf-pv-ynv4">{data?.mediaPublished || "-"}</td>
+                  </tr>
+                  <tr>
+                    <td className="nf-pv-l4" colSpan="3">3. क्या कोई अन्य पुरस्कार / सम्मान प्राप्त हुआ है ?</td>
+                    <td className="nf-pv-v4 nf-pv-ynv4">{yesNo(data?.otherAward)}</td>
+                  </tr>
+                  {data?.otherAward === "हाँ" && (
+                    <tr>
+                      <td className="nf-pv-sub4" colSpan="3">अन्य पुरस्कार का विवरण</td>
+                      <td className="nf-pv-v4">{data?.otherAwardDetails || "-"}</td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td className="nf-pv-l4" colSpan="3">4. अतिरिक्त टिप्पणी / अन्य महत्वपूर्ण जानकारी</td>
+                    <td className="nf-pv-v4">{data?.additionalInformation || "-"}</td>
+                  </tr>
+
+                  <tr><td colSpan="4" className="nf-pv-sep4" /></tr>
+
+                  {docPairs.map((pair, idx) => (
+                    <tr key={idx}>
+                      <DocNameCell label={pair.left.label} file={data?.[pair.left.key]} />
+                      <td className="nf-pv-v4 nf-pv-prev-td">
+                        <DocPreview file={data?.[pair.left.key]} />
+                      </td>
+                      {pair.right ? (
+                        <>
+                          <DocNameCell label={pair.right.label} file={data?.[pair.right.key]} />
+                          <td className="nf-pv-v4 nf-pv-prev-td">
+                            <DocPreview file={data?.[pair.right.key]} />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="nf-pv-l4 nf-pv-empty" />
+                          <td className="nf-pv-v4 nf-pv-empty" />
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── 4. घोषणा ── */}
+            <div className="nf-pv-block">
+              <div className="nf-pv-block-label">घोषणा</div>
+              <div className="nf-pv-decl-box">
+                <p className="nf-pv-decl-title">नामांकनकर्ता की घोषणा:</p>
+                <p>
+                  मेरे द्वारा उपरोक्त भरी गई समस्त जानकारी पूर्णतयः सत्य एवं
+                  सही है। यदि कोई जानकारी उपरोक्त में अंकित है और गलत पाई
+                  जाती है तो विभाग द्वारा नियमानुसार कार्यवाही की जा
+                  सकती है जिसकी सम्पूर्ण जिम्मेदारी आवेदक की होगी।
+                </p>
+                {data?.declarationDocument && (
+                  <div className="nf-pv-decl-view">
+                    <a href={getFileSrc(data?.declarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
+                  </div>
                 )}
-                <tr>
-                  <td className="nf-pv-l4" colSpan="3">4. अतिरिक्त टिप्पणी / अन्य महत्वपूर्ण जानकारी</td>
-                  <td className="nf-pv-v4">{data?.additionalInformation || "-"}</td>
-                </tr>
-
-                {/* ── separator ── */}
-                <tr><td colSpan="4" className="nf-pv-sep4" /></tr>
-
-                {/* ── Documents: 2 per row (name | preview | name | preview) ── */}
-                {docPairs.map((pair, idx) => (
-                  <tr key={idx}>
-                    <DocNameCell label={pair.left.label} file={data?.[pair.left.key]} />
-                    <td className="nf-pv-v4 nf-pv-prev-td">
-                      <DocPreview file={data?.[pair.left.key]} />
-                    </td>
-                    {pair.right ? (
-                      <>
-                        <DocNameCell label={pair.right.label} file={data?.[pair.right.key]} />
-                        <td className="nf-pv-v4 nf-pv-prev-td">
-                          <DocPreview file={data?.[pair.right.key]} />
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="nf-pv-l4 nf-pv-empty" />
-                        <td className="nf-pv-v4 nf-pv-empty" />
-                      </>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-                   {/* ═══ 4. घोषणा ═══ */}
-          <div className="nf-pv-block">
-            <div className="nf-pv-block-label">घोषणा</div>
-            <div className="nf-pv-decl-box">
-              {/* ── नामांकनकर्ता की घोषणा ── */}
-              <p className="nf-pv-decl-title">नामांकनकर्ता की घोषणा:</p>
-              <p>
-                मेरे द्वारा उपरोक्त भरी गई समस्त जानकारी पूर्णतयः सत्य एवं
-                सही है। यदि कोई जानकारी उपरोक्त में अंकित है और गलत पाई
-                जाती है तो विभाग द्वारा नियमानुसार कार्यवाही की जा
-                सकती है जिसकी सम्पूर्ण जिम्मेदारी आवेदक की होगी।
-              </p>
-              {data?.declarationDocument && (
-                <div className="nf-pv-decl-view">
-                  <a href={getFileSrc(data?.declarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
+                <div className="nf-pv-decl-sign">
+                  <span className="nf-pv-sign-name">{data?.childName || "-"}</span>
                 </div>
-              )}
-              <div className="nf-pv-decl-sign">
-                <span className="nf-pv-sign-name">{data?.childName || "-"}</span>
-              </div>
-              <div className="nf-pv-sign-line">
-                <span>नामांकनकर्ता</span>
-                <span>द्वारा</span>
-                <span>हस्ताक्षर</span>
-              </div>
-
-              {/* ── अभिभावक की घोषणा / सहमति ── */}
-              <p className="nf-pv-decl-title" style={{ marginTop: "14px" }}>
-                अभिभावक की घोषणा / सहमति:
-              </p>
-              <p>
-                मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल
-                विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी
-                एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस
-                विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन
-                कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा
-                भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त
-                किया जा सकता है तथा नियमानुसार आवश्यक कार्यवाही की
-                जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम,
-                फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग
-                विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं
-                आधिकारिक प्रयोजनों के लिए किया जा सकेगा।
-              </p>
-              {data?.parentDeclarationDocument && (
-                <div className="nf-pv-decl-view">
-                  <a href={getFileSrc(data?.parentDeclarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
+                <div className="nf-pv-sign-line">
+                  <span>नामांकनकर्ता</span>
+                  <span>द्वारा</span>
+                  <span>हस्ताक्षर</span>
                 </div>
-              )}
-              <div className="nf-pv-decl-sign">
-                <span className="nf-pv-sign-name">
-                  {data?.guardianName || data?.fatherName || "-"}
-                </span>
-              </div>
-              <div className="nf-pv-sign-line">
-                <span>अभिभावक</span>
-                <span>द्वारा</span>
-                <span>हस्ताक्षर</span>
+
+                <p className="nf-pv-decl-title" style={{ marginTop: "14px" }}>
+                  अभिभावक की घोषणा / सहमति:
+                </p>
+                <p>
+                  मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल
+                  विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी
+                  एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस
+                  विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन
+                  कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा
+                  भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त
+                  किया जा सकता है तथा नियमानुसार आवश्यक कार्यवाही की
+                  जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम,
+                  फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग
+                  विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं
+                  आधिकारिक प्रयोजनों के लिए किया जा सकेगा।
+                </p>
+                {data?.parentDeclarationDocument && (
+                  <div className="nf-pv-decl-view">
+                    <a href={getFileSrc(data?.parentDeclarationDocument)} target="_blank" rel="noopener noreferrer" className="nf-pv-dstatus has">view</a>
+                  </div>
+                )}
+                <div className="nf-pv-decl-sign">
+                  <span className="nf-pv-sign-name">
+                    {data?.guardianName || data?.fatherName || "-"}
+                  </span>
+                </div>
+                <div className="nf-pv-sign-line">
+                  <span>अभिभावक</span>
+                  <span>द्वारा</span>
+                  <span>हस्ताक्षर</span>
+                </div>
               </div>
             </div>
+
           </div>
-          
         </div>
+        {/* ── End printable ── */}
 
         {/* ── Footer ── */}
         <div className="nf-pv-footer">
