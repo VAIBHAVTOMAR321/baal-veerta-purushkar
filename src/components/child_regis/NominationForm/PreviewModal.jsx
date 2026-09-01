@@ -252,7 +252,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
     /* ═════════════════ PAGE SETUP ═══════════════ */
     @page {
       size: 297mm 420mm;
-      margin: 2mm;
+      margin: 12mm 8mm 10mm 8mm;
     }
 
     /* ═══════════════ COLOR FIX ═══════════════ */
@@ -303,7 +303,8 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
 
     /* ═══════════════ HEADER — same left/right as screen ═══════════════ */
     .nf-pv-dept-header {
-      padding: 14px 20mm 10px !important;
+      padding: 18px 20mm 10px !important;
+      margin-top: 8px !important;
     }
 
     /* ═══════════════ BODY — same left/right as screen ═══════════════ */
