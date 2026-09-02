@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../login/AuthContext";
 import { FaEye, FaFileAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import RaiseQueryModal from "./RaiseQueryModal.jsx";
 
 const declaration = "मैं/हम यह प्रमाणित करते हैं कि इस ऑनलाइन नामांकन प्रपत्र में मेरे/हमारे द्वारा उपलब्ध कराई गई समस्त जानकारी एवं संलग्न अभिलेख मेरे/हमारे ज्ञान एवं विश्वास के अनुसार सत्य एवं सही हैं। उपरोक्त आवेदन में मेरे/हमारे द्वारा कोई महत्वपूर्ण तथ्य छिपाया नहीं गया है। तथा मुख्यमंत्री राज्य बाल पुरुष्कार हेतु नामांकन योग्य है।";
 const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवेदन की कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
 const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/declaration/";
+const registrationEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/";
 const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
+const queryEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
 
 const getDocumentUrl = (value) => {
   if (!value) return "";
@@ -46,8 +49,17 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [showQueryModal, setShowQueryModal] = useState(false);
+  const [queryMode, setQueryMode] = useState("create");
+  const [queryData, setQueryData] = useState(null);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [hasSubmittedQuery, setHasSubmittedQuery] = useState(false);
+  const registrationFetchStarted = useRef(false);
+
+  const userMobile = data?.mobile_number || data?.mobileNumber || user?.mobile_number || user?.mobile || "";
 
   const applicantId = data?.applicant_id || user?.applicant_id || localStorage.getItem("applicantId") || "";
+  const applicantMobile = data?.mobile_number || data?.childMobile || userMobile;
   const district = data?.["permanentजनपद"] || data?.permanentजनपद || data?.district || "System Generated";
   const submissionDate = new Date().toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -100,6 +112,29 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   }, [applicantId, authFetch, onApplicationCompleted]);
 
   useEffect(() => {
+    if (registrationFetchStarted.current) return;
+    registrationFetchStarted.current = true;
+    let active = true;
+    const fetchRegistrationData = async () => {
+      try {
+        const response = await authFetch(registrationEndpoint);
+        if (!response.ok) return;
+        const result = await response.json();
+        const records = Array.isArray(result?.data) ? result.data : result?.data ? [result.data] : [];
+        const record = records.find((item) => !applicantId || String(item?.applicant_id) === String(applicantId)) || records[0];
+        const mobile = record?.child_guardian_mobile || record?.mobile_number;
+        if (active && mobile && !data?.childMobile) {
+          update({ target: { name: "childMobile", value: mobile, type: "text" } });
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch registration details:", fetchError);
+      }
+    };
+    fetchRegistrationData();
+    return () => { active = false; };
+  }, [applicantId, authFetch, update]);
+
+  useEffect(() => {
     if (data.declarationAccepted) {
       setShowDocumentUpload(true);
     }
@@ -110,6 +145,53 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
       setShowParentDocumentUpload(true);
     }
   }, [data.parentDeclarationAccepted]);
+
+  const fetchQueries = async () => {
+    if (!isCompleted || !applicantId) return null;
+    setQueryLoading(true);
+    try {
+      const response = await authFetch(`${queryEndpoint}?applicant_id=${encodeURIComponent(applicantId)}`);
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await response.json() : null;
+      if (response.ok && result?.success) {
+        const list = (Array.isArray(result.data) ? result.data : [])
+          .filter((item) => String(item?.applicant_id || "") === String(applicantId));
+        setQueryData(list);
+        setHasSubmittedQuery(list.length > 0);
+        return list;
+      }
+    } catch (err) {
+      console.error("Failed to fetch queries:", err);
+    } finally {
+      setQueryLoading(false);
+    }
+    return null;
+  };
+
+  const handleRaiseQuery = () => {
+    setQueryMode("create");
+    setShowQueryModal(true);
+  };
+
+  const handleQueryButton = async () => {
+    setShowQueryModal(true);
+    if (hasSubmittedQuery && queryData) {
+      setQueryMode("view");
+      return;
+    }
+    setQueryMode("create");
+    const list = await fetchQueries();
+    if (list && list.length > 0) {
+      setQueryMode("view");
+    }
+  };
+
+  const handleQuerySubmitted = async (result) => {
+    setHasSubmittedQuery(true);
+    setQueryMode("view");
+    setQueryData(result?.data || null);
+    await fetchQueries();
+  };
 
   const handleCheckboxChange = (e) => {
     const checked = e.target.checked;
@@ -233,9 +315,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
           </Link>
         </div>
         {showDocumentUpload && (
-          <div
-            className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}
-          >
+          <div className="nf-document-upload">
             <label
               htmlFor="nf-declarationDocument"
               className="nf-document-upload-label"
@@ -252,7 +332,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 name="declarationDocument"
                 onChange={handleFileChange}
                 className="nf-document-input"
-                disabled={topAccepted || isCompleted}
+                disabled={isCompleted}
               />
               <span className="nf-document-dropzone-text">
                 {data.declarationDocument
@@ -306,9 +386,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
           </Link>
         </div>
         {showParentDocumentUpload && (
-          <div
-            className={`nf-document-upload${topAccepted ? " nf-disabled" : ""}`}
-          >
+          <div className="nf-document-upload">
             <label
               htmlFor="nf-parentDeclarationDocument"
               className="nf-document-upload-label"
@@ -325,7 +403,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
                 name="parentDeclarationDocument"
                 onChange={handleParentFileChange}
                 className="nf-document-input"
-                disabled={topAccepted || isCompleted}
+                disabled={isCompleted}
               />
               <span className="nf-document-dropzone-text">
                 {data.parentDeclarationDocument
@@ -366,6 +444,16 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               {submitting ? "Submitting..." : "Final Submit"}
             </button>
           )}
+          {isCompleted && (
+            <button
+              type="button"
+              className={hasSubmittedQuery ? "nf-secondary" : "nf-primary"}
+              onClick={handleQueryButton}
+              disabled={queryLoading}
+            >
+              {queryLoading ? "Loading..." : hasSubmittedQuery ? "View Query" : "Raise Query"}
+            </button>
+          )}
         </div>
         <p className="nf-note">
           नोट: Final Submit के पश्चात आवेदन में कोई संशोधन नहीं किया जा सकेगा।
@@ -383,6 +471,15 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
           <strong>District:</strong> {district}
         </p>
       </div>
+      <RaiseQueryModal
+        open={showQueryModal}
+        mode={queryMode}
+        onClose={() => setShowQueryModal(false)}
+        applicantId={applicantId}
+        mobileNumber={applicantMobile}
+        existingQuery={queryData}
+        onSubmitted={handleQuerySubmitted}
+      />
     </section>
   );
 };
