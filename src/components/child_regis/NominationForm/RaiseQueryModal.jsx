@@ -73,6 +73,10 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
       setError("कृपया टिप्पणी दर्ज करें।");
       return;
     }
+    if (!file) {
+      setError("कृपया अभिलेख अपलोड करें।");
+      return;
+    }
     setSubmitting(true);
     setError("");
     setSuccess("");
@@ -154,7 +158,7 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
 
               <div className="nf-document-upload">
                 <label htmlFor="nf-query-file" className="nf-document-upload-label">
-                  अभिलेख अपलोड करें (वैकल्पिक)
+                  अभिलेख अपलोड करें <span className="nf-tag required">अनिवार्य</span>
                 </label>
                 <label htmlFor="nf-query-file" className="nf-document-dropzone">
                   <input
