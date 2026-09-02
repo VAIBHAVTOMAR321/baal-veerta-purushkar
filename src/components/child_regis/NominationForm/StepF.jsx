@@ -286,25 +286,50 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
       return;
     }
 
+    const jsonPayload = {
+      applicant_id: applicantId,
+      declarationDocument: declarationValue instanceof File ? declarationValue.name : declarationValue,
+      parentDeclarationDocument: parentDeclarationValue instanceof File ? parentDeclarationValue.name : parentDeclarationValue,
+      declarationAccepted: Boolean(data.declarationAccepted),
+      parentDeclarationAccepted: Boolean(data.parentDeclarationAccepted),
+    };
+
     const formData = new FormData();
     formData.append("applicant_id", applicantId);
+    formData.append("declarationAccepted", String(Boolean(data.declarationAccepted)));
+    formData.append("parentDeclarationAccepted", String(Boolean(data.parentDeclarationAccepted)));
     if (declarationValue) formData.append("declarationDocument", declarationValue);
     if (parentDeclarationValue) formData.append("parentDeclarationDocument", parentDeclarationValue);
 
     setSubmitting(true);
     setSubmitError("");
     try {
-      const response = await authFetch(endpoint, { method: "PUT", body: formData });
-      const contentType = response.headers.get("content-type") || "";
-      const result = contentType.includes("application/json")
+      let response = await authFetch(endpoint, { method: "PUT", body: formData });
+      let contentType = response.headers.get("content-type") || "";
+      let result = contentType.includes("application/json")
         ? await response.json()
         : await response.text();
 
       if (!response.ok || (typeof result === "object" && result.success === false)) {
-        const message = typeof result === "object"
-          ? (result.detail || result.message || result.error)
-          : result;
-        throw new Error(message || "अंतिम सबमिशन में त्रुटि हुई।");
+        const fallbackResponse = await authFetch(endpoint, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(jsonPayload),
+        });
+
+        contentType = fallbackResponse.headers.get("content-type") || "";
+        result = contentType.includes("application/json")
+          ? await fallbackResponse.json()
+          : await fallbackResponse.text();
+
+        if (!fallbackResponse.ok || (typeof result === "object" && result.success === false)) {
+          const message = typeof result === "object"
+            ? (result.detail || result.message || result.error || result.error_message)
+            : result;
+          throw new Error(message || "अंतिम सबमिशन में त्रुटि हुई।");
+        }
+
+        response = fallbackResponse;
       }
 
       setPendingDocuments({
