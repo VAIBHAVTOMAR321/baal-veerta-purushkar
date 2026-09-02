@@ -913,21 +913,6 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         </div>
       )}
 
-      {/*   Show validation error count if there are errors */}
-      {Object.keys(combinedErrors).length > 0 && (
-        <div style={{
-          color: "#dc2626",
-          padding: "12px",
-          marginTop: "16px",
-          backgroundColor: "#fef2f2",
-          borderRadius: "8px",
-          border: "1px solid #fca5a5",
-          fontSize: "14px"
-        }}>
-          ⚠️ कृपया सभी अनिवार्य फ़ील्ड भरें ({Object.keys(combinedErrors).length} त्रुटियाँ)
-        </div>
-      )}
-
       <div className="nf-step-actions" style={{
         display: "flex",
         justifyContent: "flex-end",
