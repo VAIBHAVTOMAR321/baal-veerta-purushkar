@@ -297,6 +297,14 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     fetchCurrentProjects();
   }, [currentSelectedDistrict]);
 
+  useEffect(() => {
+    if (data.schoolEnrollmentStatus && data.schoolEnrollmentStatus !== "हाँ") {
+      update({ target: { name: "schoolName", value: "", type: "text" } });
+      update({ target: { name: "schoolAddress", value: "", type: "text" } });
+      update({ target: { name: "currentClass", value: "", type: "text" } });
+    }
+  }, [data.schoolEnrollmentStatus, update]);
+
   const nominatorCategory = data?.nominator_category || "";
   const registeredCategory = String(nominator?.nominator_category || nominatorCategory).toLowerCase();
   const nominatorName = nominator?.full_name || data?.full_name || "";
