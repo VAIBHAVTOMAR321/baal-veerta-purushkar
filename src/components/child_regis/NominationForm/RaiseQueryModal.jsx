@@ -3,15 +3,37 @@ import { useAuth } from "../../login/AuthContext";
 import { FaEye, FaFileAlt } from "react-icons/fa";
 
 const queryEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
-const mediaBaseUrl = "https://mahadevaaya.com";
+const mediaBaseUrl = "http://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/media";
 
 const getDocumentUrl = (value) => {
   if (!value) return "";
-  if (typeof value === "string") {
-    if (/^https?:\/\//i.test(value)) return value;
-    return `${mediaBaseUrl}/${value.replace(/^\/+/, "")}`;
+
+  const raw = String(value).trim();
+  if (!raw) return "";
+
+  let normalizedPath = raw;
+
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const url = new URL(raw);
+      normalizedPath = url.pathname.replace(/^\/+/, "");
+    } catch {
+      normalizedPath = raw.replace(/^https?:\/\/[^/]+\//i, "");
+    }
+  } else {
+    normalizedPath = raw.replace(/^\/+/, "");
   }
-  return "";
+
+  const cleanPath = normalizedPath
+    .replace(/^media\//i, "")
+    .replace(/^applicant_requests\//i, "")
+    .replace(/^balvirtaawardproject\//i, "")
+    .replace(/^balvirtaawardproject_backend\//i, "")
+    .replace(/^\/+/, "");
+
+  if (!cleanPath) return "";
+
+  return `${mediaBaseUrl}/applicant_requests/${cleanPath}`;
 };
 
 const getFileName = (value) => {

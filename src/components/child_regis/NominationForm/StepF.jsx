@@ -8,16 +8,38 @@ const declaration = "मैं/हम यह प्रमाणित करत�
 const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवेदन की कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
 const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/declaration/";
 const registrationEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/";
-const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
+const mediaBaseUrl = "http://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/media";
 const queryEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
 
 const getDocumentUrl = (value) => {
   if (!value) return "";
-  if (typeof value === "string") {
-    if (/^https?:\/\//i.test(value)) return value;
-    return `${mediaBaseUrl}/${value.replace(/^\/+/, "")}`;
+
+  const raw = String(value).trim();
+  if (!raw) return "";
+
+  let normalizedPath = raw;
+
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const url = new URL(raw);
+      normalizedPath = url.pathname.replace(/^\/+/, "");
+    } catch {
+      normalizedPath = raw.replace(/^https?:\/\/[^/]+\//i, "");
+    }
+  } else {
+    normalizedPath = raw.replace(/^\/+/, "");
   }
-  return "";
+
+  const cleanPath = normalizedPath
+    .replace(/^media\//i, "")
+    .replace(/^applicant_requests\//i, "")
+    .replace(/^balvirtaawardproject\//i, "")
+    .replace(/^balvirtaawardproject_backend\//i, "")
+    .replace(/^\/+/, "");
+
+  if (!cleanPath) return "";
+
+  return `${mediaBaseUrl}/applicant_requests/${cleanPath}`;
 };
 const getFileName = (value) => {
   if (!value) return "";
