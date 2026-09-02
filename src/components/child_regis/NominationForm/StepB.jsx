@@ -352,6 +352,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     if (nameFields.includes(name)) {
       const sanitized = value.replace(numericPattern, "");
       update({ target: { name, value: sanitized, type: "text" } });
+    } else if (name === "permanentपिन कोड" || name === "currentपिन कोड") {
+      const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 6);
+      update({ target: { name, value: numericOnly, type: "text" } });
     } else if (name && addressFields.some((field) => name === `current${field}`)) {
       setSameAsPermanent(false);
       update(e);
@@ -446,6 +449,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       if (!data["permanentजनपद"]) errors["permanentजनपद"] = "यह फ़ील्ड अनिवार्य है";
       if (!data["permanentविकासखण्ड/नगर निकाय"]) errors["permanentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
       if (!data["permanentपिन कोड"]?.trim()) errors["permanentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
+      else if (!/^\d{6}$/.test(data["permanentपिन कोड"])) errors["permanentपिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
       if (!data["residence_certificate_number"]?.trim()) errors["residence_certificate_number"] = "यह फ़ील्ड अनिवार्य है";
     }
 
@@ -460,6 +464,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     if (!data["currentजनपद"]) errors["currentजनपद"] = "यह फ़ील्ड अनिवार्य है";
     if (!data["currentविकासखण्ड/नगर निकाय"]) errors["currentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
     if (!data["currentपिन कोड"]?.trim()) errors["currentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
+    else if (!/^\d{6}$/.test(data["currentपिन कोड"])) errors["currentपिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
 
     return errors;
   };
