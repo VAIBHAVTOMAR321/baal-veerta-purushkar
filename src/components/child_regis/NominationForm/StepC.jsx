@@ -20,10 +20,25 @@ const isPart3Submitted = (record) => {
 };
 
 const firstValue = (record, ...keys) => keys.map((key) => record?.[key]).find((value) => value !== undefined && value !== null);
-const normalizePerson = (person) => {
-  if (Array.isArray(person)) {
-    if (person.length >= 4) {
-      const [name, mobile, ageRaw, relation] = person;
+  const normalizePerson = (person) => {
+    if (Array.isArray(person)) {
+      if (person.length >= 4) {
+        const [name, mobile, ageRaw, relation] = person;
+        const ageStr = String(ageRaw || "");
+        let ageYears = "", ageMonths = "", ageDays = "";
+        if (ageStr) {
+          if (ageStr.includes("/")) {
+            const parts = ageStr.split("/");
+            ageYears = parts[0] || "";
+            ageMonths = parts[1] || "";
+            ageDays = parts[2] || "";
+          } else {
+            ageYears = ageStr;
+          }
+        }
+        return { name: name || "", mobile: String(mobile || "").replace(/[^0-9]/g, "").slice(0, 10), ageYears, ageMonths, ageDays, relation: relation || "" };
+      }
+      const [name, ageRaw, relation] = person;
       const ageStr = String(ageRaw || "");
       let ageYears = "", ageMonths = "", ageDays = "";
       if (ageStr) {
@@ -36,46 +51,31 @@ const normalizePerson = (person) => {
           ageYears = ageStr;
         }
       }
-      return { name: name || "", mobile: mobile || "", ageYears, ageMonths, ageDays, relation: relation || "" };
+      return { name: name || "", ageYears, ageMonths, ageDays, relation: relation || "" };
     }
-    const [name, ageRaw, relation] = person;
-    const ageStr = String(ageRaw || "");
+    const name = person?.name || "";
+    const relation = person?.relation || "";
+    const mobile = String(person?.mobile || "").replace(/[^0-9]/g, "").slice(0, 10);
     let ageYears = "", ageMonths = "", ageDays = "";
-    if (ageStr) {
-      if (ageStr.includes("/")) {
-        const parts = ageStr.split("/");
-        ageYears = parts[0] || "";
-        ageMonths = parts[1] || "";
-        ageDays = parts[2] || "";
-      } else {
-        ageYears = ageStr;
+    if (person?.ageYears !== undefined) {
+      ageYears = String(person.ageYears || "");
+      ageMonths = String(person.ageMonths || "");
+      ageDays = String(person.ageDays || "");
+    } else if (person?.age !== undefined) {
+      const ageStr = String(person.age || "");
+      if (ageStr) {
+        if (ageStr.includes("/")) {
+          const parts = ageStr.split("/");
+          ageYears = parts[0] || "";
+          ageMonths = parts[1] || "";
+          ageDays = parts[2] || "";
+        } else {
+          ageYears = ageStr;
+        }
       }
     }
-    return { name: name || "", ageYears, ageMonths, ageDays, relation: relation || "" };
-  }
-  const name = person?.name || "";
-  const relation = person?.relation || "";
-  const mobile = person?.mobile || "";
-  let ageYears = "", ageMonths = "", ageDays = "";
-  if (person?.ageYears !== undefined) {
-    ageYears = String(person.ageYears || "");
-    ageMonths = String(person.ageMonths || "");
-    ageDays = String(person.ageDays || "");
-  } else if (person?.age !== undefined) {
-    const ageStr = String(person.age || "");
-    if (ageStr) {
-      if (ageStr.includes("/")) {
-        const parts = ageStr.split("/");
-        ageYears = parts[0] || "";
-        ageMonths = parts[1] || "";
-        ageDays = parts[2] || "";
-      } else {
-        ageYears = ageStr;
-      }
-    }
-  }
-  return { name, mobile, ageYears, ageMonths, ageDays, relation };
-};
+    return { name, mobile, ageYears, ageMonths, ageDays, relation };
+  };
 const normalizeWitness = (witness) => Array.isArray(witness)
   ? { name: witness[0] || "", mobile: witness[1] || "", address: witness[2] || "", relation: witness[3] || "" }
   : { name: witness?.name || "", mobile: witness?.mobile || "", address: witness?.address || "", relation: witness?.relation || "" };
@@ -188,6 +188,14 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     };
     fetchDistricts();
   }, []);
+
+  useEffect(() => {
+    if (data.firRegistered && data.firRegistered !== "हाँ") {
+      update({ target: { name: "policeStation", value: "", type: "text" } });
+      update({ target: { name: "firNumber", value: "", type: "text" } });
+      update({ target: { name: "firDate", value: "", type: "text" } });
+    }
+  }, [data.firRegistered, update]);
 
   useEffect(() => {
     if (data.actDate && data.birthDate) {
@@ -316,7 +324,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   };
 
   const updatePerson = (index, field, value) => {
-    const next = rescuedPeople.map((person, i) => (i === index ? { ...person, [field]: value } : person));
+    const next = rescuedPeople.map((person, i) => (i === index ? { ...person, [field]: field === "mobile" ? String(value).replace(/[^0-9]/g, "").slice(0, 10) : value } : person));
     setRescuedPeople(next);
     syncPeople(next);
     //   Clear error for this field on change
@@ -355,7 +363,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   };
 
   const updateWitness = (index, field, value) => {
-    const next = witnesses.map((row, i) => (i === index ? { ...row, [field]: value } : row));
+    const next = witnesses.map((row, i) => (i === index ? { ...row, [field]: field === "mobile" ? String(value).replace(/[^0-9]/g, "").slice(0, 10) : value } : row));
     setWitnesses(next);
     syncWitnesses(next);
     //   Clear error for this field on change
@@ -500,11 +508,13 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       (rows || []).forEach((row, index) => {
         const name = String(row?.name || "").trim();
         const ageYears = String(row?.ageYears || "").trim();
+        const mobile = String(row?.mobile || "").trim();
         if (name || ageYears) {
           if (!name) errors[`rescuedPeople.${index}.name`] = "यह फ़ील्ड अनिवार्य है";
           if (!ageYears) errors[`rescuedPeople.${index}.ageYears`] = "यह फ़ील्ड अनिवार्य है";
           if (String(row?.relation || "").trim() === "") errors[`rescuedPeople.${index}.relation`] = "यह फ़ील्ड अनिवार्य है";
-          if (String(row?.mobile || "").trim() === "") errors[`rescuedPeople.${index}.mobile`] = "यह फ़ील्ड अनिवार्य है";
+          if (!mobile) errors[`rescuedPeople.${index}.mobile`] = "यह फ़ील्ड अनिवार्य है";
+          else if (!/^\d{10}$/.test(mobile)) errors[`rescuedPeople.${index}.mobile`] = "मोबाइल नंबर 10 अंकों का होना चाहिए";
         }
       });
     };
@@ -513,8 +523,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       (rows || []).forEach((row, index) => {
         if (["name", "mobile", "address", "relation"].some((field) => String(row?.[field] || "").trim())) {
           ["name", "mobile", "address", "relation"].forEach((field) => {
-            if (!String(row?.[field] || "").trim()) {
+            const value = String(row?.[field] || "").trim();
+            if (!value) {
               errors[`witnesses.${index}.${field}`] = "यह फ़ील्ड अनिवार्य है";
+            } else if (field === "mobile" && !/^\d{10}$/.test(value)) {
+              errors[`witnesses.${index}.${field}`] = "मोबाइल नंबर 10 अंकों का होना चाहिए";
             }
           });
         }
@@ -931,7 +944,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
           {input("11. घटना के संबंध में पुलिस रिपोर्ट/FIR दर्ज है?", "firRegistered", { required: true, options: ["हाँ", "नहीं", "लागू नहीं"] })}
           {input("12. क्या घटना के संबंध में कोई समाचार/मीडिया रिपोर्ट प्रकाशित हुई है?", "mediaPublished", { required: true, options: ["हाँ, प्रकाशित हुई है।", "नहीं, प्रकाशित नहीं हुई है।", "प्रकाशित हुई है किंतु आवेदन हेतु उपलब्ध नहीं है।"], fieldClassName: "nf-media-field" })}
         </div>
-        {data.firRegistered === "हाँ" && <div className="nf-grid nf-conditional">{input("थाना", "policeStation", { required: true })}{input("FIR संख्या", "firNumber", { required: true })}{input("FIR दिनांक", "firDate", { required: true, type: "date" })}</div>}
+        {data.firRegistered === "हाँ" && <div className="nf-grid nf-conditional">{input("थाना", "policeStation", { required: true })}{input("FIR संख्या", "firNumber", { required: true })}{input("FIR दिनांक", "firDate", { required: true, type: "date", max: today })}</div>}
       </div>
 
     </section>
