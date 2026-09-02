@@ -206,6 +206,13 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
           if (fieldName && record.full_name && !data[fieldName]) {
             update({ target: { name: fieldName, value: record.full_name, type: "text" } });
           }
+
+          if (!data.childMobile && record.phone) {
+            const mobileValue = String(record.phone || "").replace(/[^0-9]/g, "").slice(0, 10);
+            if (mobileValue) {
+              update({ target: { name: "childMobile", value: mobileValue, type: "text" } });
+            }
+          }
         }
       } catch (fetchError) {
         console.error("Failed to fetch nominator details:", fetchError);
