@@ -54,7 +54,15 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const [queryData, setQueryData] = useState(null);
   const [queryLoading, setQueryLoading] = useState(false);
   const [hasSubmittedQuery, setHasSubmittedQuery] = useState(false);
+  const [pendingDocuments, setPendingDocuments] = useState({
+    declarationDocument: null,
+    parentDeclarationDocument: null,
+  });
   const registrationFetchStarted = useRef(false);
+  const manualDocumentEditRef = useRef({
+    declarationDocument: false,
+    parentDeclarationDocument: false,
+  });
 
   const userMobile = data?.mobile_number || data?.mobileNumber || user?.mobile_number || user?.mobile || "";
 
@@ -83,10 +91,10 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
         const record = Array.isArray(responseData) ? responseData[0] : responseData;
         const recordApplicantId = record?.applicant_id;
         if (active && record && (!applicantId || String(recordApplicantId) === String(applicantId))) {
-          if (record.declarationDocument) {
+          if (!manualDocumentEditRef.current.declarationDocument && record.declarationDocument) {
             update({ target: { name: "declarationDocument", value: record.declarationDocument, type: "text" } });
           }
-          if (record.parentDeclarationDocument) {
+          if (!manualDocumentEditRef.current.parentDeclarationDocument && record.parentDeclarationDocument) {
             update({ target: { name: "parentDeclarationDocument", value: record.parentDeclarationDocument, type: "text" } });
           }
           if (record.declarationDocument) {
@@ -147,7 +155,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   }, [data.parentDeclarationAccepted]);
 
   const fetchQueries = async () => {
-    if (!isCompleted || !applicantId) return null;
+    if (!applicantId) return null;
     setQueryLoading(true);
     try {
       const response = await authFetch(`${queryEndpoint}?applicant_id=${encodeURIComponent(applicantId)}`);
@@ -157,16 +165,45 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
         const list = (Array.isArray(result.data) ? result.data : [])
           .filter((item) => String(item?.applicant_id || "") === String(applicantId));
         setQueryData(list);
-        setHasSubmittedQuery(list.length > 0);
+        const hasQuery = list.length > 0;
+        setHasSubmittedQuery(hasQuery);
         return list;
       }
+      setQueryData(null);
+      setHasSubmittedQuery(false);
     } catch (err) {
       console.error("Failed to fetch queries:", err);
+      setQueryData(null);
+      setHasSubmittedQuery(false);
     } finally {
       setQueryLoading(false);
     }
     return null;
   };
+
+  useEffect(() => {
+    if (!isCompleted || !applicantId) {
+      setQueryData(null);
+      setHasSubmittedQuery(false);
+      return;
+    }
+
+    let active = true;
+    const loadExistingQuery = async () => {
+      const list = await fetchQueries();
+      if (!active) return;
+      if (list?.length) {
+        setQueryMode("view");
+      } else {
+        setQueryMode("create");
+      }
+    };
+
+    loadExistingQuery();
+    return () => {
+      active = false;
+    };
+  }, [isCompleted, applicantId, authFetch]);
 
   const handleRaiseQuery = () => {
     setQueryMode("create");
@@ -174,16 +211,11 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   };
 
   const handleQueryButton = async () => {
-    setShowQueryModal(true);
-    if (hasSubmittedQuery && queryData) {
-      setQueryMode("view");
-      return;
-    }
-    setQueryMode("create");
     const list = await fetchQueries();
-    if (list && list.length > 0) {
-      setQueryMode("view");
-    }
+    const hasExistingQuery = Array.isArray(list) ? list.length > 0 : hasSubmittedQuery;
+
+    setQueryMode(hasExistingQuery ? "view" : "create");
+    setShowQueryModal(true);
   };
 
   const handleQuerySubmitted = async (result) => {
@@ -207,11 +239,15 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
+    manualDocumentEditRef.current.declarationDocument = true;
+    setPendingDocuments((prev) => ({ ...prev, declarationDocument: file }));
     update({ target: { name: "declarationDocument", value: file } });
   };
 
   const handleParentFileChange = (e) => {
     const file = e.target.files?.[0] || null;
+    manualDocumentEditRef.current.parentDeclarationDocument = true;
+    setPendingDocuments((prev) => ({ ...prev, parentDeclarationDocument: file }));
     update({ target: { name: "parentDeclarationDocument", value: file } });
   };
 
@@ -228,13 +264,32 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
     }
   };
 
+  const getEffectiveDocumentValue = (fieldName) => {
+    const pendingValue = pendingDocuments[fieldName];
+    if (pendingValue instanceof File) return pendingValue;
+
+    const currentValue = data?.[fieldName];
+    if (currentValue instanceof File) return currentValue;
+    if (currentValue && typeof currentValue === "string" && currentValue.trim()) return currentValue;
+
+    return null;
+  };
+
   const handleFinalSubmit = async () => {
     if (!canSubmit || isCompleted || submitting) return;
 
+    const declarationValue = getEffectiveDocumentValue("declarationDocument");
+    const parentDeclarationValue = getEffectiveDocumentValue("parentDeclarationDocument");
+
+    if (!declarationValue || !parentDeclarationValue) {
+      setSubmitError("कृपया दोनों घोषणा दस्तावेज़ अपलोड/चुनें।");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("applicant_id", applicantId);
-    formData.append("declarationDocument", data.declarationDocument);
-    formData.append("parentDeclarationDocument", data.parentDeclarationDocument);
+    if (declarationValue) formData.append("declarationDocument", declarationValue);
+    if (parentDeclarationValue) formData.append("parentDeclarationDocument", parentDeclarationValue);
 
     setSubmitting(true);
     setSubmitError("");
@@ -252,6 +307,14 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
         throw new Error(message || "अंतिम सबमिशन में त्रुटि हुई।");
       }
 
+      setPendingDocuments({
+        declarationDocument: null,
+        parentDeclarationDocument: null,
+      });
+      manualDocumentEditRef.current = {
+        declarationDocument: false,
+        parentDeclarationDocument: false,
+      };
       setIsCompleted(true);
       onApplicationCompleted?.(result);
       onSubmit?.();
