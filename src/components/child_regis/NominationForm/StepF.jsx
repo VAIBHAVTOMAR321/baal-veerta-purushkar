@@ -30,16 +30,13 @@ const getDocumentUrl = (value) => {
     normalizedPath = raw.replace(/^\/+/, "");
   }
 
-  const cleanPath = normalizedPath
-    .replace(/^media\//i, "")
-    .replace(/^applicant_requests\//i, "")
-    .replace(/^balvirtaawardproject\//i, "")
-    .replace(/^balvirtaawardproject_backend\//i, "")
-    .replace(/^\/+/, "");
+  if (/^media\//i.test(normalizedPath)) {
+    normalizedPath = normalizedPath.replace(/^media\//i, "");
+  }
 
-  if (!cleanPath) return "";
+  if (!normalizedPath) return "";
 
-  return `${mediaBaseUrl}/applicant_requests/${cleanPath}`;
+  return `${mediaBaseUrl}/${normalizedPath}`;
 };
 const getFileName = (value) => {
   if (!value) return "";
