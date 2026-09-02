@@ -48,6 +48,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const [isCompleted, setIsCompleted] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [nominatorPhoneNumber, setNominatorPhoneNumber] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [showQueryModal, setShowQueryModal] = useState(false);
   const [queryMode, setQueryMode] = useState("create");
@@ -67,7 +68,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const userMobile = data?.mobile_number || data?.mobileNumber || user?.mobile_number || user?.mobile || "";
 
   const applicantId = data?.applicant_id || user?.applicant_id || localStorage.getItem("applicantId") || "";
-  const applicantMobile = data?.mobile_number || data?.childMobile || userMobile;
+  const applicantMobile = data?.mobile_number || data?.phone_number || data?.childMobile || nominatorPhoneNumber || userMobile;
   const district = data?.["permanentजनपद"] || data?.permanentजनपद || data?.district || "System Generated";
   const submissionDate = new Date().toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -141,6 +142,37 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
     fetchRegistrationData();
     return () => { active = false; };
   }, [applicantId, authFetch, update]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchNominatorPhone = async () => {
+      try {
+        const response = await authFetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/");
+        if (!response.ok) return;
+        const result = await response.json();
+        const records = Array.isArray(result?.data) ? result.data : result?.data ? [result.data] : [];
+        const record = records.find((item) => !applicantId || String(item?.applicant_id || "") === String(applicantId)) || records[0];
+        const phone = record?.phone_number || record?.mobile_number || record?.mobile || "";
+
+        if (active && phone) {
+          setNominatorPhoneNumber(phone);
+          if (!data?.phone_number && !data?.mobile_number) {
+            update({ target: { name: "phone_number", value: phone, type: "text" } });
+          }
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch nominator phone number:", fetchError);
+      }
+    };
+
+    if (applicantId || user?.applicant_id) {
+      fetchNominatorPhone();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [applicantId, authFetch, update, user?.applicant_id]);
 
   useEffect(() => {
     if (data.declarationAccepted) {
