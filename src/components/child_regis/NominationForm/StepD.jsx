@@ -76,6 +76,8 @@ const normalizeVideoUrl = (value) => {
   return /^https?:\/\//i.test(trimmedValue) ? trimmedValue : `https://${trimmedValue}`;
 };
 
+const BYTES_PER_MB = 1024 * 1024;
+
 const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDChecked, externalSubmitTrigger, onErrorsChange }) => {
   const { authFetch } = useAuth();
   const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
@@ -160,6 +162,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
     const mimeType = file.type.toLowerCase();
 
     const isPassportPhoto = index === 5;
+    const maxFileSize = index === 7 ? 2 * BYTES_PER_MB : BYTES_PER_MB;
     const currentAllowedExtensions = isPassportPhoto ? ["jpg", "jpeg", "png"] : allowedExtensions;
     const currentAllowedMimeTypes = isPassportPhoto ? ["image/jpeg", "image/jpg", "image/png"] : allowedMimeTypes;
 
@@ -179,6 +182,16 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
           ? `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल JPG, JPEG, PNG फ़ाइलें अपलोड करें।`
           : `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल PDF, JPG, JPEG, PNG फ़ाइलें अपलोड करें।\nHEIC/HEIF और अन्य फॉर्मेट स्वीकार नहीं हैं।`
       );
+      return;
+    }
+
+    if (file.size > maxFileSize) {
+      e.target.value = "";
+      update({ target: { name: `document${index}`, value: null } });
+      setFieldErrors((prev) => ({
+        ...prev,
+        [`document${index}`]: `फ़ाइल का आकार ${maxFileSize / BYTES_PER_MB} MB से अधिक नहीं होना चाहिए।`,
+      }));
       return;
     }
 
@@ -465,6 +478,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
               {isCombinedMedia ? (
                 <div className="nf-field">
                   <small className="nf-hint-note">* यदि एक से अधिक दस्तावेज़ हैं, तो सभी दस्तावेज़ों को एक ही PDF में मर्ज (संयोजित) करके अपलोड करें</small>
+                  <small className="nf-hint-note">अधिकतम फ़ाइल आकार: 2 MB</small>
                   <label htmlFor="nf-document-7-file">समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो</label>
                   <input
                     id="nf-document-7-file"
@@ -577,7 +591,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                   </div>
 
                   <small id={`nf-document-help-${index}`}>
-                    {index === 5 ? "JPG/JPEG/PNG only" : "File Format: PDF/JPG/JPEG/PNG only"} | Max Size: 5MB प्रति दस्तावेज
+                    {index === 5 ? "JPG/JPEG/PNG only" : "File Format: PDF/JPG/JPEG/PNG only"} | Max Size: {index === 7 ? "2MB" : "1MB"} प्रति दस्तावेज
                   </small>
                   {pendingFile && (
                     <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(index)} disabled={isSubmitting}>

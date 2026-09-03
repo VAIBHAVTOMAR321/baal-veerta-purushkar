@@ -4,6 +4,7 @@ import { FaEye, FaFileAlt } from "react-icons/fa";
 
 const queryEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
 const mediaBaseUrl = "http://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/media";
+const MAX_QUERY_FILE_SIZE = 1024 * 1024;
 
 const getDocumentUrl = (value) => {
   if (!value) return "";
@@ -99,6 +100,10 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
       setError("कृपया अभिलेख अपलोड करें।");
       return;
     }
+    if (file.size > MAX_QUERY_FILE_SIZE) {
+      setError("क्वेरी अभिलेख का आकार 1 MB से अधिक नहीं होना चाहिए।");
+      return;
+    }
     setSubmitting(true);
     setError("");
     setSuccess("");
@@ -186,7 +191,17 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
                   <input
                     id="nf-query-file"
                     type="file"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    onChange={(e) => {
+                      const selectedFile = e.target.files?.[0] || null;
+                      if (selectedFile && selectedFile.size > MAX_QUERY_FILE_SIZE) {
+                        e.target.value = "";
+                        setFile(null);
+                        setError("क्वेरी अभिलेख का आकार 1 MB से अधिक नहीं होना चाहिए।");
+                        return;
+                      }
+                      setError("");
+                      setFile(selectedFile);
+                    }}
                     className="nf-document-input"
                   />
                   <span className="nf-document-dropzone-text">
@@ -205,7 +220,7 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
                   )}
                 </label>
                 <span className="nf-document-upload-hint">
-                  PDF, DOC, JPG, PNG (अधिकतम 5MB)
+                  PDF, DOC, JPG, PNG (अधिकतम 1MB)
                 </span>
               </div>
 

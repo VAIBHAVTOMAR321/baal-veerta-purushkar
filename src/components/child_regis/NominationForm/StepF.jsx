@@ -12,6 +12,7 @@ const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproj
 const registrationEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/";
 const mediaBaseUrl = "http://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/media";
 const queryEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
+const MAX_UPLOAD_SIZE = 1024 * 1024;
 
 const getDocumentUrl = (value) => {
   if (!value) return "";
@@ -340,6 +341,12 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
+    if (file && file.size > MAX_UPLOAD_SIZE) {
+      e.target.value = "";
+      setSubmitError("फ़ाइल का आकार 1 MB से अधिक नहीं होना चाहिए।");
+      return;
+    }
+    setSubmitError("");
     manualDocumentEditRef.current.declarationDocument = true;
     setPendingDocuments((prev) => ({ ...prev, declarationDocument: file }));
     update({ target: { name: "declarationDocument", value: file } });
@@ -347,6 +354,12 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
 
   const handleParentFileChange = (e) => {
     const file = e.target.files?.[0] || null;
+    if (file && file.size > MAX_UPLOAD_SIZE) {
+      e.target.value = "";
+      setSubmitError("फ़ाइल का आकार 1 MB से अधिक नहीं होना चाहिए।");
+      return;
+    }
+    setSubmitError("");
     manualDocumentEditRef.current.parentDeclarationDocument = true;
     setPendingDocuments((prev) => ({ ...prev, parentDeclarationDocument: file }));
     update({ target: { name: "parentDeclarationDocument", value: file } });
@@ -384,6 +397,14 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
 
     if (!declarationValue || !parentDeclarationValue) {
       setSubmitError("कृपया दोनों घोषणा दस्तावेज़ अपलोड/चुनें।");
+      return;
+    }
+    if (declarationValue instanceof File && declarationValue.size > MAX_UPLOAD_SIZE) {
+      setSubmitError("नामांकनकर्ता घोषणा फ़ाइल का आकार 1 MB से अधिक नहीं होना चाहिए।");
+      return;
+    }
+    if (parentDeclarationValue instanceof File && parentDeclarationValue.size > MAX_UPLOAD_SIZE) {
+      setSubmitError("अभिभावक घोषणा फ़ाइल का आकार 1 MB से अधिक नहीं होना चाहिए।");
       return;
     }
 
@@ -541,7 +562,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               )}
             </label>
             <span className="nf-document-upload-hint">
-              PDF, DOC, JPG, PNG (अधिकतम 5MB)
+              PDF, DOC, JPG, PNG (अधिकतम 1MB)
             </span>
           </div>
         )}
@@ -612,7 +633,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
               )}
             </label>
             <span className="nf-document-upload-hint">
-              PDF, DOC, JPG, PNG (अधिकतम 5MB)
+              PDF, DOC, JPG, PNG (अधिकतम 1MB)
             </span>
           </div>
         )}
