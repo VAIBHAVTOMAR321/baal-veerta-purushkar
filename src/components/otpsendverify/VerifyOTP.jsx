@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { sendOtpApi, verifyOtpApi } from "./api";
 import "./otp.css";
 
@@ -17,17 +18,25 @@ export const VerifyOTP = ({ show, onClose, mobile, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setError("");
+    console.info("[VerifyOTP] submit", { mobile: mobile ? `${mobile.slice(0, 2)}******${mobile.slice(-2)}` : "<missing>" });
     if (!/^[0-9]{6}$/.test(otp)) {
+      console.error("[VerifyOTP] invalid OTP format", { length: otp.length });
       setError("कृपया 6 अंकों का OTP दर्ज करें।");
       return;
     }
     setLoading(true);
     try {
       const res = await verifyOtpApi(mobile, otp);
+      console.info("[VerifyOTP] success; opening query form", {
+        responseKeys: Object.keys(res || {}),
+        hasAccessToken: Boolean(res?.access),
+      });
       onSuccess && onSuccess(res);
       onClose();
     } catch (err) {
+      console.error("[VerifyOTP] failed", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -50,7 +59,7 @@ export const VerifyOTP = ({ show, onClose, mobile, onSuccess }) => {
 
   if (!show) return null;
 
-  return (
+  return createPortal(
     <div className="otp-modal-overlay" onClick={onClose}>
       <div className="otp-modal" onClick={(e) => e.stopPropagation()}>
         <div className="otp-modal-header">
@@ -92,6 +101,7 @@ export const VerifyOTP = ({ show, onClose, mobile, onSuccess }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

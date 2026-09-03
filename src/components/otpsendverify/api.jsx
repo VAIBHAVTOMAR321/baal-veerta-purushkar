@@ -1,35 +1,63 @@
 const API_BASE = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api";
 
+const maskMobile = (mobile) => {
+  const value = String(mobile || "");
+  return value.length >= 4 ? `${value.slice(0, 2)}******${value.slice(-2)}` : "<missing>";
+};
+
+const summarizeResponse = (res, data) => ({
+  status: res.status,
+  ok: res.ok,
+  success: data?.success,
+  message: data?.detail || data?.message || data?.error,
+  responseKeys: Object.keys(data || {}),
+  hasAccessToken: Boolean(data?.access),
+});
+
 export const sendOtpApi = async (mobile) => {
-  const res = await fetch(`${API_BASE}/send-otp/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone: mobile, role: "user" }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+  console.info("[OTP][send] request", { mobile: maskMobile(mobile), role: "user" });
+  try {
+    const res = await fetch(`${API_BASE}/send-otp/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: mobile, role: "user" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    console.info("[OTP][send] response", summarizeResponse(res, data));
+    if (!res.ok) {
+      throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+    }
+    if (data.success === false) {
+      throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+    }
+    return data;
+  } catch (error) {
+    console.error("[OTP][send] failed", { mobile: maskMobile(mobile), message: error.message, error });
+    throw error;
   }
-  if (data.success === false) {
-    throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
-  }
-  return data;
 };
 
 export const verifyOtpApi = async (mobile, otp) => {
-  const res = await fetch(`${API_BASE}/verify-otp-user/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone: mobile, otp, role: "user" }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+  console.info("[OTP][verify] request", { mobile: maskMobile(mobile), role: "user" });
+  try {
+    const res = await fetch(`${API_BASE}/verify-otp-user/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: mobile, otp, role: "user" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    console.info("[OTP][verify] response", summarizeResponse(res, data));
+    if (!res.ok) {
+      throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+    }
+    if (data.success === false) {
+      throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+    }
+    return data;
+  } catch (error) {
+    console.error("[OTP][verify] failed", { mobile: maskMobile(mobile), message: error.message, error });
+    throw error;
   }
-  if (data.success === false) {
-    throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
-  }
-  return data;
 };
 
 export const submitNominatorPart1 = async (data, token) => {

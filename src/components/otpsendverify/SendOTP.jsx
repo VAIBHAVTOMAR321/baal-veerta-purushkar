@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { sendOtpApi } from "./api";
 import "./otp.css";
 
@@ -13,17 +14,22 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setError("");
+    console.info("[SendOTP] submit", { mobile: mobile ? `${mobile.slice(0, 2)}******${mobile.slice(-2)}` : "<missing>" });
     if (!/^[0-9]{10}$/.test(mobile)) {
+      console.error("[SendOTP] invalid mobile number", { length: mobile.length });
       setError("कृपया वैध 10 अंकों का मोबाइल नंबर दर्ज करें।");
       return;
     }
     setLoading(true);
     try {
       await sendOtpApi(mobile);
-      onSuccess && onSuccess(mobile);
+      console.info("[SendOTP] success; opening verify modal");
       onClose();
+      onSuccess && onSuccess(mobile);
     } catch (err) {
+      console.error("[SendOTP] failed", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -32,7 +38,7 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
 
   if (!show) return null;
 
-  return (
+  return createPortal(
     <div className="otp-modal-overlay" onClick={onClose}>
       <div className="otp-modal" onClick={(e) => e.stopPropagation()}>
         <div className="otp-modal-header">
@@ -64,6 +70,7 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

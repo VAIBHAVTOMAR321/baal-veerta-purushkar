@@ -1,10 +1,106 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Table, Badge, Form, Modal, Button } from "react-bootstrap";
-import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye } from "react-icons/fa";
+import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye, FaIdCard, FaFileAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import ITCellTopNav from "./ITCellTopNav";
 import ITCellLeftNav from "./ITCellLeftNav";
+import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
 
+const mapApiDataToPreviewData = (item) => {
+  if (!item) return null;
+  const s1 = item["step-1"] || {};
+  const s2 = item["step-2"] || {};
+  const s3 = item["step-3"] || {};
+  const s4 = item["step-4"] || {};
+  const s5 = item["step-5"] || {};
+
+  return {
+    applicant_id: item.applicant_id || s1.applicant_id || "",
+    // Step 1: Personal Details (from step-1 only, no nomination)
+    childName: s1.child_full_name || "",
+    fatherName: s1.father_name || "",
+    motherName: s1.mother_name || "",
+    guardianName: s1.guardian_name || "",
+    birthDate: s1.date_of_birth || "",
+    gender: s1.gender || "",
+    resident: s1.permanent_resident_uttarakhand || "",
+    residence_certificate_number: s1.residence_certificate_number || "",
+    childMobile: s1.child_guardian_mobile || "",
+    schoolName: s1.school_name || "",
+    schoolAddress: s1.school_address || "",
+    currentClass: s1.current_class || "",
+
+    // Addresses
+    "currentग्राम/मोहल्ला": s1.current_village || "",
+    "currentडाकघर": s1.current_post_office || "",
+    "currentजनपद": s1.current_district || "",
+    "currentविकासखण्ड/नगर निकाय": s1.current_block_local_body || "",
+    "currentपिन कोड": s1.current_pincode || "",
+
+    "permanentग्राम/मोहल्ला": s1.permanent_village || "",
+    "permanentडाकघर": s1.permanent_post_office || "",
+    "permanentजनपद": s1.permanent_district || "",
+    "permanentविकासखण्ड/नगर निकाय": s1.permanent_block_local_body || "",
+    "permanentपिन कोड": s1.permanent_pincode || "",
+    district: s1.permanent_district || "",
+
+    submissionDate: s1.updated_at || s1.created_at || "",
+    step1Status: s1.status || "",
+
+    // Step 2: Incident Details
+    actTitle: s2.incident_title || "",
+    incidentType: s2.incident_type || "",
+    actDate: s2.incident_date || "",
+    incidentAge: s2.age_at_incident || "",
+    actTime: s2.incident_time || "",
+    actPlace: s2.incident_location || "",
+    actDistrict: s2.incident_district || "",
+    shortDescription: s2.incident_description || "",
+    rescuedCount: s2.rescued_persons_description || "",
+    rescuedPersons: s2.rescued_persons || [],
+    rescuedDetails: { people: s2.rescued_persons || [] },
+    eyewitnesses: s2.eyewitnesses || [],
+    firRegistered: s2.fir_status || "",
+    policeStation: s2.police_station || "",
+    firNumber: s2.fir_number || "",
+    firDate: s2.fir_date || "",
+    mediaPublished: s2.media_report_available || "",
+    step2Status: s2.status || "",
+
+    // Step 3: Additional Details
+    otherAward: s3.other_award || "",
+    otherAwardDetails: s3.other_award_details || "",
+    additionalInformation: s3.additional_information || "",
+    step3Status: s3.status || "",
+
+    // Step 4: Documents
+    document0: s4.nominator_id_proof || s5.nominator_id_proof || "",
+    document1: s4.child_aadhaar_identity || s5.child_aadhaar_identity || "",
+    document2: s4.permanent_residence_certificate || s5.permanent_residence_certificate || "",
+    document3: s4.child_birth_age_certificate || s5.child_birth_age_certificate || "",
+    document4: s4.bravery_incident_description || s5.bravery_incident_description || "",
+    document5: s4.child_passport_photo || s5.child_passport_photo || "",
+    document6: s4.fir_police_report || s5.fir_police_report || "",
+    document7: s4.media_report || s5.media_report || "",
+    document8: s4.eyewitness_statements || s5.eyewitness_statements || "",
+    document9: s4.incident_photo_video_url || s5.incident_photo_video_url || "",
+    document10: s4.school_certificate || s5.school_certificate || "",
+    document11: s4.otherSupporting_documents || s5.otherSupporting_documents || "",
+    step4Status: s4.status || "",
+
+    // Step 5: Declarations
+    declarationDocument: s5.declarationDocument || s4.declarationDocument || "",
+    parentDeclarationDocument: s5.parentDeclarationDocument || s4.parentDeclarationDocument || "",
+    step5Status: s5.status || "",
+
+    rawStep1: s1,
+    rawStep2: s2,
+    rawStep3: s3,
+    rawStep4: s4,
+    rawStep5: s5,
+    dpoStatus: item.dpo_status || {},
+  };
+};
 
 const ITCellDashBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -20,6 +116,13 @@ const ITCellDashBoard = () => {
   const [stepStatusFilter, setStepStatusFilter] = useState("");
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showChoiceModal, setShowChoiceModal] = useState(false);
+  const [showFormPreviewModal, setShowFormPreviewModal] = useState(false);
+  const [selectedFormPreviewData, setSelectedFormPreviewData] = useState(null);
+  const [formStatusList, setFormStatusList] = useState([]);
+  const [loadingFormStatus, setLoadingFormStatus] = useState(false);
+  const [formStatusError, setFormStatusError] = useState(null);
+  const [noFormDataAlert, setNoFormDataAlert] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +136,37 @@ const ITCellDashBoard = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const fetchFormStatusData = async () => {
+    try {
+      setLoadingFormStatus(true);
+      setFormStatusError(null);
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/director-itcell/application/status/", {
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        setFormStatusList(result.data);
+        return result.data;
+      } else {
+        setFormStatusList([]);
+        return [];
+      }
+    } catch (err) {
+      console.error("Failed to fetch form status list:", err);
+      setFormStatusError(err.message || "Failed to fetch form status details");
+      return [];
+    } finally {
+      setLoadingFormStatus(false);
+    }
+  };
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -64,6 +198,7 @@ const ITCellDashBoard = () => {
     };
 
     fetchApplications();
+    fetchFormStatusData();
   }, []);
 
    const toggleSidebar = () => {
@@ -106,14 +241,56 @@ const ITCellDashBoard = () => {
       return matchesSearch && matchesProject && matchesDistrict && matchesStepStatus;
     });
 
-    const handleViewDetails = (app) => {
+    const handleViewClick = (app) => {
       setSelectedApplication(app);
+      setNoFormDataAlert(false);
+      setShowChoiceModal(true);
+    };
+
+    const handleOpenRegistrationDetails = (app = selectedApplication) => {
+      setSelectedApplication(app);
+      setShowChoiceModal(false);
       setShowModal(true);
     };
 
-    const handleCloseModal = () => {
+    const handleCloseRegistrationModal = () => {
       setShowModal(false);
-      setSelectedApplication(null);
+    };
+
+    const handleOpenFormDetails = async (app = selectedApplication) => {
+      if (!app) return;
+      setSelectedApplication(app);
+      setNoFormDataAlert(false);
+
+      let currentList = formStatusList;
+      if (!currentList || currentList.length === 0) {
+        currentList = await fetchFormStatusData();
+      }
+
+      const foundRecord = currentList.find(
+        (item) => String(item.applicant_id || "").trim() === String(app.applicant_id || "").trim()
+      );
+
+      if (!foundRecord || !foundRecord["step-1"]) {
+        setNoFormDataAlert(true);
+        return;
+      }
+
+      setShowChoiceModal(false);
+      setShowModal(false);
+      const mapped = mapApiDataToPreviewData(foundRecord);
+      setSelectedFormPreviewData(mapped);
+      setShowFormPreviewModal(true);
+    };
+
+    const handleSwitchToForm = (app = selectedApplication) => {
+      setShowModal(false);
+      handleOpenFormDetails(app);
+    };
+
+    const handleSwitchToRegistration = () => {
+      setShowFormPreviewModal(false);
+      setShowModal(true);
     };
 
    return (
@@ -286,7 +463,7 @@ const ITCellDashBoard = () => {
                             <Button
                               variant="outline-primary"
                               size="sm"
-                              onClick={() => handleViewDetails(app)}
+                              onClick={() => handleViewClick(app)}
                               style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "4px 10px", fontSize: "0.75rem", borderRadius: "6px" }}
                             >
                               <FaEye /> View
@@ -300,7 +477,8 @@ const ITCellDashBoard = () => {
               </div>
             )}
 
-            <Modal show={showModal} onHide={handleCloseModal} size="lg" centered>
+            {/* ── Registration Details Modal (Existing view on view details) ── */}
+            <Modal show={showModal} onHide={handleCloseRegistrationModal} size="lg" centered>
               <Modal.Header closeButton style={{ backgroundColor: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                 <Modal.Title style={{ fontSize: "1.1rem", fontWeight: 700, color: "#17324d" }}>
                   Registration Details
@@ -433,12 +611,120 @@ const ITCellDashBoard = () => {
                   </div>
                 )}
               </Modal.Body>
-              <Modal.Footer style={{ borderTop: "1px solid #e5e7eb", padding: "12px 20px" }}>
-                <Button variant="secondary" onClick={handleCloseModal} style={{ borderRadius: "6px", fontSize: "0.875rem" }}>
+              <Modal.Footer style={{ borderTop: "1px solid #e5e7eb", padding: "12px 20px", display: "flex", justifyContent: "space-between" }}>
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={() => handleSwitchToForm(selectedApplication)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", borderRadius: "6px", fontSize: "0.85rem", fontWeight: 600 }}
+                >
+                  <FaFileAlt /> आवेदन प्रपत्र देखें (Form Details) →
+                </Button>
+                <Button variant="secondary" onClick={handleCloseRegistrationModal} style={{ borderRadius: "6px", fontSize: "0.875rem" }}>
                   Close
                 </Button>
               </Modal.Footer>
             </Modal>
+
+            {/* ── Choice Modal: Ask user to view either Registration Details or Form Details ── */}
+            <Modal show={showChoiceModal} onHide={() => setShowChoiceModal(false)} centered>
+              <Modal.Header closeButton style={{ backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                <Modal.Title style={{ fontSize: "1.05rem", fontWeight: 700, color: "#1e293b" }}>
+                  विवरण चुनें / Choose Details to View
+                </Modal.Title>
+              </Modal.Header>
+              <Modal.Body style={{ padding: "20px" }}>
+                {selectedApplication && (
+                  <div style={{ marginBottom: "16px", padding: "10px 14px", background: "#f1f5f9", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                    <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b" }}>
+                      Applicant ID: <strong style={{ color: "#0f172a" }}>{selectedApplication.applicant_id}</strong>
+                    </p>
+                    <p style={{ margin: "4px 0 0", fontSize: "0.92rem", color: "#0f172a", fontWeight: 600 }}>
+                      {selectedApplication.full_name}
+                    </p>
+                  </div>
+                )}
+
+                {noFormDataAlert && (
+                  <Alert variant="warning" style={{ fontSize: "0.85rem", marginBottom: "16px" }}>
+                    <strong>सूचना:</strong> इस आवेदक द्वारा अभी तक आवेदन प्रपत्र (Step 1) नहीं भरा गया है। आप नीचे दिए गए विकल्प से केवल <strong>पंजीकरण विवरण</strong> देख सकते हैं।
+                  </Alert>
+                )}
+
+                {loadingFormStatus && (
+                  <div className="text-center py-2 mb-3">
+                    <Spinner animation="border" size="sm" variant="primary" />
+                    <span className="ms-2" style={{ fontSize: "0.85rem", color: "#64748b" }}>फॉर्म डेटा लोड हो रहा है...</span>
+                  </div>
+                )}
+
+                <p style={{ fontSize: "0.875rem", color: "#475569", marginBottom: "16px" }}>
+                  कृपया चुनें कि आप कौन सा विवरण देखना चाहते हैं:
+                  <br />
+                  <small style={{ color: "#64748b" }}>Please select which details you would like to view:</small>
+                </p>
+
+                <div className="d-grid gap-3">
+                  <Card
+                    onClick={() => handleOpenRegistrationDetails(selectedApplication)}
+                    style={{ cursor: "pointer", border: "1.5px solid #cbd5e1", borderRadius: "10px", transition: "all 0.2s" }}
+                    className="shadow-sm"
+                  >
+                    <Card.Body className="d-flex align-items-center" style={{ padding: "14px 16px" }}>
+                      <div style={{ width: "42px", height: "42px", borderRadius: "8px", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", marginRight: "14px", flexShrink: 0 }}>
+                        <FaIdCard />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h6 style={{ margin: 0, fontWeight: 700, color: "#1e293b", fontSize: "0.95rem" }}>
+                          1. पंजीकरण विवरण (Registration Details)
+                        </h6>
+                        <p style={{ margin: "3px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                          प्रारंभिक नामांकनकर्ता विवरण, पता एवं पहचान पत्र की जानकारी
+                        </p>
+                      </div>
+                      <Badge bg="primary" style={{ fontSize: "0.72rem", padding: "6px 10px" }}>देखें →</Badge>
+                    </Card.Body>
+                  </Card>
+
+                  <Card
+                    onClick={() => handleOpenFormDetails(selectedApplication)}
+                    style={{ cursor: "pointer", border: "1.5px solid #cbd5e1", borderRadius: "10px", transition: "all 0.2s" }}
+                    className="shadow-sm"
+                  >
+                    <Card.Body className="d-flex align-items-center" style={{ padding: "14px 16px" }}>
+                      <div style={{ width: "42px", height: "42px", borderRadius: "8px", background: "#f0fdf4", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", marginRight: "14px", flexShrink: 0 }}>
+                        <FaFileAlt />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h6 style={{ margin: 0, fontWeight: 700, color: "#1e293b", fontSize: "0.95rem" }}>
+                          2. आवेदन प्रपत्र विवरण (Form Details)
+                        </h6>
+                        <p style={{ margin: "3px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                          चरणबद्ध प्रपत्र (Step 1 से 5), अभिलेख एवं प्रिंट प्रीव्यू
+                        </p>
+                      </div>
+                      <Badge bg="success" style={{ fontSize: "0.72rem", padding: "6px 10px" }}>देखें →</Badge>
+                    </Card.Body>
+                  </Card>
+                </div>
+              </Modal.Body>
+              <Modal.Footer style={{ borderTop: "1px solid #e2e8f0", padding: "10px 20px" }}>
+                <Button variant="secondary" size="sm" onClick={() => setShowChoiceModal(false)} style={{ borderRadius: "6px" }}>
+                  Close
+                </Button>
+              </Modal.Footer>
+            </Modal>
+
+            {/* ── Form View Preview Modal (Identical to user preview & print) ── */}
+            {showFormPreviewModal && selectedFormPreviewData && (
+              <PreviewModal
+                data={selectedFormPreviewData}
+                onClose={() => setShowFormPreviewModal(false)}
+                isApplicationCompleted={true}
+                isITCell={true}
+                onSwitchToRegistration={handleSwitchToRegistration}
+              />
+            )}
           </Container>
         </div>
       </div>

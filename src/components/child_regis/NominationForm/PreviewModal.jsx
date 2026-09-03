@@ -163,16 +163,30 @@ const DocNameCell = ({ label, file }) => {
 };
 
 /* ════════════════════════════════════════════════ */
-const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isApplicationCompleted }) => {
+const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isApplicationCompleted, isITCell = false, onSwitchToRegistration }) => {
   const printRef = useRef(null);
-  const applicationNumber = data?.applicant_id || "System Generated";
+  const applicationNumber = data?.applicant_id || data?.applicationNumber || "System Generated";
   const district = data?.["permanentजनपद"] || data?.district || "-";
 
-  const submissionDate = new Date().toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", hour12: true,
-  }).replace(",", "");
+  const submissionDate = data?.submissionDate && data.submissionDate !== "System Generated"
+    ? (() => {
+        try {
+          const d = new Date(data.submissionDate);
+          if (!isNaN(d.getTime())) {
+            return d.toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric", month: "2-digit", day: "2-digit",
+              hour: "2-digit", minute: "2-digit", hour12: true,
+            }).replace(",", "");
+          }
+        } catch {}
+        return data.submissionDate;
+      })()
+    : new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12: true,
+      }).replace(",", "");
 
   const photoSrc = useMemo(() => getFileSrc(data?.document5), [data?.document5]);
 
@@ -418,6 +432,13 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
             </svg>
             <span>Print</span>
           </button>
+          <div className="nf-pv-step-pills">
+            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step1")?.scrollIntoView({ behavior: "smooth" })}>Step 1</button>
+            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step2")?.scrollIntoView({ behavior: "smooth" })}>Step 2</button>
+            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step3")?.scrollIntoView({ behavior: "smooth" })}>Step 3</button>
+            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step4")?.scrollIntoView({ behavior: "smooth" })}>Step 4</button>
+            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step5")?.scrollIntoView({ behavior: "smooth" })}>Step 5</button>
+          </div>
         </div>
 
         <button type="button" className="nf-pv-x" onClick={onClose} aria-label="Close">×</button>
@@ -436,9 +457,9 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
                  PAGE 1 — आवेदक + वीरता
                  ═══════════════════════════════════════ */}
 
-            {/* ── 1. आवेदक का विवरण ── */}
-            <div className="nf-pv-block">
-              <div className="nf-pv-block-label">आवेदक का विवरण:</div>
+            {/* ── 1. आवेदक का विवरण (Step 1) ── */}
+            <div className="nf-pv-block" id="nf-pv-step1">
+              <div className="nf-pv-block-label">चरण 1 / Step 1: आवेदक का विवरण (Nominee Details):</div>
               <div className="nf-pv-form-id">
                 Form ID: {applicationNumber} (Final Submitted on {submissionDate})
               </div>
@@ -468,9 +489,9 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
               </div>
             </div>
 
-            {/* ── 2. वीरता की घटना का विवरण ── */}
-            <div className="nf-pv-block">
-              <div className="nf-pv-block-label">वीरता की घटना का विवरण:</div>
+            {/* ── 2. वीरता की घटना का विवरण (Step 2) ── */}
+            <div className="nf-pv-block" id="nf-pv-step2">
+              <div className="nf-pv-block-label">चरण 2 / Step 2: वीरता की घटना का विवरण (Bravery Act Details):</div>
               <table className="nf-pv-t4">
                 <tbody>
                   <Row4Full label="घटना का शीर्षक" value={data?.actTitle} />
@@ -483,17 +504,35 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
                     </td>
                   </tr>
                   <Row4Full label="बचाए गये व्यक्तियों का विवरण" value={data?.rescuedCount} />
+                  {Array.isArray(data?.rescuedPersons) && data.rescuedPersons.length > 0 && (
+                    <tr>
+                      <td className="nf-pv-l4">बचाए गए व्यक्ति विवरण</td>
+                      <td className="nf-pv-v4" colSpan="3">
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                          {data.rescuedPersons.map((p, pIdx) => {
+                            const [pName, pMobile, pAge, pRel] = Array.isArray(p) ? p : [p.name, p.mobile, p.age || p.ageYears, p.relation];
+                            if (!pName && !pMobile && !pAge && !pRel) return null;
+                            return (
+                              <span key={pIdx} style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: "4px", fontSize: "0.72rem", border: "1px solid #e2e8f0" }}>
+                                <strong>{pName || "-"}</strong> ({pRel || "-"}) {pAge ? `| आयु: ${pAge}` : ""} {pMobile ? `| मो: ${pMobile}` : ""}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* ═══════════════════════════════════════
-                 PAGE 2 — अतिरिक्त जानकारी + घोषणा
+                 PAGE 2 — अतिरिक्त जानकारी + अभिलेख + घोषणा
                  ═══════════════════════════════════════ */}
 
-            {/* ── 3. अतिरिक्त जानकारी ── */}
-            <div className="nf-pv-block nf-pv-page2-start">
-              <div className="nf-pv-block-label">अतिरिक्त जानकारी एवं अपलोड दस्तावेजों का विवरण:</div>
+            {/* ── 3. अतिरिक्त जानकारी (Step 3) ── */}
+            <div className="nf-pv-block nf-pv-page2-start" id="nf-pv-step3">
+              <div className="nf-pv-block-label">चरण 3 / Step 3: अतिरिक्त जानकारी (Additional Information):</div>
               <table className="nf-pv-t4">
                 <tbody>
                   <tr>
@@ -534,9 +573,15 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
                     <td className="nf-pv-l4" colSpan="3">4. अतिरिक्त टिप्पणी / अन्य महत्वपूर्ण जानकारी</td>
                     <td className="nf-pv-v4">{data?.additionalInformation || "-"}</td>
                   </tr>
+                </tbody>
+              </table>
+            </div>
 
-                  <tr><td colSpan="4" className="nf-pv-sep4" /></tr>
-
+            {/* ── 4. आवश्यक अभिलेख अपलोड (Step 4) ── */}
+            <div className="nf-pv-block" id="nf-pv-step4">
+              <div className="nf-pv-block-label">चरण 4 / Step 4: आवश्यक अभिलेख अपलोड (Uploaded Documents):</div>
+              <table className="nf-pv-t4">
+                <tbody>
                   {docPairs.map((pair, idx) => (
                     <tr key={idx}>
                       <DocNameCell label={pair.left.label} file={data?.[pair.left.key]} />
@@ -562,9 +607,9 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
               </table>
             </div>
 
-            {/* ── 4. घोषणा ── */}
-            <div className="nf-pv-block">
-              <div className="nf-pv-block-label">घोषणा</div>
+            {/* ── 5. घोषणा (Step 5) ── */}
+            <div className="nf-pv-block" id="nf-pv-step5">
+              <div className="nf-pv-block-label">चरण 5 / Step 5: घोषणा एवं सहमति (Declaration):</div>
               <div className="nf-pv-decl-box">
                 <p className="nf-pv-decl-title">नामांकनकर्ता की घोषणा:</p>
                 <p>
@@ -627,12 +672,35 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
 
         {/* ── Footer ── */}
         <div className="nf-pv-footer">
-          <label className="nf-pv-accept">
-            <input type="checkbox" checked={isApplicationCompleted ? true : topAccepted} onChange={(e) => onTopAcceptedChange?.(e.target.checked)} disabled={isApplicationCompleted} />
-            <span>मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे सहमत हूँ।</span>
-          </label>
-          {!isApplicationCompleted && topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
-          <button type="button" className="nf-pv-closebtn" onClick={onClose}>Close</button>
+          {isITCell ? (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginRight: "auto", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#1e293b", background: "#f1f5f9", padding: "4px 10px", borderRadius: "4px", border: "1px solid #cbd5e1" }}>
+                  IT Cell Form View: {applicationNumber}
+                </span>
+                {onSwitchToRegistration && (
+                  <button
+                    type="button"
+                    className="nf-pv-switchbtn"
+                    onClick={onSwitchToRegistration}
+                    style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe", borderRadius: "4px", padding: "5px 12px", fontSize: "0.76rem", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    ← पंजीकरण विवरण देखें (Registration Details)
+                  </button>
+                )}
+              </div>
+              <button type="button" className="nf-pv-closebtn" onClick={onClose}>Close</button>
+            </>
+          ) : (
+            <>
+              <label className="nf-pv-accept">
+                <input type="checkbox" checked={isApplicationCompleted ? true : topAccepted} onChange={(e) => onTopAcceptedChange?.(e.target.checked)} disabled={isApplicationCompleted} />
+                <span>मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे सहमत हूँ।</span>
+              </label>
+              {!isApplicationCompleted && topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
+              <button type="button" className="nf-pv-closebtn" onClick={onClose}>Close</button>
+            </>
+          )}
         </div>
       </div>
     </div>
