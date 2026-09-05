@@ -73,7 +73,7 @@ const StudentRegistration = () => {
       setCheckingPhone(true);
       setPhoneCheckError("");
       try {
-        const response = await fetch(`https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/check-phone/?phone=${encodeURIComponent(mobile)}`);
+        const response = await fetch(`https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/check-phone/?phone=${encodeURIComponent(mobile)}`);
         const data = await response.json();
         if (data.success && data.registered) {
           setPhoneCheckError(data.message || "फ़ोन नंबर पहले से पंजीकृत है। कृपया लॉगिन करें।");
@@ -93,7 +93,7 @@ const StudentRegistration = () => {
     const fetchDistricts = async () => {
       setLoadingDistricts(true);
       try {
-        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/");
+        const response = await fetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/");
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
           setDistricts([...new Set(result.data.map((item) => item.district).filter(Boolean))]);
@@ -117,7 +117,7 @@ const StudentRegistration = () => {
     setProjects([]); // old list clear
     try {
       const response = await fetch(
-        `https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(district)}`
+        `https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(district)}`
       );
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {

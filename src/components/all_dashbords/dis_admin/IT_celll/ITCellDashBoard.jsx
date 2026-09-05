@@ -142,7 +142,7 @@ const ITCellDashBoard = () => {
       setLoadingFormStatus(true);
       setFormStatusError(null);
       const accessToken = localStorage.getItem("accessToken");
-      const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/director-itcell/application/status/", {
+      const response = await fetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/director-itcell/application/status/", {
         headers: {
           "Content-Type": "application/json",
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -174,7 +174,7 @@ const ITCellDashBoard = () => {
         setLoading(true);
         setError(null);
         const accessToken = localStorage.getItem("accessToken");
-        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/it-cell/applications/", {
+        const response = await fetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/it-cell/applications/", {
           headers: {
             "Content-Type": "application/json",
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),

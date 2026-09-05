@@ -49,7 +49,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setLoadingData(true);
       try {
         const response = await authFetch(
-          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/"
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/"
         );
 
         if (!response.ok) {
@@ -178,7 +178,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     const fetchNominator = async () => {
       try {
         const response = await authFetch(
-          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/"
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/"
         );
         if (!response.ok) return;
 
@@ -227,7 +227,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setLoadingDistricts(true);
       try {
         const response = await fetch(
-          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/"
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/"
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
@@ -252,7 +252,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setProjects([]);
       try {
         const response = await fetch(
-          `https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(selectedDistrict)}`
+          `https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(selectedDistrict)}`
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
@@ -279,7 +279,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setLoadingProjects(true);
       try {
         const response = await fetch(
-          `https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(currentSelectedDistrict)}`
+          `https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(currentSelectedDistrict)}`
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
@@ -563,7 +563,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       const method = isCompleted && isEditing ? "PUT" : "POST";
 
       const response = await authFetch(
-        "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/",
+        "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/",
         {
           method: method,
           body: JSON.stringify(payload),

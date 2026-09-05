@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../login/AuthContext";
 
-const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part4/";
+const endpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part4/";
 
 const isPart4Submitted = (record) => {
     const status = String(record?.status || record?.submission_status || "").toLowerCase();

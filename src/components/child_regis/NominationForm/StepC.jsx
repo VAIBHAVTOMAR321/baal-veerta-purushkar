@@ -113,7 +113,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     dataFetchStarted.current = true;
     const fetchPart3Data = async () => {
       try {
-        const response = await authFetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part3/");
+        const response = await authFetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part3/");
         if (!response.ok) return;
         const result = await response.json();
         const record = result.success && (Array.isArray(result.data) ? result.data[0] : result.data);
@@ -175,7 +175,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     const fetchDistricts = async () => {
       setLoadingDistricts(true);
       try {
-        const response = await fetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/");
+        const response = await fetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/");
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
           setDistricts([...new Set(result.data.map((item) => item.district).filter(Boolean))]);
@@ -597,7 +597,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     try {
       console.log("[StepC] Submitting payload:", JSON.stringify(payload, null, 2));
       const response = await authFetch(
-        "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part3/",
+        "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part3/",
         {
           method: isCompleted && isEditing ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },

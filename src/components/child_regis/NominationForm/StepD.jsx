@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../login/AuthContext";
 import { FaEye } from "react-icons/fa";
 
-const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/";
-const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
+const endpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/";
+const mediaBaseUrl = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend";
 
 const documents = [
   ["नामांकनकर्ता का पहचान पत्र", "अनिवार्य"],

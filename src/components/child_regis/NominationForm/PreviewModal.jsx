@@ -64,7 +64,7 @@ const getFileName = (file) => {
 
 const getFileSrc = (file) => {
   if (!file) return null;
-  const mediaBaseUrl = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend";
+  const mediaBaseUrl = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend";
   if (typeof file === "string") {
     const trimmed = String(file).trim();
     if (!trimmed) return null;

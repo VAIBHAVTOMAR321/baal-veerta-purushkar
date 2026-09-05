@@ -130,7 +130,7 @@ function Home() {
       if (!password.trim()) { setError("कृपया पासवर्ड दर्ज करें।"); return; }
       try {
         const response = await fetch(
-          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/login/",
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/login/",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -161,7 +161,7 @@ function Home() {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/send-otp-password-change/",
+        "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/send-otp-password-change/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -187,7 +187,7 @@ function Home() {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/verify-otp-password-change/",
+        "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/verify-otp-password-change/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -220,7 +220,7 @@ function Home() {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/change-password/",
+        "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/change-password/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

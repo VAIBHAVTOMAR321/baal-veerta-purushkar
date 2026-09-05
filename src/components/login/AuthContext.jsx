@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     isRefreshingRef.current = true;
 
     try {
-      const refreshResponse = await fetch('https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/refresh-token/', {
+      const refreshResponse = await fetch('https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/refresh-token/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh: refreshToken }),

@@ -1,4 +1,4 @@
-const API_BASE = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api";
+const API_BASE = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api";
 
 const maskMobile = (mobile) => {
   const value = String(mobile || "");

@@ -8,10 +8,11 @@ import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 
 const declaration = "मैं/हम यह प्रमाणित करते हैं कि इस ऑनलाइन नामांकन प्रपत्र में मेरे/हमारे द्वारा उपलब्ध कराई गई समस्त जानकारी एवं संलग्न अभिलेख मेरे/हमारे ज्ञान एवं विश्वास के अनुसार सत्य एवं सही हैं। उपरोक्त आवेदन में मेरे/हमारे द्वारा कोई महत्वपूर्ण तथ्य छिपाया नहीं गया है। तथा मुख्यमंत्री राज्य बाल पुरुष्कार हेतु नामांकन योग्य है।";
 const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवेदन की कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
-const endpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/declaration/";
-const registrationEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/";
-const mediaBaseUrl = "http://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/media";
-const queryEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
+const endpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/declaration/";
+const registrationEndpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/";
+const mediaBaseUrl =
+  "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/media";
+const queryEndpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
 const MAX_UPLOAD_SIZE = 1024 * 1024;
 
 const getDocumentUrl = (value) => {
@@ -171,7 +172,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
     let active = true;
     const fetchNominatorPhone = async () => {
       try {
-        const response = await authFetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/");
+        const response = await authFetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/");
         if (!response.ok) return;
         const result = await response.json();
         const records = Array.isArray(result?.data) ? result.data : result?.data ? [result.data] : [];
@@ -263,7 +264,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const getOrFetchPhone = async () => {
     if (nominatorPhoneNumber) return nominatorPhoneNumber;
     try {
-      const response = await authFetch("https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/");
+      const response = await authFetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/");
       if (response.ok) {
         const result = await response.json();
         const records = Array.isArray(result?.data) ? result.data : result?.data ? [result.data] : [];

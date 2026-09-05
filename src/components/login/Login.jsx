@@ -70,7 +70,7 @@ function Login() {
       try {
         const isITCell = loginType === "it_cell";
         const response = await fetch(
-          "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/login/",
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/login/",
           {
             method: "POST",
             headers: {

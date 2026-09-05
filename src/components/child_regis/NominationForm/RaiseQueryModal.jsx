@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../login/AuthContext";
 import { FaEye, FaFileAlt } from "react-icons/fa";
 
-const queryEndpoint = "https://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
+const queryEndpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
 const mediaBaseUrl = "http://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/media";
 const MAX_QUERY_FILE_SIZE = 1024 * 1024;
 
