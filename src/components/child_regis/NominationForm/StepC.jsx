@@ -403,9 +403,18 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         return [person.name, person.mobile || "", ageStr, person.relation || ""];
       });
 
-    const eyewitnesses = witnesses
-      .filter((witness) => String(witness.name || "").trim() !== "")
-      .map((witness) => [witness.name, witness.mobile || "", witness.address || "", witness.relation || ""]);
+   const eyewitnesses = witnesses
+  .filter((witness) =>
+    ["name", "mobile", "address", "relation"].some(
+      (field) => String(witness?.[field] || "").trim() !== ""
+    )
+  )
+  .map((witness) => [
+    witness.name || "",
+    witness.mobile || "",
+    witness.address || "",
+    witness.relation || "",
+  ]);
 
     const payload = {
       applicant_id: applicantId,

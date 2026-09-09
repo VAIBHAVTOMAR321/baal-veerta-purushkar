@@ -93,15 +93,71 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
 
   // ★ FIX: Track previous trigger value to only respond to CHANGES, not stale mount value
   const prevTriggerRef = useRef(externalSubmitTrigger);
+  useEffect(() => {
+  // If there are no actual witness details in Step 2,
+  // remove the witness document from Step 4 state.
+  if (!hasWitnessData(data.witnesses)) {
+    if (data.document8) {
+      update({
+        target: {
+          name: "document8",
+          value: null,
+          type: "text",
+        },
+      });
+    }
 
+    setPendingDocuments((prev) => {
+      if (!prev.document8) return prev;
+
+      const next = { ...prev };
+      delete next.document8;
+      return next;
+    });
+
+    setFieldErrors((prev) => {
+      if (!prev.document8) return prev;
+
+      const next = { ...prev };
+      delete next.document8;
+      return next;
+    });
+  }
+}, [data.witnesses, data.document8, update]);
   const visibleDocumentIndices = documents.reduce((indices, _, index) => {
-    if (index === 9) return indices;
-    const isFirApplicable = index !== 6 || String(data.firRegistered || "").trim() === "हाँ";
-    const isSchoolApplicable = index !== 10 || hasValue(data.currentClass);
-    const isMediaApplicable = index !== 7 || String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
-    if (isFirApplicable && isSchoolApplicable && isMediaApplicable) indices.push(index);
-    return indices;
-  }, []);
+  // document9 is handled inside document7/media section
+  if (index === 9) return indices;
+
+  const isFirApplicable =
+    index !== 6 ||
+    String(data.firRegistered || "").trim() === "हाँ";
+
+  const isSchoolApplicable =
+    index !== 10 ||
+    hasValue(data.currentClass);
+
+  const isMediaApplicable =
+    index !== 7 ||
+    String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+
+  // ★ IMPORTANT:
+  // Witness document (index 8) should ONLY appear
+  // when at least one witness field is actually filled in Step 2.
+  const isWitnessApplicable =
+    index !== 8 ||
+    hasWitnessData(data.witnesses);
+
+  if (
+    isFirApplicable &&
+    isSchoolApplicable &&
+    isMediaApplicable &&
+    isWitnessApplicable
+  ) {
+    indices.push(index);
+  }
+
+  return indices;
+}, []);
 
   useEffect(() => {
     if (dataFetchStarted.current) return;
