@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Navbar, Nav, Button, Container } from "react-bootstrap";
+import { Navbar, Nav, Container } from "react-bootstrap";
 import { NavLink, Link } from "react-router-dom";
 import ulLogo from "../../assets/images/uk_logo.jpeg";
 import "../../assets/css/navbar.css";
@@ -46,7 +46,11 @@ function NavBar() {
           {/* Navigation Links */}
           <Nav className="me-auto">
             {/* Home */}
-            <Nav.Link
+           
+          </Nav>
+
+          <Nav className="align-items-center">
+             <Nav.Link
               as={NavLink}
               to="/"
               end
@@ -54,19 +58,6 @@ function NavBar() {
             >
               Home
             </Nav.Link>
-          </Nav>
-
-          {/* Login */}
-          <Nav className="align-items-center">
-            <Button
-              as={Link}
-              to="/Login"
-              variant="primary"
-              className="primary-btn"
-              size="sm"
-            >
-              Login
-            </Button>
           </Nav>
         </Navbar.Collapse>
       </Container>

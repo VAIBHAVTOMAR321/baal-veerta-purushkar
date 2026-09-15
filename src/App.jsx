@@ -45,7 +45,8 @@ const AppContent = () => {
           <Route path="/StudentRegistration" element={<StudentRegistration />} />
           <Route path="/StepB" element={<StepB />} />
           <Route path="/NominationForm" element={<NominationForm />} />
-          <Route path="/login" element={<Login />} />
+         
+          <Route path="/Login" element={<Login />} />
           <Route path="/StepD" element={<StepD />} />
           <Route path="/StepE" element={<StepE />} />
           <Route path="/StepF" element={<StepF />} />
