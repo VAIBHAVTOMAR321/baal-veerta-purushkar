@@ -712,12 +712,7 @@ function Home() {
                 </Card.Body>
               </Card>
 
-              <div className="login-footer-info">
-                
-                <p className="copyright">
-                  © 2026 महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड
-                </p>
-              </div>
+             
             </div>
           </Col>
         </Row>

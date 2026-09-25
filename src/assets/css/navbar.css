@@ -27,7 +27,10 @@
   align-items: center;
   transition: color 0.3s ease;
 }
-
+.main-container-style img{
+  width: 52px;
+  height: 52px;
+}
 .drc-navbar .navbar-brand:hover,
 .drc-navbar .navbar-brand:focus {
   color: #e3f2fd !important;

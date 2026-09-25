@@ -26,7 +26,7 @@ function NavBar() {
       className={`drc-navbar ${scrolled ? "navbar-scrolled" : ""}`}
       fixed="top"
     >
-      <Container>
+      <Container className="main-container-style">
         {/* Logo & Brand */}
         <Navbar.Brand as={Link} to="/">
           <img

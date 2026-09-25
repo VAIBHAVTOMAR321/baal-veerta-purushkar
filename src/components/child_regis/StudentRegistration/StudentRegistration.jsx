@@ -384,9 +384,7 @@ const StudentRegistration = () => {
                 <p>कृपया सभी आवश्यक जानकारी दर्ज करें</p>
               </div>
             </div>
-            <button type="button" className="sr-eligibility-btn" onClick={() => setShowEligibility(!showEligibility)}>
-              पात्रता जांचें
-            </button>
+          
           </div>
 
           {showEligibility && (
