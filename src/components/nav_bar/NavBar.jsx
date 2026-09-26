@@ -52,11 +52,11 @@ function NavBar() {
           <Nav className="align-items-center">
              <Nav.Link
               as={NavLink}
-              to="/"
+              to="/StudentRegistration"
               end
               className="nav-link-custom"
             >
-              Home
+              Register
             </Nav.Link>
               <Nav.Link
               as={NavLink}
