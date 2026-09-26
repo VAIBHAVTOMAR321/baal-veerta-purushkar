@@ -15,6 +15,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../login/AuthContext";
 import "./UserLogin.css";
 
+// NOTE: Update the paths below to match where your images are actually located in your project
+import Rekha from "../../assets/images/rekha.png";
+import CM from "../../assets/images/cm.png";
+
 function LoginPortal() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -378,18 +382,45 @@ function LoginPortal() {
     <div className="home-page">
       <div className="home-main-card">
 
-        {/* ── FULL-WIDTH SCHEME TITLE ── */}
+        {/* ── FULL-WIDTH SCHEME TITLE WITH IMAGES ── */}
         <div className="scheme-title-block">
-          <div className="scheme-badge">
-            ऑनलाइन नामांकन प्रपत्र 2026-27
-          </div>
-          <h2 className="scheme-title">
-            मुख्यमंत्री राज्य बाल वीरता पुरस्कार
-          </h2>
-          <p className="scheme-name-en">
-            Chief Minister State Child Bravery Award
-          </p>
-        </div>
+          <div className="scheme-title-wrapper">
+            
+            {/* Left Image: CM Pushkar Singh Dhami */}
+            <div className="scheme-authority-img">
+              <img 
+                src={CM}
+                alt="मुख्यमंत्री पुष्कर सिंह धामी" 
+                className="authority-photo"
+              />
+              <span className="authority-name">Sh. Pushkar Singh Dhami<br/>Hon'ble Chief Minister
+Uttarakhand</span>
+            </div>
+
+            {/* Center Text */}
+            <div className="scheme-title-text">
+              <div className="scheme-badge">
+                ऑनलाइन नामांकन प्रपत्र 2026-27
+              </div>
+              <h2 className="scheme-title">
+                मुख्यमंत्री राज्य बाल वीरता पुरस्कार
+              </h2>
+              <p className="scheme-name-en">
+                Chief Minister State Child Bravery Award
+              </p>
+            </div>
+
+            {/* Right Image: Director */}
+            <div className="scheme-authority-img">
+              <img 
+                src={Rekha} 
+                alt="Rekha" 
+                className="authority-photo"
+              />
+              <span className="authority-name">Smt. Rekha Arya<br/>Cabinet Minister of Women and Child Welfare</span>
+            </div>
+          </div> {/* END scheme-title-wrapper */}
+        </div> {/* END scheme-title-block */}
 
         <Row className="g-0 home-row">
 
@@ -443,8 +474,6 @@ function LoginPortal() {
                       );
                     })}
                   </div>
-
-                 
 
                   <div className="registration-steps-col">
                     {registrationSteps.slice(4).map((step, index) => {
@@ -505,49 +534,30 @@ function LoginPortal() {
 
                 </div>
               </div>
-                     {/* ── SCHEME DOCUMENTS (Desktop: after Step D) ── */}
+                     
+              {/* ── SCHEME DOCUMENTS (Desktop: after Step D) ── */}
+              <div className="scheme-documents-section desktop-only">
+                <h4 className="scheme-documents-heading">योजना संबंधी अभिलेख</h4>
+                <Link
+                  to="/GOV.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="scheme-documents-link"
+                >
+                  <FaFileAlt className="pdf-icon" />
+                  मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
+                </Link>
+                <Link
+                  to="/vikupti.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="scheme-documents-link"
+                >
+                  <FaFileAlt className="pdf-icon" />
+                  मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी विज्ञप्ति
+                </Link>
+              </div>
 
-                  <div className="scheme-documents-section desktop-only">
-
-                    <h4 className="scheme-documents-heading">योजना संबंधी अभिलेख</h4>
-
-                    <Link
-
-                      to="/GOV.pdf"
-
-                      target="_blank"
-
-                      rel="noopener noreferrer"
-
-                      className="scheme-documents-link"
-
-                    >
-
-                      <FaFileAlt className="pdf-icon" />
-
-                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
-
-                    </Link>
-
-                    <Link
-
-                      to="/vikupti.pdf"
-
-                      target="_blank"
-
-                      rel="noopener noreferrer"
-
-                      className="scheme-documents-link"
-
-                    >
-
-                      <FaFileAlt className="pdf-icon" />
-
-                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी विज्ञप्ति
-
-                    </Link>
-
-                  </div>
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
               <div className="info-section">
                 <button
@@ -575,8 +585,6 @@ function LoginPortal() {
                   </ol>
                 </div>
               </div>
-
-             
 
             </div>
 
