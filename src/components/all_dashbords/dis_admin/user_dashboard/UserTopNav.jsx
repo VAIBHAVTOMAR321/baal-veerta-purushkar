@@ -17,11 +17,13 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../login/AuthContext";
 
 
 
 function UserTopNav({ toggleSidebar }) {
   const navigate = useNavigate();
+  const { authFetch } = useAuth();
 
   // State to track if the API itself failed (404/500)
   const [apiError, setApiError] = useState(null);
@@ -35,6 +37,36 @@ function UserTopNav({ toggleSidebar }) {
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
 
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const response = await authFetch(
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/"
+        );
+        if (!response.ok) return;
+        const result = await response.json();
+        const records = Array.isArray(result?.data)
+          ? result.data
+          : result?.data
+          ? [result.data]
+          : [];
+        const record = records[0];
+        if (record) {
+          setUserDetails({
+            full_name: record.full_name || "",
+            profile_picture: record.profile_picture || null,
+          });
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch user details:", fetchError);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserDetails();
+  }, [authFetch]);
+
  
 
   const getDisplayName = () => {
@@ -47,6 +79,10 @@ function UserTopNav({ toggleSidebar }) {
       return profilePicture;
     }
     return null;
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
 
