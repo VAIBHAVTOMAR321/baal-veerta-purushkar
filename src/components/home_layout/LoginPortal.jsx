@@ -401,18 +401,6 @@ function LoginPortal() {
               onScroll={handleContentScroll}
             >
 
-              {/* Mobile-only PDF link */}
-              <Link
-                to="/GOV.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mobile-pdf-link"
-              >
-                <FaFileAlt className="pdf-icon" />
-                योजना की पूरी जानकारी / Scheme Details (PDF)
-              </Link>
-
-
               {/* ── REGISTRATION STEPS ── */}
               <div className="steps-section">
                 <div className="steps-heading-row">
@@ -420,15 +408,6 @@ function LoginPortal() {
                     <FaClipboardList className="steps-heading-icon" />
                     आवेदन प्रक्रिया के चरण
                   </h3>
-                  <Link
-                    to="/GOV.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="steps-pdf-link"
-                  >
-                    <FaFileAlt className="pdf-icon" />
-                    योजना की पूरी जानकारी (PDF)
-                  </Link>
                 </div>
 
                 <div className="registration-steps-grid">
@@ -464,6 +443,9 @@ function LoginPortal() {
                       );
                     })}
                   </div>
+
+                 
+
                   <div className="registration-steps-col">
                     {registrationSteps.slice(4).map((step, index) => {
                       const IconComponent = step.icon;
@@ -496,30 +478,76 @@ function LoginPortal() {
                         
                       );
                     })}
-                    <div className="step-f-pdf-links">
-            <Link
-              to="/declaration1.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="step-f-pdf-link"
-            >
-              <FaFileAlt className="pdf-icon" />
-              घोषणा 1 डाउनलोड करें
-            </Link>
-            <Link
-              to="/declaration2.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="step-f-pdf-link"
-            >
-              <FaFileAlt className="pdf-icon" />
-              घोषणा 2 डाउनलोड करें
-            </Link>
-          </div>
                   </div>
+
+                  {/* ── SCHEME DOCUMENTS (Mobile: after Step F) ── */}
+                  <div className="scheme-documents-section mobile-only">
+                    <h4 className="scheme-documents-heading">योजना संबंधी अभिलेख</h4>
+                    <Link
+                      to="/GOV.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="scheme-documents-link"
+                    >
+                      <FaFileAlt className="pdf-icon" />
+                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
+                    </Link>
+                    <Link
+                      to="/vikupti.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="scheme-documents-link"
+                    >
+                      <FaFileAlt className="pdf-icon" />
+                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी विज्ञप्ति
+                    </Link>
+                  </div>
+
                 </div>
               </div>
+                     {/* ── SCHEME DOCUMENTS (Desktop: after Step D) ── */}
 
+                  <div className="scheme-documents-section desktop-only">
+
+                    <h4 className="scheme-documents-heading">योजना संबंधी अभिलेख</h4>
+
+                    <Link
+
+                      to="/GOV.pdf"
+
+                      target="_blank"
+
+                      rel="noopener noreferrer"
+
+                      className="scheme-documents-link"
+
+                    >
+
+                      <FaFileAlt className="pdf-icon" />
+
+                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
+
+                    </Link>
+
+                    <Link
+
+                      to="/vikupti.pdf"
+
+                      target="_blank"
+
+                      rel="noopener noreferrer"
+
+                      className="scheme-documents-link"
+
+                    >
+
+                      <FaFileAlt className="pdf-icon" />
+
+                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी विज्ञप्ति
+
+                    </Link>
+
+                  </div>
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
               <div className="info-section">
                 <button
@@ -548,17 +576,7 @@ function LoginPortal() {
                 </div>
               </div>
 
-              {/* ── BOTTOM PDF LINK ── */}
-              <div className="scheme-pdf-link">
-                <Link
-                  to="/GOV.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaFileAlt className="pdf-icon" />
-                  योजना की पूरी जानकारी / Scheme Details (PDF)
-                </Link>
-              </div>
+             
 
             </div>
 

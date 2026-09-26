@@ -464,60 +464,9 @@
   font-size: 1.1rem;
 }
 
-.steps-pdf-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: #fff8e1;
-  color: #b45309;
-  border: 1px solid #fcd34d;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.72rem;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  animation: pdfBlink 2s infinite;
-}
-
 @keyframes pdfBlink {
   0%, 100% { opacity: 1; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); }
   50% { opacity: 0.4; box-shadow: 0 2px 6px rgba(251, 191, 36, 0.45); }
-}
-
-.steps-pdf-link:hover {
-  background: #fef3c7;
-  border-color: #f59e0b;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.steps-pdf-link .pdf-icon {
-  font-size: 0.95rem;
-  color: #dc2626;
-}
-
-.mobile-pdf-link {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  background: #fff8e1;
-  color: #b45309;
-  border: 1px solid #fcd34d;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.8rem;
-  text-decoration: none;
-  animation: pdfBlink 2s infinite;
-}
-
-.mobile-pdf-link .pdf-icon {
-  font-size: 1.1rem;
-  color: #dc2626;
 }
 
 .registration-steps-grid {
@@ -530,6 +479,60 @@
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+}
+
+/* Scheme Documents Section */
+.scheme-documents-section {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  background: #f8faff;
+  border: 1px solid #e5eaf2;
+  border-radius: 10px;
+}
+
+.scheme-documents-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #172033;
+}
+
+.scheme-documents-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fff8e1;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  animation: pdfBlink 2s infinite;
+}
+
+.scheme-documents-link:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.scheme-documents-link .pdf-icon {
+  font-size: 0.9rem;
+  color: #dc2626;
+}
+
+/* Responsive visibility */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
 }
 
 /* Document description inside step E */
@@ -1301,12 +1304,12 @@
     display: none;
   }
 
-  .steps-pdf-link {
+  .desktop-only {
     display: none;
   }
 
-  .mobile-pdf-link {
-    display: inline-flex;
+  .mobile-only {
+    display: block;
   }
 
   .home-right-col {
