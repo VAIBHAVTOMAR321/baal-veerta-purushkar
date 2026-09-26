@@ -6,7 +6,7 @@ import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 import { submitNominatorPart1 } from "../../otpsendverify/api";
 
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
-const idTypes = ["आधार कार्ड", "पैन कार्ड", "ड्राइविंग लाइसेंस", "पहचान पत्र (फोटो के साथ)"];
+const idTypes = ["आधार कार्ड", "पैन कार्ड", "ड्राइविंग लाइसेंस", "पहचान पत्र (फोटो के साथ)", "पासपोर्ट", "मतदाता पहचान पत्र"];
 
 const validatePassword = (pwd) => {
   const issues = [];
@@ -268,6 +268,8 @@ const StudentRegistration = () => {
         "पैन कार्ड": "pan",
         "ड्राइविंग लाइसेंस": "driving_license",
         "पहचान पत्र (फोटो के साथ)": "pehchan_patraw",
+        "पासपोर्ट": "passport",
+        "मतदाता पहचान पत्र": "voter_id",
       };
 
       const payload = {
