@@ -26,6 +26,14 @@ const mapApiDataToPreviewData = (item) => {
     resident: s1.permanent_resident_uttarakhand || "",
     residence_certificate_number: s1.residence_certificate_number || "",
     childMobile: s1.child_guardian_mobile || "",
+
+    // Bank Details (nominator part-2)
+    bankAccountHolderType: s2.bank_nominee_relation || s1.bank_nominee_relation || "",
+    bankAccountHolderName: s2.bank_holder_name || s1.bank_holder_name || "",
+    bankName: s2.bank_name || s1.bank_name || "",
+    ifscCode: s2.ifsc_code || s1.ifsc_code || "",
+    bankAccountNumber: s2.bank_acc_no || s1.bank_acc_no || "",
+
     schoolName: s1.school_name || "",
     schoolAddress: s1.school_address || "",
     currentClass: s1.current_class || "",
@@ -86,6 +94,7 @@ const mapApiDataToPreviewData = (item) => {
     document9: s4.incident_photo_video_url || s5.incident_photo_video_url || "",
     document10: s4.school_certificate || s5.school_certificate || "",
     document11: s4.otherSupporting_documents || s5.otherSupporting_documents || "",
+    document12: s4.bank_detail || s5.bank_detail || "",
     step4Status: s4.status || "",
 
     // Step 5: Declarations
