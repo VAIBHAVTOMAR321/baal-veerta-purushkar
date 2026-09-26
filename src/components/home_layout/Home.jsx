@@ -221,21 +221,35 @@ function Home() {
       step: "E", title: "आवश्यक अभिलेख अपलोड", subtitle: "Document Upload", icon: FaFileAlt, color: "#6f42c1",
       description: (
         <div className="document-description">
-          <ul>
-            <li>नामांकनकर्ता का पहचान पत्र - <span style={{ color: "red", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का आधार कार्ड/पहचान पत्र - <span style={{ color: "red", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बालक / बालिका  का  उत्तराखण्ड का स्थायी निवास प्रमाण पत्र - <span style={{ color: "red", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र - <span style={{ color: "red", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण - <span style={{ color: "red", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का पासपोर्ट आकार का फोटो - <span style={{ color: "red", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>पासबुक के प्रथम पृष्ठ की प्रति - <span style={{ color: "red", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>FIR / पुलिस रिपोर्ट</li>
-            <li>समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो</li>
-            <li>प्रत्यक्षदर्शियों के बयान / प्रमाण</li>
-            <li>वीडियो / फोटो लिंक</li>
-            <li>विद्यालय का प्रमाण पत्र</li>
-            <li>अन्य सहायक अभिलेख</li>
+          
+          {/* हेडिंग: अनिवार्य दस्तावेज़ */}
+          <p style={{ marginTop: "0px", marginBottom: "5px", fontWeight: "bold", color: "#dc3545" }}>
+            नामांकन हेतु निम्नलिखित अभिलेख अनिवार्य रूप से जमा किए जाने होंगे:
+          </p>
+          
+          <ul style={{ marginBottom: "15px" }}>
+            <li>नामांकनकर्ता का पहचान पत्र - <span style={{ color: "#8a1f1f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बच्चे का आधार कार्ड/पहचान पत्र - <span style={{ color: "#8a1f1f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बालक / बालिका का उत्तराखण्ड का स्थायी निवास प्रमाण पत्र - <span style={{ color: "#8a1f1f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र - <span style={{ color: "#8a1f1f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण - <span style={{ color: "#8a1f1f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बच्चे का पासपोर्ट आकार का फोटो - <span style={{ color: "#8a1f1f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>पासबुक के प्रथम पृष्ठ की प्रति - <span style={{ color: "#8a1f1f", fontWeight: "bold" }}>अनिवार्य</span></li>
           </ul>
+          
+          {/* हेडिंग: जहां लागू हो / यदि लागू हो */}
+          <p style={{ marginTop: "10px", marginBottom: "5px", fontWeight: "bold", color: "#0d6efd" }}>
+            आवेदनकर्ता द्वारा दिए गए प्रश्नों के उत्तर के आधार पर आवेदनकर्ता पर लागू होने की स्थिति निम्न अभिलेख भी जमा किए जाएंगे:
+          </p>
+          
+          <ul>
+            <li>FIR/पुलिस रिपोर्ट - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>जहां लागू हो</span></li>
+            <li>घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>जहां लागू हो</span></li>
+            <li>प्रत्यक्षदर्शियों के बयान/प्रमाण - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>यदि लागू हो</span></li>
+            <li>विद्यालय का प्रमाण पत्र - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>यदि लागू हो</span></li>
+            <li>अन्य सहायक अभिलेख - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>यदि लागू हो</span></li>
+          </ul>
+          
           <strong>सभी आवश्यक दस्तावेज़ अपलोड करें।</strong>
         </div>
       )
