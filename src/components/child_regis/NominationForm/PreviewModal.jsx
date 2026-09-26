@@ -206,6 +206,7 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
     { label: "घटना से संबंधित फोटो/वीडियो", key: "document9" },
     { label: "विद्यालय का प्रमाण पत्र", key: "document10" },
     { label: "अन्य सहायक अभिलेख", key: "document11" },
+    { label: "पासबुक के प्रथम पृष्ठ की प्रति", key: "document12" },
     { label: "नामांकनकर्ता घोषणा अभिलेख", key: "declarationDocument" },
     { label: "अभिभावक घोषणा अभिलेख", key: "parentDeclarationDocument" },
   ];
@@ -478,6 +479,13 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
                     <Row4 l1="वर्तमान विकासखण्ड / नगर निकाय" v1={data?.["currentविकासखण्ड/नगर निकाय"]} l2="स्थायी विकासखण्ड / नगर निकाय" v2={data?.["permanentविकासखण्ड/नगर निकाय"]} />
                     <Row4 l1="वर्तमान जनपद" v1={data?.["currentजनपद"]} l2="स्थायी जनपद" v2={district} />
                     <Row4 l1="वर्तमान पिन कोड" v1={data?.["currentपिन कोड"]} l2="स्थायी पिन कोड" v2={data?.["permanentपिन कोड"]} />
+                    <tr><td colSpan="4" className="nf-pv-sep4" /></tr>
+                    <tr>
+                      <td className="nf-pv-l4" colSpan="4">10. बैंक खाता विवरण ( जिसमें पुरस्कार की धनराशि अंतरित की जानी है )</td>
+                    </tr>
+                    <Row4 l1="खाता किसके नाम पर है" v1={data?.bankAccountHolderType} l2="खाताधारक का पूरा नाम" v2={data?.bankAccountHolderName} />
+                    <Row4 l1="बैंक का नाम" v1={data?.bankName} l2="IFSC कोड" v2={data?.ifscCode} />
+                    <Row4Full label="बैंक खाता संख्या" value={data?.bankAccountNumber} />
                   </tbody>
                 </table>
                 <div className="nf-pv-photo-wrap">

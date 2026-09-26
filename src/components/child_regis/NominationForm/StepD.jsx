@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../login/AuthContext";
 import { FaEye } from "react-icons/fa";
@@ -18,6 +19,7 @@ const documents = [
   ["घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक", "जहां लागू हो"],
   ["विद्यालय का प्रमाण पत्र", "यदि लागू हो"],
   ["अन्य सहायक अभिलेख", "यदि लागू हो"],
+  ["पासबुक के प्रथम पृष्ठ की प्रति", "अनिवार्य"],
 ];
 
 const documentHints = {
@@ -37,6 +39,7 @@ const documentFieldMap = [
   "incident_photo_video_url",
   "school_certificate",
   "otherSupporting_documents",
+  "bank_detail",
 ];
 
 const hasValue = (value) => String(value || "").trim() !== "";
@@ -91,73 +94,48 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
   const [hasPart5Record, setHasPart5Record] = useState(false);
   const dataFetchStarted = useRef(false);
 
-  // ★ FIX: Track previous trigger value to only respond to CHANGES, not stale mount value
   const prevTriggerRef = useRef(externalSubmitTrigger);
+  
   useEffect(() => {
-  // If there are no actual witness details in Step 2,
-  // remove the witness document from Step 4 state.
-  if (!hasWitnessData(data.witnesses)) {
-    if (data.document8) {
-      update({
-        target: {
-          name: "document8",
-          value: null,
-          type: "text",
-        },
+    if (!hasWitnessData(data.witnesses)) {
+      if (data.document8) {
+        update({ target: { name: "document8", value: null, type: "text" } });
+      }
+      setPendingDocuments((prev) => {
+        if (!prev.document8) return prev;
+        const next = { ...prev };
+        delete next.document8;
+        return next;
+      });
+      setFieldErrors((prev) => {
+        if (!prev.document8) return prev;
+        const next = { ...prev };
+        delete next.document8;
+        return next;
       });
     }
+  }, [data.witnesses, data.document8, update]);
 
-    setPendingDocuments((prev) => {
-      if (!prev.document8) return prev;
-
-      const next = { ...prev };
-      delete next.document8;
-      return next;
-    });
-
-    setFieldErrors((prev) => {
-      if (!prev.document8) return prev;
-
-      const next = { ...prev };
-      delete next.document8;
-      return next;
-    });
-  }
-}, [data.witnesses, data.document8, update]);
   const visibleDocumentIndices = documents.reduce((indices, _, index) => {
-  // document9 is handled inside document7/media section
-  if (index === 9) return indices;
+    if (index === 9) return indices;
 
-  const isFirApplicable =
-    index !== 6 ||
-    String(data.firRegistered || "").trim() === "हाँ";
+    // Bank passbook is always visible (index 12)
+    if (index === 12) {
+      indices.push(index);
+      return indices;
+    }
 
-  const isSchoolApplicable =
-    index !== 10 ||
-    hasValue(data.currentClass);
+    const isFirApplicable = index !== 6 || String(data.firRegistered || "").trim() === "हाँ";
+    const isSchoolApplicable = index !== 10 || hasValue(data.currentClass);
+    const isMediaApplicable = index !== 7 || String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+    const isWitnessApplicable = index !== 8 || hasWitnessData(data.witnesses);
 
-  const isMediaApplicable =
-    index !== 7 ||
-    String(data.mediaPublished || "").trim() === "हाँ, प्रकाशित हुई है।";
+    if (isFirApplicable && isSchoolApplicable && isMediaApplicable && isWitnessApplicable) {
+      indices.push(index);
+    }
 
-  // ★ IMPORTANT:
-  // Witness document (index 8) should ONLY appear
-  // when at least one witness field is actually filled in Step 2.
-  const isWitnessApplicable =
-    index !== 8 ||
-    hasWitnessData(data.witnesses);
-
-  if (
-    isFirApplicable &&
-    isSchoolApplicable &&
-    isMediaApplicable &&
-    isWitnessApplicable
-  ) {
-    indices.push(index);
-  }
-
-  return indices;
-}, []);
+    return indices;
+  }, []);
 
   useEffect(() => {
     if (dataFetchStarted.current) return;
@@ -202,7 +180,6 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
     fetchPart5Data();
   }, [authFetch, data.applicant_id, isStepDChecked, onCompleted, update]);
 
-  // ★ FIX: Only fire handleNext when trigger CHANGES, not on mount with stale value
   useEffect(() => {
     if (externalSubmitTrigger !== prevTriggerRef.current) {
       prevTriggerRef.current = externalSubmitTrigger;
@@ -227,12 +204,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
 
     if (!isExtensionAllowed || !isMimeTypeAllowed) {
       e.target.value = "";
-      update({
-        target: {
-          name: `document${index}`,
-          value: null,
-        },
-      });
+      update({ target: { name: `document${index}`, value: null } });
       alert(
         isPassportPhoto
           ? `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल JPG, JPEG फ़ाइलें अपलोड करें।`
@@ -305,7 +277,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
     return formData;
   };
 
-   const validateDocuments = () => {
+  const validateDocuments = () => {
     const errors = {};
     visibleDocumentIndices.forEach((index) => {
       const applicability = documents[index][1];
@@ -436,12 +408,8 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
             padding: "1rem 1.25rem",
             marginBottom: "1.5rem",
             borderRadius: "8px",
-            border: alertInfo.type === "success"
-              ? "1px solid #22c55e"
-              : "1px solid #ef4444",
-            backgroundColor: alertInfo.type === "success"
-              ? "#f0fdf4"
-              : "#fef2f2",
+            border: alertInfo.type === "success" ? "1px solid #22c55e" : "1px solid #ef4444",
+            backgroundColor: alertInfo.type === "success" ? "#f0fdf4" : "#fef2f2",
             color: alertInfo.type === "success" ? "#166534" : "#991b1b",
             fontSize: "1rem",
             fontWeight: "600",
@@ -491,6 +459,18 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
           const pendingFile = pendingDocuments[index];
           const isSubmitting = submittingIndex === index;
 
+          // Alert logic for specific fields connected to previous steps
+          let conditionalAlertMessage = "";
+          if (isFirRequired) {
+            conditionalAlertMessage = "आपने पिछले चरण में FIR दर्ज कराने हेतु 'हाँ' चुना था। यदि यह अभिलेख अपलोड किए जाने हेतु उपलब्ध नहीं है, तो कृपया पिछले चरण में जाकर 'नहीं' चुनें।";
+          } else if (isSchoolRequired) {
+            conditionalAlertMessage = "आपने पिछले चरण में विद्यालय में नामांकित होने हेतु 'हाँ' चुना था। यदि यह अभिलेख अपलोड किए जाने हेतु उपलब्ध नहीं है, तो कृपया पिछले चरण में जाकर 'नहीं' चुनें।";
+          } else if (isCombinedMedia && mediaRequired) {
+            conditionalAlertMessage = "आपने पिछले चरण में मीडिया में प्रकाशित होने हेतु 'हाँ' चुना था। यदि यह अभिलेख अपलोड किए जाने हेतु उपलब्ध नहीं है, तो कृपया पिछले चरण में जाकर 'नहीं' चुनें।";
+          } else if (isWitnessRequired) {
+            conditionalAlertMessage = "आपने पिछले चरण में प्रत्यक्षदर्शी का विवरण दिया है। यदि यह अभिलेख अपलोड किए जाने हेतु उपलब्ध नहीं है, तो कृपया पिछले चरण में जाकर विवरण हटा दें या 'नहीं' चुनें।";
+          }
+
           return (
             <div className="nf-upload" key={label}>
               <div className="nf-upload-header">
@@ -530,6 +510,12 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                   </div>
                 )}
               </div>
+
+              {conditionalAlertMessage && (
+                <small style={{ color: "#dc3545", fontWeight: "bold", display: "block", marginBottom: "8px" }}>
+                  ⚠️ {conditionalAlertMessage}
+                </small>
+              )}
 
               {isCombinedMedia ? (
                 <div className="nf-field">

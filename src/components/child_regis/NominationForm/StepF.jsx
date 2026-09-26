@@ -639,6 +639,21 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
           </div>
         )}
       </div>
+      {(data.declarationDocument || data.parentDeclarationDocument) && !isCompleted && (
+        <div
+          className="nf-notice"
+          style={{
+            background: topAccepted ? "#e4f4ed" : "#fff7ed",
+            borderLeftColor: topAccepted ? "#16715b" : "#e7b858",
+            color: topAccepted ? "#105944" : "#8a4b08",
+            marginTop: "-.75rem",
+          }}
+        >
+          {topAccepted
+            ? "शर्तों की सहमति दर्ज कर ली गई है। अब आप 'Final Submit' बटन दबाकर आवेदन जमा कर सकते हैं।"
+            : "घोषणा अभिलेख जमा करने के पश्चात कृपया 'Preview Application' खोलें और प्रीव्यू में नीचे दिए गए चेकबॉक्स 'मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे सहमत हूँ।' पर चिन्ह अवश्य लगाएँ। चेकबॉक्स चुनने के पश्चात ही 'Final Submit' बटन सक्रिय होगा।"}
+        </div>
+      )}
       <div className="nf-final">
         <h3>अंतिम प्रस्तुतीकरण (Final Submission)</h3>
         <div className="nf-final-actions">
