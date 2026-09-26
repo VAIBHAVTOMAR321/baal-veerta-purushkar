@@ -390,6 +390,13 @@
   line-height: 1.4;
 }
 
+.nf-hint {
+  display: block;
+  margin: .25rem 0 .5rem;
+  color: #617486;
+  font-size: .75rem;
+}
+
 @keyframes nfSpin {
   to {
     transform: rotate(360deg);

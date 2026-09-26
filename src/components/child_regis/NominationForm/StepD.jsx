@@ -80,8 +80,8 @@ const BYTES_PER_MB = 1024 * 1024;
 
 const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDChecked, externalSubmitTrigger, onErrorsChange }) => {
   const { authFetch } = useAuth();
-  const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
-  const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+  const allowedExtensions = ["pdf"];
+  const allowedMimeTypes = ["application/pdf"];
 
   const [loadingData, setLoadingData] = useState(true);
   const [submittingIndex, setSubmittingIndex] = useState(null);
@@ -218,9 +218,9 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
     const mimeType = file.type.toLowerCase();
 
     const isPassportPhoto = index === 5;
-    const maxFileSize = index === 7 ? 2 * BYTES_PER_MB : BYTES_PER_MB;
-    const currentAllowedExtensions = isPassportPhoto ? ["jpg", "jpeg", "png"] : allowedExtensions;
-    const currentAllowedMimeTypes = isPassportPhoto ? ["image/jpeg", "image/jpg", "image/png"] : allowedMimeTypes;
+    const maxFileSize = 3 * BYTES_PER_MB;
+    const currentAllowedExtensions = isPassportPhoto ? ["jpg", "jpeg"] : allowedExtensions;
+    const currentAllowedMimeTypes = isPassportPhoto ? ["image/jpeg", "image/jpg"] : allowedMimeTypes;
 
     const isExtensionAllowed = currentAllowedExtensions.includes(extension);
     const isMimeTypeAllowed = currentAllowedMimeTypes.includes(mimeType);
@@ -235,8 +235,8 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
       });
       alert(
         isPassportPhoto
-          ? `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल JPG, JPEG, PNG फ़ाइलें अपलोड करें।`
-          : `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल PDF, JPG, JPEG, PNG फ़ाइलें अपलोड करें।\nHEIC/HEIF और अन्य फॉर्मेट स्वीकार नहीं हैं।`
+          ? `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल JPG, JPEG फ़ाइलें अपलोड करें।`
+          : `अवैध फ़ाइल प्रकार: "${extension?.toUpperCase() || "Unknown"}"\n\nकृपया केवल PDF फ़ाइलें अपलोड करें।\nHEIC/HEIF और अन्य फॉर्मैट स्वीकार नहीं हैं।`
       );
       return;
     }
@@ -620,7 +620,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                         id={`nf-document-${index}`}
                         name={`document${index}`}
                         type="file"
-                        accept={index === 5 ? ".jpg,.jpeg,.png" : ".pdf,.jpg,.jpeg,.png"}
+                        accept={index === 5 ? ".jpg,.jpeg" : ".pdf"}
                         onChange={(e) => handleFileChange(e, index)}
                         disabled={isSubmitting}
                         aria-describedby={`nf-document-help-${index}`}
@@ -647,7 +647,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                   </div>
 
                   <small id={`nf-document-help-${index}`}>
-                    {index === 5 ? "JPG/JPEG/PNG only" : "File Format: PDF/JPG/JPEG/PNG only"} | Max Size: {index === 7 ? "2MB" : "1MB"} प्रति दस्तावेज
+                    {index === 5 ? "JPG/JPEG only" : "File Format: PDF only"} | Max Size: 3MB प्रति दस्तावेज
                   </small>
                   {pendingFile && (
                     <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(index)} disabled={isSubmitting}>

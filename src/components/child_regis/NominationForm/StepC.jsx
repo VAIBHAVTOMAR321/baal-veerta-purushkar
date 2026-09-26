@@ -482,6 +482,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     if (!data.actPlace || data.actPlace.trim() === "") {
       errors.actPlace = "यह फ़ील्ड अनिवार्य है";
     }
+    if (!data.actTime || data.actTime.trim() === "") {
+      errors.actTime = "यह फ़ील्ड अनिवार्य है";
+    } else if (!/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/.test(data.actTime)) {
+      errors.actTime = "समय HH:MM:SS फॉर्मेट में होना चाहिए (24-घंटे आधारित)";
+    }
     if (!data.actDistrict) {
       errors.actDistrict = "यह फ़ील्ड अनिवार्य है";
     }
@@ -489,16 +494,16 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       errors.shortDescription = "यह फ़ील्ड अनिवार्य है";
     } else {
       const wc = data.shortDescription.trim().split(/\s+/).filter(Boolean).length;
-      if (wc < 100 || wc > 500) {
-        errors.shortDescription = "विवरण कम से कम 100 और अधिकतम 500 शब्दों में होना चाहिए।";
+      if (wc < 100 || wc > 300) {
+        errors.shortDescription = "विवरण कम से कम 100 और अधिकतम 300 शब्दों में होना चाहिए।";
       }
     }
     if (!data.rescuedCount || data.rescuedCount.trim() === "") {
       errors.rescuedCount = "यह फ़ील्ड अनिवार्य है";
     } else {
       const wc = data.rescuedCount.trim().split(/\s+/).filter(Boolean).length;
-      if (wc > 500) {
-        errors.rescuedCount = "विवरण अधिकतम 500 शब्दों में होना चाहिए।";
+      if (wc > 300) {
+        errors.rescuedCount = "विवरण अधिकतम 300 शब्दों में होना चाहिए।";
       }
     }
     if (!data.firRegistered) {
@@ -888,17 +893,72 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         </div>
 
         <div className="nf-grid nf-grid-3">
-          {input("4. घटना का समय", "actTime", { type: "time" })}
+          <div className="nf-field">
+            <label htmlFor="nf-actTime">4. घटना का समय (घंटा.मिनट) <span>*</span></label>
+            <p className="nf-hint-note">फ़ॉर्मेट: HH:MM (24-घंटे आधारित)</p>
+            <div style={{ display: "flex", gap: ".35rem", alignItems: "center", flexWrap: "wrap" }}>
+              {(() => {
+                const parts = data.actTime ? data.actTime.split(":") : ["", "", ""];
+                const curHour = String(parts[0] || "").slice(0, 2);
+                const curMinute = parts[1] ? String(parts[1]).slice(0, 2) : "";
+                return (
+                  <>
+                    <select
+                      id="nf-actHour"
+                      value={curHour}
+                      onChange={(e) => {
+                        const hour = e.target.value;
+                        const minute = curMinute || "00";
+                        update({ target: { name: "actTime", value: hour ? `${hour}:${minute}:00` : "" } });
+                      }}
+                      disabled={isFormLocked || isOverAge}
+                      className={combinedErrors.actTime ? "error-style" : ""}
+                      style={{ flex: 1, minWidth: "80px" }}
+                    >
+                      <option value="">घंटा</option>
+                      {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                    <span style={{ fontWeight: "bold", margin: "0 .2rem" }}>:</span>
+                    <select
+                      id="nf-actMinute"
+                      value={curMinute}
+                      onChange={(e) => {
+                        const minute = e.target.value;
+                        const hour = curHour || "00";
+                        update({ target: { name: "actTime", value: minute ? `${hour}:${minute}:00` : "" } });
+                      }}
+                      disabled={isFormLocked || isOverAge}
+                      className={combinedErrors.actTime ? "error-style" : ""}
+                      style={{ flex: 1, minWidth: "80px" }}
+                    >
+                      <option value="">मिनट</option>
+                      {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0")).map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </>
+                );
+              })()}
+            </div>
+            {data.actTime && (
+              <p style={{ marginTop: ".35rem", color: "#217193", fontSize: ".8rem", fontWeight: 600 }}>
+                चयनित समय: {data.actTime}
+              </p>
+            )}
+            {combinedErrors.actTime && <small className="nf-error">{combinedErrors.actTime}</small>}
+          </div>
           {input("5. घटना का जनपद", "actDistrict", { required: true, options: districts, placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें", disabled: loadingDistricts })}
           {input("6. घटना का स्थान", "actPlace", { required: true })}
         </div>
 
-        {input("7. घटना का संक्षिप्त विवरण", "shortDescription", { required: true, textarea: true, wide: true, words: { min: 100, max: 500 } })}
-        <p className="nf-hint">(कम से कम 100 और अधिकतम 500 शब्द)</p>
+        {input("7. घटना का संक्षिप्त विवरण", "shortDescription", { required: true, textarea: true, wide: true, words: { min: 100, max: 300 } })}
+        <p className="nf-hint">(कम से कम 100 और अधिकतम 300 शब्द)</p>
         <div className="nf-grid">
-          {input("8. घटना के दौरान बच्चे द्वारा बचाये गये व्यक्ति/व्यक्तियों/संस्थानों का संक्षिप्त विवरण", "rescuedCount", { required: true, textarea: true, wide: true, words: { min: 0, max: 500 } })}
+          {input("8. घटना के दौरान बच्चे द्वारा बचाये गये व्यक्ति/व्यक्तियों/संस्थानों का संक्षिप्त विवरण", "rescuedCount", { required: true, textarea: true, wide: true, words: { min: 0, max: 300 } })}
         </div>
-        <p className="nf-hint">(अधिकतम 500 शब्द)</p>
+        <p className="nf-hint">(अधिकतम 300 शब्द)</p>
       </div>
 
       <div className="nf-block">

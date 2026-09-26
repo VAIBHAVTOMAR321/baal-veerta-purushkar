@@ -1,18 +1,39 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../login/AuthContext";
 
-const addressFields = ["ग्राम/मोहल्ला", "तहसील ", "जनपद", "विकासखण्ड/नगर निकाय", "पिन कोड"];
+const addressFields = [
+  "ग्राम/मोहल्ला",
+  "तहसील ",
+  "जनपद",
+  "विकासखण्ड/नगर निकाय",
+  "पिन कोड",
+];
 
 const hasSchoolDetails = (formData) =>
-  [formData?.schoolName, formData?.schoolAddress, formData?.currentClass]
-    .every((value) => String(value || "").trim());
+  [formData?.schoolName, formData?.schoolAddress, formData?.currentClass].every(
+    (value) => String(value || "").trim(),
+  );
 
 const isPart2Submitted = (record) => {
-  const status = String(record?.status || record?.submission_status || "").toLowerCase();
-  return ["completed", "submitted"].includes(status) || record?.submitted === true || record?.is_submitted === true;
+  const status = String(
+    record?.status || record?.submission_status || "",
+  ).toLowerCase();
+  return (
+    ["completed", "submitted"].includes(status) ||
+    record?.submitted === true ||
+    record?.is_submitted === true
+  );
 };
 
-const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErrorsChange }) => {
+const StepB = ({
+  data,
+  update,
+  error,
+  onNext,
+  onCompleted,
+  isStepBChecked,
+  onErrorsChange,
+}) => {
   const { authFetch } = useAuth();
   const [resident, setResident] = useState(data?.resident || "");
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
@@ -25,22 +46,26 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [selectedDistrict, setSelectedDistrict] = useState(data?.["permanentजनपद"] || "");
-  const [currentSelectedDistrict, setCurrentSelectedDistrict] = useState(data?.["currentजनपद"] || "");
+  const [selectedDistrict, setSelectedDistrict] = useState(
+    data?.["permanentजनपद"] || "",
+  );
+  const [currentSelectedDistrict, setCurrentSelectedDistrict] = useState(
+    data?.["currentजनपद"] || "",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editSnapshot, setEditSnapshot] = useState(null);
-  //   CRITICAL FIX: Add local errors state
   const [localErrors, setLocalErrors] = useState({});
   const fetchStarted = useRef(false);
   const dataFetchStarted = useRef(false);
 
-  //   COMBINED ERRORS - merge parent errors with local errors
   const combinedErrors = { ...error, ...localErrors };
 
-  //   Fetch existing part2 data on mount
+  // Bank account holder type options
+  const bankAccountHolderOptions = ["स्वयं", "माता", "पिता", "अभिभावक"];
+
   useEffect(() => {
     if (dataFetchStarted.current) return;
     dataFetchStarted.current = true;
@@ -49,7 +74,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setLoadingData(true);
       try {
         const response = await authFetch(
-          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/"
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/",
         );
 
         if (!response.ok) {
@@ -61,7 +86,11 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         const result = await response.json();
         console.log("Part2 GET response:", result);
 
-        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        if (
+          result.success &&
+          Array.isArray(result.data) &&
+          result.data.length > 0
+        ) {
           const record = result.data[0];
 
           if (isPart2Submitted(record)) {
@@ -79,15 +108,21 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               gender: record.gender,
               resident: record.permanent_resident_uttarakhand,
               residence_certificate_number: record.residence_certificate_number,
+              hasBankAccount: record.bank_detail_available || "",
+              bankAccountHolderType: record.bank_nominee_relation || "",
+              bankAccountHolderName: record.bank_holder_name || "",
+              bankName: record.bank_name || "",
+              ifscCode: record.ifsc_code || "",
+              bankAccountNumber: record.bank_acc_no || "",
               "permanentग्राम/मोहल्ला": record.permanent_village,
               "permanentतहसील ": record.permanent_post_office,
               "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
-              "permanentजनपद": record.permanent_district,
+              permanentजनपद: record.permanent_district,
               "permanentपिन कोड": record.permanent_pincode,
               "currentग्राम/मोहल्ला": record.current_village,
               "currentतहसील ": record.current_post_office,
               "currentविकासखण्ड/नगर निकाय": record.current_block_local_body,
-              "currentजनपद": record.current_district,
+              currentजनपद: record.current_district,
               "currentपिन कोड": record.current_pincode,
               schoolName: record.school_name,
               schoolAddress: record.school_address,
@@ -96,7 +131,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
                 schoolName: record.school_name,
                 schoolAddress: record.school_address,
                 currentClass: record.current_class,
-              }) ? "हाँ" : "नहीं",
+              })
+                ? "हाँ"
+                : "नहीं",
               childMobile: record.child_guardian_mobile,
             };
 
@@ -107,9 +144,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             });
 
             if (record.applicant_id) setApplicantId(record.applicant_id);
-            if (record.permanent_resident_uttarakhand) setResident(record.permanent_resident_uttarakhand);
-            if (record.permanent_district) setSelectedDistrict(record.permanent_district);
-            if (record.current_district) setCurrentSelectedDistrict(record.current_district);
+            if (record.permanent_resident_uttarakhand)
+              setResident(record.permanent_resident_uttarakhand);
+            if (record.permanent_district)
+              setSelectedDistrict(record.permanent_district);
+            if (record.current_district)
+              setCurrentSelectedDistrict(record.current_district);
 
             if (!isStepBChecked) {
               setTimeout(() => {
@@ -127,15 +167,21 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               gender: record.gender,
               resident: record.permanent_resident_uttarakhand,
               residence_certificate_number: record.residence_certificate_number,
+              hasBankAccount: record.bank_detail_available || "",
+              bankAccountHolderType: record.bank_nominee_relation || "",
+              bankAccountHolderName: record.bank_holder_name || "",
+              bankName: record.bank_name || "",
+              ifscCode: record.ifsc_code || "",
+              bankAccountNumber: record.bank_acc_no || "",
               "permanentग्राम/मोहल्ला": record.permanent_village,
               "permanentतहसील ": record.permanent_post_office,
               "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
-              "permanentजनपद": record.permanent_district,
+              permanentजनपद: record.permanent_district,
               "permanentपिन कोड": record.permanent_pincode,
               "currentग्राम/मोहल्ला": record.current_village,
               "currentतहसील ": record.current_post_office,
               "currentविकासखण्ड/नगर निकाय": record.current_block_local_body,
-              "currentजनपद": record.current_district,
+              currentजनपद: record.current_district,
               "currentपिन कोड": record.current_pincode,
               schoolName: record.school_name,
               schoolAddress: record.school_address,
@@ -144,7 +190,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
                 schoolName: record.school_name,
                 schoolAddress: record.school_address,
                 currentClass: record.current_class,
-              }) ? "हाँ" : "नहीं",
+              })
+                ? "हाँ"
+                : "नहीं",
               childMobile: record.child_guardian_mobile,
             };
 
@@ -155,9 +203,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             });
 
             if (record.applicant_id) setApplicantId(record.applicant_id);
-            if (record.permanent_resident_uttarakhand) setResident(record.permanent_resident_uttarakhand);
-            if (record.permanent_district) setSelectedDistrict(record.permanent_district);
-            if (record.current_district) setCurrentSelectedDistrict(record.current_district);
+            if (record.permanent_resident_uttarakhand)
+              setResident(record.permanent_resident_uttarakhand);
+            if (record.permanent_district)
+              setSelectedDistrict(record.permanent_district);
+            if (record.current_district)
+              setCurrentSelectedDistrict(record.current_district);
           }
         }
       } catch (err) {
@@ -170,7 +221,6 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     fetchPart2Data();
   }, [authFetch, update, onCompleted, isStepBChecked]);
 
-  // Fetch nominator-part1 data
   useEffect(() => {
     if (fetchStarted.current) return;
     fetchStarted.current = true;
@@ -178,7 +228,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     const fetchNominator = async () => {
       try {
         const response = await authFetch(
-          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/"
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/",
         );
         if (!response.ok) return;
 
@@ -189,28 +239,50 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
 
           if (record.applicant_id && !applicantId) {
             setApplicantId(record.applicant_id);
-            update({ target: { name: "applicant_id", value: record.applicant_id, type: "text" } });
+            update({
+              target: {
+                name: "applicant_id",
+                value: record.applicant_id,
+                type: "text",
+              },
+            });
           }
 
-          const category = String(record.nominator_category || "").toLowerCase();
+          const category = String(
+            record.nominator_category || "",
+          ).toLowerCase();
           const fieldName = {
             self: "childName",
             "स्वयं बालक / बालिका": "childName",
             mother: "motherName",
-            "माता": "motherName",
+            माता: "motherName",
             father: "fatherName",
-            "पिता": "fatherName",
+            पिता: "fatherName",
             legal_guardian: "guardianName",
             "विधिक अभिभावक": "guardianName",
           }[category];
           if (fieldName && record.full_name && !data[fieldName]) {
-            update({ target: { name: fieldName, value: record.full_name, type: "text" } });
+            update({
+              target: {
+                name: fieldName,
+                value: record.full_name,
+                type: "text",
+              },
+            });
           }
 
           if (!data.childMobile && record.phone) {
-            const mobileValue = String(record.phone || "").replace(/[^0-9]/g, "").slice(0, 10);
+            const mobileValue = String(record.phone || "")
+              .replace(/[^0-9]/g, "")
+              .slice(0, 10);
             if (mobileValue) {
-              update({ target: { name: "childMobile", value: mobileValue, type: "text" } });
+              update({
+                target: {
+                  name: "childMobile",
+                  value: mobileValue,
+                  type: "text",
+                },
+              });
             }
           }
         }
@@ -227,11 +299,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setLoadingDistricts(true);
       try {
         const response = await fetch(
-          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/"
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/",
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
-          setDistricts([...new Set(result.data.map((item) => item.district).filter(Boolean))]);
+          setDistricts([
+            ...new Set(
+              result.data.map((item) => item.district).filter(Boolean),
+            ),
+          ]);
         }
       } catch (error) {
         console.error("Failed to fetch districts:", error);
@@ -252,11 +328,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setProjects([]);
       try {
         const response = await fetch(
-          `https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(selectedDistrict)}`
+          `https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(selectedDistrict)}`,
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
-          setProjects([...new Set(result.data.map((item) => item.project_name).filter(Boolean))]);
+          setProjects([
+            ...new Set(
+              result.data.map((item) => item.project_name).filter(Boolean),
+            ),
+          ]);
         } else {
           setProjects([]);
         }
@@ -279,11 +359,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       setLoadingProjects(true);
       try {
         const response = await fetch(
-          `https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(currentSelectedDistrict)}`
+          `https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/cdpo-dropdown/?district=${encodeURIComponent(currentSelectedDistrict)}`,
         );
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
-          setCurrentProjects([...new Set(result.data.map((item) => item.project_name).filter(Boolean))]);
+          setCurrentProjects([
+            ...new Set(
+              result.data.map((item) => item.project_name).filter(Boolean),
+            ),
+          ]);
         } else {
           setCurrentProjects([]);
         }
@@ -305,29 +389,57 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     }
   }, [data.schoolEnrollmentStatus, update]);
 
+  // Clear bank fields when user selects "नहीं"
+  useEffect(() => {
+    if (data.hasBankAccount && data.hasBankAccount !== "हाँ") {
+      update({
+        target: { name: "bankAccountHolderType", value: "", type: "text" },
+      });
+      update({
+        target: { name: "bankAccountHolderName", value: "", type: "text" },
+      });
+      update({ target: { name: "bankName", value: "", type: "text" } });
+      update({ target: { name: "ifscCode", value: "", type: "text" } });
+      update({
+        target: { name: "bankAccountNumber", value: "", type: "text" },
+      });
+    }
+  }, [data.hasBankAccount, update]);
+
   const nominatorCategory = data?.nominator_category || "";
-  const registeredCategory = String(nominator?.nominator_category || nominatorCategory).toLowerCase();
+  const registeredCategory = String(
+    nominator?.nominator_category || nominatorCategory,
+  ).toLowerCase();
   const nominatorName = nominator?.full_name || data?.full_name || "";
 
-  const isSelf = ["self", "स्वयं", "स्वयं बालक / बालिका"].includes(registeredCategory);
+  const isSelf = ["self", "स्वयं", "स्वयं बालक / बालिका"].includes(
+    registeredCategory,
+  );
   const isMother = ["mother", "माता"].includes(registeredCategory);
   const isFather = ["father", "पिता"].includes(registeredCategory);
-  const isLegalGuardian = ["legal_guardian", "विधिक अभिभावक"].includes(registeredCategory);
+  const isLegalGuardian = ["legal_guardian", "विधिक अभिभावक"].includes(
+    registeredCategory,
+  );
 
   const today = new Date().toISOString().split("T")[0];
 
-  const nameFields = ["childName", "fatherName", "motherName", "guardianName"];
+  const nameFields = [
+    "childName",
+    "fatherName",
+    "motherName",
+    "guardianName",
+    "bankAccountHolderName",
+    "bankName",
+  ];
   const numericPattern = /[0-9]/g;
 
-  //   Helper to clear error for a specific field
   const clearFieldError = (fieldName) => {
-    setLocalErrors(prev => {
+    setLocalErrors((prev) => {
       if (!prev[fieldName]) return prev;
       const next = { ...prev };
       delete next[fieldName];
       return next;
     });
-    // Also clear in parent if callback exists
     if (onErrorsChange) {
       onErrorsChange({ [fieldName]: undefined });
     }
@@ -344,6 +456,18 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         clearFieldError(field);
       });
     }
+    if (name === "hasBankAccount" && value === "नहीं") {
+      [
+        "bankAccountHolderType",
+        "bankAccountHolderName",
+        "bankName",
+        "ifscCode",
+        "bankAccountNumber",
+      ].forEach((field) => {
+        update({ target: { name: field, value: "", type: "text" } });
+        clearFieldError(field);
+      });
+    }
     if (name === "childMobile") {
       const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 10);
       update({ target: { name, value: numericOnly, type: "text" } });
@@ -352,17 +476,36 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       } else {
         setChildMobileError("");
       }
-      //   Clear error on change
       clearFieldError("childMobile");
+      return;
+    }
+    if (name === "bankAccountNumber") {
+      const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 18);
+      update({ target: { name, value: numericOnly, type: "text" } });
+      clearFieldError(name);
+      return;
+    }
+    if (name === "ifscCode") {
+      const upperValue = value.toUpperCase().slice(0, 11);
+      update({ target: { name, value: upperValue, type: "text" } });
+      clearFieldError(name);
       return;
     }
     if (name === "permanentजनपद") {
       setSelectedDistrict(value);
-      update({ target: { name: "permanentविकासखण्ड/नगर निकाय", value: "", type: "text" } });
+      update({
+        target: {
+          name: "permanentविकासखण्ड/नगर निकाय",
+          value: "",
+          type: "text",
+        },
+      });
     }
     if (name === "currentजनपद") {
       setCurrentSelectedDistrict(value);
-      update({ target: { name: "currentविकासखण्ड/नगर निकाय", value: "", type: "text" } });
+      update({
+        target: { name: "currentविकासखण्ड/नगर निकाय", value: "", type: "text" },
+      });
     }
     if (nameFields.includes(name)) {
       const sanitized = value.replace(numericPattern, "");
@@ -370,13 +513,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     } else if (name === "permanentपिन कोड" || name === "currentपिन कोड") {
       const numericOnly = value.replace(/[^0-9]/g, "").slice(0, 6);
       update({ target: { name, value: numericOnly, type: "text" } });
-    } else if (name && addressFields.some((field) => name === `current${field}`)) {
+    } else if (
+      name &&
+      addressFields.some((field) => name === `current${field}`)
+    ) {
       setSameAsPermanent(false);
       update(e);
     } else {
       update(e);
     }
-    //   Clear error on change for all fields
     clearFieldError(name);
   };
 
@@ -388,15 +533,29 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       addressFields.forEach((field) => {
         const permanentValue = data[`permanent${field}`] || "";
         currentAddressParts.push(permanentValue);
-        update({ target: { name: `current${field}`, value: permanentValue, type: "text" } });
+        update({
+          target: {
+            name: `current${field}`,
+            value: permanentValue,
+            type: "text",
+          },
+        });
         if (field === "जनपद") {
           setCurrentSelectedDistrict(permanentValue);
         }
       });
-      update({ target: { name: "currentAddress", value: currentAddressParts.join(", "), type: "text" } });
+      update({
+        target: {
+          name: "currentAddress",
+          value: currentAddressParts.join(", "),
+          type: "text",
+        },
+      });
     } else {
       addressFields.forEach((field) => {
-        update({ target: { name: `current${field}`, value: "", type: "text" } });
+        update({
+          target: { name: `current${field}`, value: "", type: "text" },
+        });
         if (field === "जनपद") {
           setCurrentSelectedDistrict("");
         }
@@ -406,7 +565,8 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   };
 
   const buildPayload = () => {
-    const finalApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id || "";
+    const finalApplicantId =
+      applicantId || data?.applicant_id || nominator?.applicant_id || "";
 
     return {
       applicant_id: finalApplicantId,
@@ -418,6 +578,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       gender: data.gender || "",
       permanent_resident_uttarakhand: data.resident || "",
       residence_certificate_number: data.residence_certificate_number || "",
+      bank_detail_available: data.hasBankAccount || "",
+      bank_nominee_relation:
+        data.hasBankAccount === "हाँ" ? data.bankAccountHolderType || "" : "",
+      bank_holder_name:
+        data.hasBankAccount === "हाँ" ? data.bankAccountHolderName || "" : "",
+      bank_name: data.hasBankAccount === "हाँ" ? data.bankName || "" : "",
+      ifsc_code: data.hasBankAccount === "हाँ" ? data.ifscCode || "" : "",
+      bank_acc_no:
+        data.hasBankAccount === "हाँ" ? data.bankAccountNumber || "" : "",
       permanent_village: data["permanentग्राम/मोहल्ला"] || "",
       permanent_post_office: data["permanentतहसील "] || "",
       permanent_block_local_body: data["permanentविकासखण्ड/नगर निकाय"] || "",
@@ -436,11 +605,11 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     };
   };
 
-  //   IMPROVED: Validate form before submission
   const validateForm = () => {
     const errors = {};
 
-    const currentApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id;
+    const currentApplicantId =
+      applicantId || data?.applicant_id || nominator?.applicant_id;
     if (!currentApplicantId) {
       errors.applicant_id = "Applicant ID not found";
     }
@@ -452,20 +621,54 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     if (!data.gender) errors.gender = "यह फ़ील्ड अनिवार्य है";
     if (!data.resident) errors.resident = "यह फ़ील्ड अनिवार्य है";
 
+    // Bank account validation
+    if (!data.hasBankAccount) {
+      errors.hasBankAccount = "यह फ़ील्ड अनिवार्य है";
+    } else if (data.hasBankAccount === "हाँ") {
+      if (!data.bankAccountHolderType)
+        errors.bankAccountHolderType = "यह फ़ील्ड अनिवार्य है";
+      if (!data.bankAccountHolderName?.trim())
+        errors.bankAccountHolderName = "यह फ़ील्ड अनिवार्य है";
+      if (!data.bankName?.trim()) errors.bankName = "यह फ़ील्ड अनिवार्य है";
+      if (!data.ifscCode?.trim()) {
+        errors.ifscCode = "यह फ़ील्ड अनिवार्य है";
+      } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(data.ifscCode)) {
+        errors.ifscCode =
+          "IFSC कोड सही प्रारूप में नहीं है (जैसे: SBIN0001234)";
+      }
+      if (!data.bankAccountNumber?.trim()) {
+        errors.bankAccountNumber = "यह फ़ील्ड अनिवार्य है";
+      } else if (
+        data.bankAccountNumber.length < 9 ||
+        data.bankAccountNumber.length > 18
+      ) {
+        errors.bankAccountNumber = "खाता संख्या 9 से 18 अंकों की होनी चाहिए";
+      }
+    }
+
     if (schoolEnrollmentStatus === "हाँ") {
       if (!data.schoolName?.trim()) errors.schoolName = "यह फ़ील्ड अनिवार्य है";
-      if (!data.schoolAddress?.trim()) errors.schoolAddress = "यह फ़ील्ड अनिवार्य है";
-      if (!data.currentClass?.trim()) errors.currentClass = "यह फ़ील्ड अनिवार्य है";
+      if (!data.schoolAddress?.trim())
+        errors.schoolAddress = "यह फ़ील्ड अनिवार्य है";
+      if (!data.currentClass?.trim())
+        errors.currentClass = "यह फ़ील्ड अनिवार्य है";
     }
 
     if (data.resident === "हाँ") {
-      if (!data["permanentग्राम/मोहल्ला"]?.trim()) errors["permanentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
-      if (!data["permanentतहसील "]?.trim()) errors["permanentतहसील "] = "यह फ़ील्ड अनिवार्य है";
-      if (!data["permanentजनपद"]) errors["permanentजनपद"] = "यह फ़ील्ड अनिवार्य है";
-      if (!data["permanentविकासखण्ड/नगर निकाय"]) errors["permanentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
-      if (!data["permanentपिन कोड"]?.trim()) errors["permanentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
-      else if (!/^\d{6}$/.test(data["permanentपिन कोड"])) errors["permanentपिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
-      if (!data["residence_certificate_number"]?.trim()) errors["residence_certificate_number"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentग्राम/मोहल्ला"]?.trim())
+        errors["permanentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentतहसील "]?.trim())
+        errors["permanentतहसील "] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentजनपद"])
+        errors["permanentजनपद"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentविकासखण्ड/नगर निकाय"])
+        errors["permanentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentपिन कोड"]?.trim())
+        errors["permanentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
+      else if (!/^\d{6}$/.test(data["permanentपिन कोड"]))
+        errors["permanentपिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
+      if (!data["residence_certificate_number"]?.trim())
+        errors["residence_certificate_number"] = "यह फ़ील्ड अनिवार्य है";
     }
 
     if (!data.childMobile?.trim()) {
@@ -474,26 +677,59 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       errors.childMobile = "मोबाइल नंबर 10 अंकों का होना चाहिए";
     }
 
-    if (!data["currentग्राम/मोहल्ला"]?.trim()) errors["currentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
-    if (!data["currentतहसील "]?.trim()) errors["currentतहसील "] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentग्राम/मोहल्ला"]?.trim())
+      errors["currentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentतहसील "]?.trim())
+      errors["currentतहसील "] = "यह फ़ील्ड अनिवार्य है";
     if (!data["currentजनपद"]) errors["currentजनपद"] = "यह फ़ील्ड अनिवार्य है";
-    if (!data["currentविकासखण्ड/नगर निकाय"]) errors["currentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
-    if (!data["currentपिन कोड"]?.trim()) errors["currentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
-    else if (!/^\d{6}$/.test(data["currentपिन कोड"])) errors["currentपिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
+    if (!data["currentविकासखण्ड/नगर निकाय"])
+      errors["currentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentपिन कोड"]?.trim())
+      errors["currentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
+    else if (!/^\d{6}$/.test(data["currentपिन कोड"]))
+      errors["currentपिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
 
     return errors;
   };
 
   const editableFields = [
-    "childName", "fatherName", "motherName", "guardianName", "childMobile", "birthDate", "gender", "resident",
+    "childName",
+    "fatherName",
+    "motherName",
+    "guardianName",
+    "childMobile",
+    "birthDate",
+    "gender",
+    "resident",
     "residence_certificate_number",
-    "permanentग्राम/मोहल्ला", "permanentतहसील ", "permanentजनपद", "permanentविकासखण्ड/नगर निकाय", "permanentपिन कोड",
-    "currentग्राम/मोहल्ला", "currentतहसील ", "currentजनपद", "currentविकासखण्ड/नगर निकाय", "currentपिन कोड",
-    "schoolName", "schoolAddress", "currentClass", "schoolEnrollmentStatus",
+    "hasBankAccount",
+    "bankAccountHolderType",
+    "bankAccountHolderName",
+    "bankName",
+    "ifscCode",
+    "bankAccountNumber",
+    "permanentग्राम/मोहल्ला",
+    "permanentतहसील ",
+    "permanentजनपद",
+    "permanentविकासखण्ड/नगर निकाय",
+    "permanentपिन कोड",
+    "currentग्राम/मोहल्ला",
+    "currentतहसील ",
+    "currentजनपद",
+    "currentविकासखण्ड/नगर निकाय",
+    "currentपिन कोड",
+    "schoolName",
+    "schoolAddress",
+    "currentClass",
+    "schoolEnrollmentStatus",
   ];
 
   const handleEdit = () => {
-    setEditSnapshot(Object.fromEntries(editableFields.map((field) => [field, data[field] || ""])));
+    setEditSnapshot(
+      Object.fromEntries(
+        editableFields.map((field) => [field, data[field] || ""]),
+      ),
+    );
     setIsEditing(true);
     setSubmitError("");
   };
@@ -510,13 +746,14 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     setIsEditing(false);
     setEditSnapshot(null);
     setSubmitError("");
-    setLocalErrors({}); //   Clear local errors on cancel
+    setLocalErrors({});
   };
 
   const handleSubmit = async (moveToNext = true) => {
     setSubmitError("");
 
-    const currentApplicantId = applicantId || data?.applicant_id || nominator?.applicant_id;
+    const currentApplicantId =
+      applicantId || data?.applicant_id || nominator?.applicant_id;
     if (!currentApplicantId) {
       setSubmitError("Applicant ID नहीं मिला। कृपया पहले Step 1 पूरा करें।");
       return false;
@@ -528,18 +765,15 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     }
 
     const validationErrors = validateForm();
-    
-    //   CRITICAL FIX: Set local errors AND call onErrorsChange
+
     if (Object.keys(validationErrors).length > 0) {
       console.log("[StepB] Validation errors:", validationErrors);
-      setLocalErrors(validationErrors); //   Set local state immediately
-      
-      //   Also propagate to parent if callback exists
+      setLocalErrors(validationErrors);
+
       if (onErrorsChange) {
         onErrorsChange(validationErrors);
       }
-      
-      //   Scroll to first error
+
       requestAnimationFrame(() => {
         const firstKey = Object.keys(validationErrors)[0];
         const el = document.getElementById(`nf-${firstKey}`);
@@ -548,7 +782,6 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       return false;
     }
 
-    //   Clear errors on successful validation
     setLocalErrors({});
     if (onErrorsChange) {
       onErrorsChange({});
@@ -567,14 +800,19 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         {
           method: method,
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
         let errorMsg = "Submission failed";
         try {
           const errorData = await response.json();
-          errorMsg = errorData.message || errorData.error || errorData.detail || JSON.stringify(errorData) || errorMsg;
+          errorMsg =
+            errorData.message ||
+            errorData.error ||
+            errorData.detail ||
+            JSON.stringify(errorData) ||
+            errorMsg;
         } catch (e) {
           errorMsg = `Server error: ${response.status} ${response.statusText}`;
         }
@@ -609,7 +847,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   };
 
   const isNotUttarakhand = resident === "नहीं";
-  const schoolEnrollmentStatus = data.schoolEnrollmentStatus || (hasSchoolDetails(data) ? "हाँ" : "नहीं");
+  const schoolEnrollmentStatus =
+    data.schoolEnrollmentStatus || (hasSchoolDetails(data) ? "हाँ" : "नहीं");
+  const hasBankAccountStatus = data.hasBankAccount || "";
 
   const input = (label, name, options = {}) => {
     const isSelect = Array.isArray(options.options);
@@ -630,7 +870,6 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       extraProps.max = today;
     }
 
-    //   USE combinedErrors instead of error
     const fieldError = combinedErrors[name];
 
     return (
@@ -646,7 +885,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             value={value}
             onChange={handleChange}
             disabled={disabled}
-            className={fieldError ? "error-style" : ""} //   Apply error style
+            className={fieldError ? "error-style" : ""}
           >
             <option value="">{options.placeholder || "चयन करें"}</option>
             {options.options.map((option) => (
@@ -664,7 +903,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             placeholder={options.placeholder}
             onChange={handleChange}
             disabled={disabled}
-            className={fieldError ? "error-style" : ""} //   Apply error style
+            className={fieldError ? "error-style" : ""}
             {...extraProps}
           />
         )}
@@ -683,23 +922,29 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
           <span>Step 1</span>
           <h2>नामांकित बच्चे का व्यक्तिगत विवरण (Nominee Details)</h2>
         </div>
-        <div style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "60px 20px",
-          flexDirection: "column",
-          gap: "16px"
-        }}>
-          <div style={{
-            width: "40px",
-            height: "40px",
-            border: "4px solid #e0e0e0",
-            borderTopColor: "#28a745",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite"
-          }}></div>
-          <p style={{ color: "#666", fontSize: "16px" }}>डेटा लोड हो रहा है...</p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "60px 20px",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              border: "4px solid #e0e0e0",
+              borderTopColor: "#28a745",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+            }}
+          ></div>
+          <p style={{ color: "#666", fontSize: "16px" }}>
+            डेटा लोड हो रहा है...
+          </p>
         </div>
         <style>{`
           @keyframes spin {
@@ -718,15 +963,29 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         {isCompleted && (
           <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
             {!isEditing ? (
-              <button type="button" className="nf-secondary" onClick={handleEdit}>
+              <button
+                type="button"
+                className="nf-secondary"
+                onClick={handleEdit}
+              >
                 Edit / संपादित करें
               </button>
             ) : (
               <>
-                <button type="button" className="nf-secondary" onClick={handleCancelEdit} disabled={submitting}>
+                <button
+                  type="button"
+                  className="nf-secondary"
+                  onClick={handleCancelEdit}
+                  disabled={submitting}
+                >
                   Cancel / रद्द करें
                 </button>
-                <button type="button" className="nf-primary" onClick={() => handleSubmit(false)} disabled={submitting}>
+                <button
+                  type="button"
+                  className="nf-primary"
+                  onClick={() => handleSubmit(false)}
+                  disabled={submitting}
+                >
                   {submitting ? "अपडेट हो रहा है..." : "Update / अपडेट करें"}
                 </button>
               </>
@@ -736,15 +995,18 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       </div>
 
       {(applicantId || data?.applicant_id || nominator?.applicant_id) && (
-        <div style={{
-          padding: "8px 12px",
-          backgroundColor: "#e7f3ff",
-          borderRadius: "4px",
-          marginBottom: "16px",
-          fontSize: "14px",
-          color: "#0066cc"
-        }}>
-          Applicant ID: {applicantId || data?.applicant_id || nominator?.applicant_id}
+        <div
+          style={{
+            padding: "8px 12px",
+            backgroundColor: "#e7f3ff",
+            borderRadius: "4px",
+            marginBottom: "16px",
+            fontSize: "14px",
+            color: "#0066cc",
+          }}
+        >
+          Applicant ID:{" "}
+          {applicantId || data?.applicant_id || nominator?.applicant_id}
         </div>
       )}
 
@@ -792,14 +1054,60 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
           options: ["हाँ", "नहीं"],
           placeholder: "चुनें",
         })}
-        {input("9. स्थायी निवास प्रमाण पत्र संख्या", "residence_certificate_number", {
+        {input(
+          "9. स्थायी निवास प्रमाण पत्र संख्या",
+          "residence_certificate_number",
+          {
+            required: true,
+            placeholder: "प्रमाण पत्र संख्या दर्ज करें",
+          },
+        )}
+      </div>
+
+      {/* ============ NEW: Bank Account Section (Point 10) ============ */}
+      <div className="nf-grid">
+        {input("10. क्या आपके पास बैंक खाता है?", "hasBankAccount", {
           required: true,
-          placeholder: "प्रमाण पत्र संख्या दर्ज करें",
+          options: ["हाँ", "नहीं"],
+          placeholder: "चयन करें",
         })}
       </div>
+
+      {hasBankAccountStatus === "हाँ" && (
+        <fieldset className="nf-subsection nf-subsection-left">
+          <legend>
+            बैंक खाता विवरण <span>*</span>
+          </legend>
+          <div className="nf-grid nf-address-grid">
+            {input("10.1 खाता किसके नाम पर है", "bankAccountHolderType", {
+              required: true,
+              options: bankAccountHolderOptions,
+              placeholder: "चयन करें",
+            })}
+            {input("10.2 खाताधारक का नाम", "bankAccountHolderName", {
+              required: true,
+              placeholder: "खाताधारक का पूरा नाम",
+            })}
+            {input("10.3 बैंक का नाम", "bankName", {
+              required: true,
+              placeholder: "बैंक का नाम दर्ज करें",
+            })}
+            {input("10.4 IFSC कोड", "ifscCode", {
+              required: true,
+              placeholder: "जैसे: SBIN0001234",
+            })}
+            {input("10.5 बैंक खाता संख्या", "bankAccountNumber", {
+              required: true,
+              placeholder: "बैंक खाता संख्या दर्ज करें",
+            })}
+          </div>
+        </fieldset>
+      )}
+      {/* ============ END: Bank Account Section ============ */}
+
       <fieldset className="nf-subsection nf-subsection-left">
         <legend>
-          10. स्थायी निवास का पता <span>*</span>
+          11. स्थायी निवास का पता <span>*</span>
         </legend>
         <div className="nf-grid nf-address-grid">
           {addressFields.map((field) => {
@@ -807,7 +1115,9 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               return input("जनपद", `permanent${field}`, {
                 required: true,
                 options: districts,
-                placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें",
+                placeholder: loadingDistricts
+                  ? "लोड हो रहा है..."
+                  : "जनपद चुनें",
                 disabled: loadingDistricts,
               });
             }
@@ -818,11 +1128,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
                 placeholder: !selectedDistrict
                   ? "पहले जनपद चुनें"
                   : loadingProjects
-                  ? "लोड हो रहा है..."
-                  : projects.length === 0
-                  ? "कोई विकासखण्ड उपलब्ध नहीं"
-                  : "विकासखण्ड/नगर निकाय चुनें",
-                disabled: loadingProjects || !selectedDistrict || projects.length === 0,
+                    ? "लोड हो रहा है..."
+                    : projects.length === 0
+                      ? "कोई विकासखण्ड उपलब्ध नहीं"
+                      : "विकासखण्ड/नगर निकाय चुनें",
+                disabled:
+                  loadingProjects || !selectedDistrict || projects.length === 0,
               });
             }
             return input(field, `permanent${field}`, {
@@ -838,20 +1149,22 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
             type="checkbox"
             checked={sameAsPermanent}
             onChange={handleSameAsPermanent}
-            disabled={isCompleted && !isEditing || isNotUttarakhand}
+            disabled={(isCompleted && !isEditing) || isNotUttarakhand}
           />
           स्थायी पते के समान
         </label>
       </div>
       <fieldset className="nf-subsection nf-subsection-left">
-        <legend>11. वर्तमान पता (यदि स्थायी पते से भिन्न हो)</legend>
+        <legend>12. वर्तमान पता (यदि स्थायी पते से भिन्न हो)</legend>
         <div className="nf-grid nf-address-grid">
           {addressFields.map((field) => {
             if (field === "जनपद") {
               return input("जनपद", `current${field}`, {
                 required: true,
                 options: districts,
-                placeholder: loadingDistricts ? "लोड हो रहा है..." : "जनपद चुनें",
+                placeholder: loadingDistricts
+                  ? "लोड हो रहा है..."
+                  : "जनपद चुनें",
                 disabled: loadingDistricts,
               });
             }
@@ -862,11 +1175,14 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
                 placeholder: !currentSelectedDistrict
                   ? "पहले जनपद चुनें"
                   : loadingProjects
-                  ? "लोड हो रहा है..."
-                  : currentProjects.length === 0
-                  ? "कोई विकासखण्ड उपलब्ध नहीं"
-                  : "विकासखण्ड/नगर निकाय चुनें",
-                disabled: loadingProjects || !currentSelectedDistrict || currentProjects.length === 0,
+                    ? "लोड हो रहा है..."
+                    : currentProjects.length === 0
+                      ? "कोई विकासखण्ड उपलब्ध नहीं"
+                      : "विकासखण्ड/नगर निकाय चुनें",
+                disabled:
+                  loadingProjects ||
+                  !currentSelectedDistrict ||
+                  currentProjects.length === 0,
               });
             }
             return input(field, `current${field}`, {
@@ -877,22 +1193,26 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
         </div>
       </fieldset>
       <div className="nf-grid">
-        {input("विद्यालय में नामांकित है या नहीं?", "schoolEnrollmentStatus", {
-          required: true,
-          options: ["हाँ", "नहीं"],
-          placeholder: "चयन करें",
-        })}
+        {input(
+          "13. विद्यालय में नामांकित है या नहीं?",
+          "schoolEnrollmentStatus",
+          {
+            required: true,
+            options: ["हाँ", "नहीं"],
+            placeholder: "चयन करें",
+          },
+        )}
         {schoolEnrollmentStatus === "हाँ" && (
           <>
-            {input("12. विद्यालय का नाम", "schoolName", {
+            {input("14. विद्यालय का नाम", "schoolName", {
               required: true,
               placeholder: "विद्यालय का नाम",
             })}
-            {input("13. विद्यालय का पता", "schoolAddress", {
+            {input("15. विद्यालय का पता", "schoolAddress", {
               required: true,
               placeholder: "विद्यालय का पता",
             })}
-            {input("14. वर्तमान कक्षा", "currentClass", {
+            {input("16. वर्तमान कक्षा", "currentClass", {
               required: true,
               placeholder: "कक्षा दर्ज करें",
             })}
@@ -901,24 +1221,30 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       </div>
 
       {submitError && (
-        <div className="nf-submit-error" style={{
-          color: "#dc3545",
-          padding: "12px",
-          marginTop: "16px",
-          backgroundColor: "#f8d7da",
-          borderRadius: "4px",
-          border: "1px solid #f5c6cb"
-        }}>
+        <div
+          className="nf-submit-error"
+          style={{
+            color: "#dc3545",
+            padding: "12px",
+            marginTop: "16px",
+            backgroundColor: "#f8d7da",
+            borderRadius: "4px",
+            border: "1px solid #f5c6cb",
+          }}
+        >
           {submitError}
         </div>
       )}
 
-      <div className="nf-step-actions" style={{
-        display: "flex",
-        justifyContent: "flex-end",
-        marginTop: "24px",
-        gap: "12px"
-      }}>
+      <div
+        className="nf-step-actions"
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: "24px",
+          gap: "12px",
+        }}
+      >
         <button
           type="button"
           className="nf-btn nf-btn-next"
@@ -926,30 +1252,44 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
           disabled={submitting || (!isCompleted && isNotUttarakhand)}
           style={{
             padding: "12px 32px",
-            backgroundColor: isNotUttarakhand && !isCompleted ? "#ccc" : submitting ? "#6c757d" : "#28a745",
+            backgroundColor:
+              isNotUttarakhand && !isCompleted
+                ? "#ccc"
+                : submitting
+                  ? "#6c757d"
+                  : "#28a745",
             color: "#fff",
             border: "none",
             borderRadius: "4px",
-            cursor: isNotUttarakhand && !isCompleted ? "not-allowed" : submitting ? "wait" : "pointer",
+            cursor:
+              isNotUttarakhand && !isCompleted
+                ? "not-allowed"
+                : submitting
+                  ? "wait"
+                  : "pointer",
             fontSize: "16px",
             fontWeight: "600",
             display: "flex",
             alignItems: "center",
-            gap: "8px"
+            gap: "8px",
           }}
         >
           {submitting ? (
             <>
-              <span style={{
-                width: "18px",
-                height: "18px",
-                border: "2px solid #fff",
-                borderTopColor: "transparent",
-                borderRadius: "50%",
-                animation: "spin 0.8s linear infinite",
-                display: "inline-block"
-              }}></span>
-              {isCompleted && !isEditing ? "आगे बढ़ रहा है..." : "सबमिट हो रहा है..."}
+              <span
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  border: "2px solid #fff",
+                  borderTopColor: "transparent",
+                  borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                  display: "inline-block",
+                }}
+              ></span>
+              {isCompleted && !isEditing
+                ? "आगे बढ़ रहा है..."
+                : "सबमिट हो रहा है..."}
             </>
           ) : (
             <>
