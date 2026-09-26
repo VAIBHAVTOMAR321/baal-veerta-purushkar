@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef } from "react";
 import "./PreviewModal.css";
+import { isAgeNotEligible, getAgeIneligibilityMessage } from "./ageEligibility";
 
 const yesNo = (val) =>
   val === "हाँ" || val === "yes" || val === true
@@ -165,6 +166,7 @@ const DocNameCell = ({ label, file }) => {
 /* ════════════════════════════════════════════════ */
 const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isApplicationCompleted, isITCell = false, onSwitchToRegistration }) => {
   const printRef = useRef(null);
+  const isAgeIneligible = isAgeNotEligible(data?.birthDate, data?.actDate);
   const applicationNumber = data?.applicant_id || data?.applicationNumber || "System Generated";
   const district = data?.["permanentजनपद"] || data?.district || "-";
 
@@ -701,11 +703,17 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
             </>
           ) : (
             <>
-              <label className="nf-pv-accept">
-                <input type="checkbox" checked={isApplicationCompleted ? true : topAccepted} onChange={(e) => onTopAcceptedChange?.(e.target.checked)} disabled={isApplicationCompleted} />
+              <label className="nf-pv-accept" style={isAgeIneligible ? { cursor: "not-allowed", opacity: 0.6 } : undefined}>
+                <input
+                  type="checkbox"
+                  checked={isApplicationCompleted ? true : topAccepted}
+                  onChange={(e) => onTopAcceptedChange?.(e.target.checked)}
+                  disabled={isApplicationCompleted || isAgeIneligible}
+                />
                 <span>मैंने समस्त शर्तें पढ़ ली हैं और मैं उनसे सहमत हूँ।</span>
               </label>
-              {!isApplicationCompleted && topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
+              {isAgeIneligible && <small className="nf-pv-warn">{getAgeIneligibilityMessage(data?.birthDate, data?.actDate)}</small>}
+              {!isAgeIneligible && !isApplicationCompleted && topAccepted && <small className="nf-pv-warn">बदलाव करने के लिए कृपया ऊपर दिए गए चेकबॉक्स को अनचेक करें।</small>}
               <button type="button" className="nf-pv-closebtn" onClick={onClose}>Close</button>
             </>
           )}
