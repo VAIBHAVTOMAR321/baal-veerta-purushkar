@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { sendOtpApi } from "./api";
+import {
+  formatClock,
+  getOtpTimings,
+  startOtpSession,
+  useNow,
+  useOtpSession,
+} from "./otpSession";
 import "./otp.css";
 
 export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
@@ -8,9 +15,25 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const session = useOtpSession();
+  const now = useNow(show);
+  const { active, expiryRemaining, resendRemaining } = useMemo(
+    () => getOtpTimings(session, now),
+    [session, now],
+  );
+
   useEffect(() => {
     setMobile(defaultMobile || "");
   }, [defaultMobile]);
+
+  useEffect(() => {
+    if (show) {
+      setError("");
+      setLoading(false);
+    }
+  }, [show, mobile]);
+
+  const onCooldown = active && session.mobile === mobile && resendRemaining > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,9 +45,14 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
       setError("कृपया वैध 10 अंकों का मोबाइल नंबर दर्ज करें।");
       return;
     }
+    if (onCooldown) {
+      console.warn("[SendOTP] resend cooldown active", { resendRemaining });
+      return;
+    }
     setLoading(true);
     try {
       await sendOtpApi(mobile);
+      startOtpSession(mobile);
       console.info("[SendOTP] success; opening verify modal");
       onClose();
       onSuccess && onSuccess(mobile);
@@ -57,16 +85,26 @@ export const SendOTP = ({ show, onClose, onSuccess, defaultMobile }) => {
                   placeholder="10 अंकों का मोबाइल नंबर"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                  disabled={!!defaultMobile}
+                  disabled={!!defaultMobile || onCooldown}
                 />
               </div>
             {error && <div className="otp-error" role="alert">{error}</div>}
           </div>
           <div className="otp-modal-footer">
             <button type="button" className="otp-btn-secondary" onClick={onClose}>रद्द करें</button>
-            <button type="submit" className="otp-btn-primary" disabled={loading}>
+            <button type="submit" className="otp-btn-primary" disabled={loading || onCooldown}>
               {loading ? "भेज रहे हैं..." : "OTP भेजें"}
             </button>
+          </div>
+          <div className="otp-resend">
+            {onCooldown ? (
+              <span>
+                पुनः भेजने में {resendRemaining} सेकंड remaining
+                {expiryRemaining > 0 && ` (मौजूदा OTP ${formatClock(expiryRemaining)} में समाप्त होगा)`}
+              </span>
+            ) : (
+              <span>OTP भेजने के बाद पुनः भेजने के लिए प्रतीक्षा करें।</span>
+            )}
           </div>
         </form>
       </div>
