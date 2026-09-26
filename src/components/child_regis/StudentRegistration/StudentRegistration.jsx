@@ -5,6 +5,9 @@ import { SendOTP } from "../../otpsendverify/SendOTP";
 import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 import { submitNominatorPart1 } from "../../otpsendverify/api";
 
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const OTP_STORAGE_KEY = "otpVerificationState";
+
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
 const idTypes = ["आधार कार्ड", "पैन कार्ड", "ड्राइविंग लाइसेंस", "पहचान पत्र (फोटो के साथ)", "पासपोर्ट", "मतदाता पहचान पत्र"];
 
@@ -40,6 +43,7 @@ const StudentRegistration = () => {
   const [showSendOtp, setShowSendOtp] = useState(false);
   const [showVerifyOtp, setShowVerifyOtp] = useState(false);
   const [otpMobile, setOtpMobile] = useState("");
+  const [otpSentAt, setOtpSentAt] = useState(null);
   const [districts, setDistricts] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -58,6 +62,50 @@ const StudentRegistration = () => {
   const today = new Date().toISOString().split("T")[0];
   const idTypeRef = React.useRef(form.idType);
   const phoneCheckTimerRef = useRef(null);
+
+  const storeOtpState = (mobile, sentAt) => {
+    try {
+      sessionStorage.setItem(OTP_STORAGE_KEY, JSON.stringify({ mobile, sentAt }));
+    } catch (e) {
+      console.error("[StudentRegistration] Failed to store OTP state", e);
+    }
+  };
+
+  const getStoredOtpState = () => {
+    try {
+      const raw = sessionStorage.getItem(OTP_STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      console.error("[StudentRegistration] Failed to read OTP state", e);
+      return null;
+    }
+  };
+
+  const clearStoredOtpState = () => {
+    try {
+      sessionStorage.removeItem(OTP_STORAGE_KEY);
+    } catch (e) {
+      console.error("[StudentRegistration] Failed to clear OTP state", e);
+    }
+  };
+
+  const isOtpExpired = (sentAt) => {
+    return Date.now() - sentAt > OTP_EXPIRY_MS;
+  };
+
+  useEffect(() => {
+    const stored = getStoredOtpState();
+    if (stored && !isOtpExpired(stored.sentAt)) {
+      console.info("[StudentRegistration] Restoring pending OTP state on mount", {
+        mobile: `${stored.mobile.slice(0, 2)}******${stored.mobile.slice(-2)}`,
+      });
+      setOtpMobile(stored.mobile);
+      setOtpSentAt(stored.sentAt);
+      setForm((prev) => ({ ...prev, mobile: stored.mobile }));
+      setShowVerifyOtp(true);
+    }
+  }, []);
 
   React.useEffect(() => {
     idTypeRef.current = form.idType;
@@ -251,11 +299,20 @@ const StudentRegistration = () => {
     if (form.idType === "आधार कार्ड" && form.idNumber && !/^[0-9]{12}$/.test(form.idNumber.trim())) {
       nextErrors.idNumber = "आधार कार्ड संख्या 12 अंकों की होनी चाहिए";
     }
-    setErrors(nextErrors);
-    if (!Object.keys(nextErrors).length) {
-      setShowSendOtp(true);
-    }
-  };
+     setErrors(nextErrors);
+     if (!Object.keys(nextErrors).length) {
+       const stored = getStoredOtpState();
+       if (stored && !isOtpExpired(stored.sentAt) && stored.mobile === form.mobile) {
+         console.info("[StudentRegistration] Resuming pending OTP verification");
+         setOtpMobile(stored.mobile);
+         setOtpSentAt(stored.sentAt);
+         setShowVerifyOtp(true);
+       } else {
+         if (stored) clearStoredOtpState();
+         setShowSendOtp(true);
+       }
+     }
+   };
 
   const handleOtpSuccess = async (res) => {
     setLoading(true);
@@ -291,7 +348,9 @@ const StudentRegistration = () => {
       console.log("[StudentRegistration] Submitting payload:", payload);
       console.log("[StudentRegistration] Using token:", res?.access);
 
-      await submitNominatorPart1(payload, res?.access);
+       await submitNominatorPart1(payload, res?.access);
+      clearStoredOtpState();
+      console.info("[StudentRegistration] OTP verified; cleared stored OTP state");
       navigate("/", { state: { registrationSuccess: true } });
     } catch (err) {
       setError(err.message);
@@ -606,7 +665,11 @@ const StudentRegistration = () => {
         onClose={() => setShowSendOtp(false)}
         defaultMobile={form.mobile}
         onSuccess={(mobile) => {
+          const sentAt = Date.now();
           setOtpMobile(mobile);
+          setOtpSentAt(sentAt);
+          storeOtpState(mobile, sentAt);
+          console.info("[StudentRegistration] OTP sent; stored persistent OTP state");
           setShowSendOtp(false);
           setShowVerifyOtp(true);
         }}
@@ -616,6 +679,7 @@ const StudentRegistration = () => {
         onClose={() => setShowVerifyOtp(false)}
         mobile={otpMobile}
         onSuccess={handleOtpSuccess}
+        otpSentAt={otpSentAt}
       />
     </main>
   );
