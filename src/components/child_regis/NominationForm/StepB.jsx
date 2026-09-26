@@ -64,7 +64,7 @@ const StepB = ({
   const combinedErrors = { ...error, ...localErrors };
 
   // Bank account holder type options
-  const bankAccountHolderOptions = ["स्वयं", "माता", "पिता", "अभिभावक"];
+  const bankAccountHolderOptions = ["स्वयं बालक/बालिका  ", "माता", "पिता", "अभिभावक (माता एवं पिता के न होने की स्थिति में अभिभावक)"];
 
   useEffect(() => {
     if (dataFetchStarted.current) return;
@@ -108,7 +108,6 @@ const StepB = ({
               gender: record.gender,
               resident: record.permanent_resident_uttarakhand,
               residence_certificate_number: record.residence_certificate_number,
-              hasBankAccount: record.bank_detail_available || "",
               bankAccountHolderType: record.bank_nominee_relation || "",
               bankAccountHolderName: record.bank_holder_name || "",
               bankName: record.bank_name || "",
@@ -167,7 +166,6 @@ const StepB = ({
               gender: record.gender,
               resident: record.permanent_resident_uttarakhand,
               residence_certificate_number: record.residence_certificate_number,
-              hasBankAccount: record.bank_detail_available || "",
               bankAccountHolderType: record.bank_nominee_relation || "",
               bankAccountHolderName: record.bank_holder_name || "",
               bankName: record.bank_name || "",
@@ -389,23 +387,6 @@ const StepB = ({
     }
   }, [data.schoolEnrollmentStatus, update]);
 
-  // Clear bank fields when user selects "नहीं"
-  useEffect(() => {
-    if (data.hasBankAccount && data.hasBankAccount !== "हाँ") {
-      update({
-        target: { name: "bankAccountHolderType", value: "", type: "text" },
-      });
-      update({
-        target: { name: "bankAccountHolderName", value: "", type: "text" },
-      });
-      update({ target: { name: "bankName", value: "", type: "text" } });
-      update({ target: { name: "ifscCode", value: "", type: "text" } });
-      update({
-        target: { name: "bankAccountNumber", value: "", type: "text" },
-      });
-    }
-  }, [data.hasBankAccount, update]);
-
   const nominatorCategory = data?.nominator_category || "";
   const registeredCategory = String(
     nominator?.nominator_category || nominatorCategory,
@@ -452,18 +433,6 @@ const StepB = ({
     }
     if (name === "schoolEnrollmentStatus" && value === "नहीं") {
       ["schoolName", "schoolAddress", "currentClass"].forEach((field) => {
-        update({ target: { name: field, value: "", type: "text" } });
-        clearFieldError(field);
-      });
-    }
-    if (name === "hasBankAccount" && value === "नहीं") {
-      [
-        "bankAccountHolderType",
-        "bankAccountHolderName",
-        "bankName",
-        "ifscCode",
-        "bankAccountNumber",
-      ].forEach((field) => {
         update({ target: { name: field, value: "", type: "text" } });
         clearFieldError(field);
       });
@@ -578,15 +547,12 @@ const StepB = ({
       gender: data.gender || "",
       permanent_resident_uttarakhand: data.resident || "",
       residence_certificate_number: data.residence_certificate_number || "",
-      bank_detail_available: data.hasBankAccount || "",
-      bank_nominee_relation:
-        data.hasBankAccount === "हाँ" ? data.bankAccountHolderType || "" : "",
-      bank_holder_name:
-        data.hasBankAccount === "हाँ" ? data.bankAccountHolderName || "" : "",
-      bank_name: data.hasBankAccount === "हाँ" ? data.bankName || "" : "",
-      ifsc_code: data.hasBankAccount === "हाँ" ? data.ifscCode || "" : "",
-      bank_acc_no:
-        data.hasBankAccount === "हाँ" ? data.bankAccountNumber || "" : "",
+      bank_detail_available: "हाँ",
+      bank_nominee_relation: data.bankAccountHolderType || "",
+      bank_holder_name: data.bankAccountHolderName || "",
+      bank_name: data.bankName || "",
+      ifsc_code: data.ifscCode || "",
+      bank_acc_no: data.bankAccountNumber || "",
       permanent_village: data["permanentग्राम/मोहल्ला"] || "",
       permanent_post_office: data["permanentतहसील "] || "",
       permanent_block_local_body: data["permanentविकासखण्ड/नगर निकाय"] || "",
@@ -622,28 +588,24 @@ const StepB = ({
     if (!data.resident) errors.resident = "यह फ़ील्ड अनिवार्य है";
 
     // Bank account validation
-    if (!data.hasBankAccount) {
-      errors.hasBankAccount = "यह फ़ील्ड अनिवार्य है";
-    } else if (data.hasBankAccount === "हाँ") {
-      if (!data.bankAccountHolderType)
-        errors.bankAccountHolderType = "यह फ़ील्ड अनिवार्य है";
-      if (!data.bankAccountHolderName?.trim())
-        errors.bankAccountHolderName = "यह फ़ील्ड अनिवार्य है";
-      if (!data.bankName?.trim()) errors.bankName = "यह फ़ील्ड अनिवार्य है";
-      if (!data.ifscCode?.trim()) {
-        errors.ifscCode = "यह फ़ील्ड अनिवार्य है";
-      } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(data.ifscCode)) {
-        errors.ifscCode =
-          "IFSC कोड सही प्रारूप में नहीं है (जैसे: SBIN0001234)";
-      }
-      if (!data.bankAccountNumber?.trim()) {
-        errors.bankAccountNumber = "यह फ़ील्ड अनिवार्य है";
-      } else if (
-        data.bankAccountNumber.length < 9 ||
-        data.bankAccountNumber.length > 18
-      ) {
-        errors.bankAccountNumber = "खाता संख्या 9 से 18 अंकों की होनी चाहिए";
-      }
+    if (!data.bankAccountHolderType)
+      errors.bankAccountHolderType = "यह फ़ील्ड अनिवार्य है";
+    if (!data.bankAccountHolderName?.trim())
+      errors.bankAccountHolderName = "यह फ़ील्ड अनिवार्य है";
+    if (!data.bankName?.trim()) errors.bankName = "यह फ़ील्ड अनिवार्य है";
+    if (!data.ifscCode?.trim()) {
+      errors.ifscCode = "यह फ़ील्ड अनिवार्य है";
+    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(data.ifscCode)) {
+      errors.ifscCode =
+        "IFSC कोड सही प्रारूप में नहीं है (जैसे: SBIN0001234)";
+    }
+    if (!data.bankAccountNumber?.trim()) {
+      errors.bankAccountNumber = "यह फ़ील्ड अनिवार्य है";
+    } else if (
+      data.bankAccountNumber.length < 9 ||
+      data.bankAccountNumber.length > 18
+    ) {
+      errors.bankAccountNumber = "खाता संख्या 9 से 18 अंकों की होना चाहिए";
     }
 
     if (schoolEnrollmentStatus === "हाँ") {
@@ -702,7 +664,6 @@ const StepB = ({
     "gender",
     "resident",
     "residence_certificate_number",
-    "hasBankAccount",
     "bankAccountHolderType",
     "bankAccountHolderName",
     "bankName",
@@ -849,7 +810,6 @@ const StepB = ({
   const isNotUttarakhand = resident === "नहीं";
   const schoolEnrollmentStatus =
     data.schoolEnrollmentStatus || (hasSchoolDetails(data) ? "हाँ" : "नहीं");
-  const hasBankAccountStatus = data.hasBankAccount || "";
 
   const input = (label, name, options = {}) => {
     const isSelect = Array.isArray(options.options);
@@ -1031,10 +991,19 @@ const StepB = ({
           placeholder: "माता का पूरा नाम",
           disabled: isMother,
         })}
-        {input("4. अभिभावक का नाम (यदि लागू हो)", "guardianName", {
-          placeholder: "अभिभावक का पूरा नाम",
-          disabled: isLegalGuardian,
-        })}
+        {input(
+          <>
+            4. अभिभावक का नाम{" "}
+            <span style={{ color: "red" }}>
+              (माता एवं पिता के न होने की स्थिति में अभिभावक)
+            </span>
+          </>,
+          "guardianName",
+          {
+            placeholder: "अभिभावक का पूरा नाम",
+            disabled: isLegalGuardian,
+          },
+        )}
         {input("5. बच्चे/अभिभावक का मोबाइल नंबर", "childMobile", {
           required: true,
           type: "tel",
@@ -1064,45 +1033,35 @@ const StepB = ({
         )}
       </div>
 
-      {/* ============ NEW: Bank Account Section (Point 10) ============ */}
-      <div className="nf-grid">
-        {input("10. क्या आपके पास बैंक खाता है?", "hasBankAccount", {
-          required: true,
-          options: ["हाँ", "नहीं"],
-          placeholder: "चयन करें",
-        })}
-      </div>
-
-      {hasBankAccountStatus === "हाँ" && (
-        <fieldset className="nf-subsection nf-subsection-left">
-          <legend>
-            बैंक खाता विवरण <span>*</span>
-          </legend>
-          <div className="nf-grid nf-address-grid">
-            {input("10.1 खाता किसके नाम पर है", "bankAccountHolderType", {
-              required: true,
-              options: bankAccountHolderOptions,
-              placeholder: "चयन करें",
-            })}
-            {input("10.2 खाताधारक का नाम", "bankAccountHolderName", {
-              required: true,
-              placeholder: "खाताधारक का पूरा नाम",
-            })}
-            {input("10.3 बैंक का नाम", "bankName", {
-              required: true,
-              placeholder: "बैंक का नाम दर्ज करें",
-            })}
-            {input("10.4 IFSC कोड", "ifscCode", {
-              required: true,
-              placeholder: "जैसे: SBIN0001234",
-            })}
-            {input("10.5 बैंक खाता संख्या", "bankAccountNumber", {
-              required: true,
-              placeholder: "बैंक खाता संख्या दर्ज करें",
-            })}
-          </div>
-        </fieldset>
-      )}
+      {/* ============ Bank Account Section (Point 10) ============ */}
+      <fieldset className="nf-subsection nf-subsection-left">
+        <legend>
+          10. बैंक खाता विवरण <span> ( जिसमें पुरस्कार की धनराशि अंतरित की जानी है )*</span>
+        </legend>
+        <div className="nf-grid nf-address-grid">
+          {input("10.1 खाता किसके नाम पर है", "bankAccountHolderType", {
+            required: true,
+            options: bankAccountHolderOptions,
+            placeholder: "चयन करें",
+          })}
+          {input("10.2 खाताधारक का पूरा नाम", "bankAccountHolderName", {
+            required: true,
+            placeholder: "खाताधारक का पूरा नाम",
+          })}
+          {input("10.3 बैंक का नाम", "bankName", {
+            required: true,
+            placeholder: "बैंक का नाम दर्ज करें",
+          })}
+          {input("10.4 IFSC कोड", "ifscCode", {
+            required: true,
+            placeholder: "जैसे: SBIN0001234",
+          })}
+          {input("10.5 बैंक खाता संख्या", "bankAccountNumber", {
+            required: true,
+            placeholder: "बैंक खाता संख्या दर्ज करें",
+          })}
+        </div>
+      </fieldset>
       {/* ============ END: Bank Account Section ============ */}
 
       <fieldset className="nf-subsection nf-subsection-left">
