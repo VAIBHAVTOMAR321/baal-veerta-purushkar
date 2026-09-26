@@ -547,17 +547,26 @@ function LoginPortal() {
                   <FaFileAlt className="pdf-icon" />
                   मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
                 </Link>
-                <Link
-                  to="/vikupti.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="scheme-documents-link"
-                >
-                  <FaFileAlt className="pdf-icon" />
-                  मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी
-                  विज्ञप्ति
-                </Link>
-              </div>
+<Link
+                      to="/vikupti.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="scheme-documents-link"
+                    >
+                      <FaFileAlt className="pdf-icon" />
+                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी
+                      विज्ञप्ति
+                    </Link>
+                    <Link
+                      to="/nirdeshak-malika.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="scheme-documents-link"
+                    >
+                      <FaFileAlt className="pdf-icon" />
+                      निर्देश तालिका (PDF)
+                    </Link>
+                  </div>
               {/* ── REGISTRATION STEPS ── */}
               <div className="steps-section">
                 <div className="steps-heading-row">
@@ -646,18 +655,27 @@ function LoginPortal() {
                       मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश
                       (PDF)
                     </Link>
-                    <Link
-                      to="/vikupti.pdf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="scheme-documents-link"
-                    >
-                      <FaFileAlt className="pdf-icon" />
-                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी
-                      विज्ञप्ति
-                    </Link>
-                  </div>
+<Link
+                    to="/vikupti.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="scheme-documents-link"
+                  >
+                    <FaFileAlt className="pdf-icon" />
+                    मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी
+                    विज्ञप्ति
+                  </Link>
+                  <Link
+                    to="/nirdeshak-malika.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="scheme-documents-link"
+                  >
+                    <FaFileAlt className="pdf-icon" />
+                    निर्देश तालिका (PDF)
+                  </Link>
                 </div>
+              </div>
               </div>
 
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
