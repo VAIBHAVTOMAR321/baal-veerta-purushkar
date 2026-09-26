@@ -403,7 +403,7 @@ function LoginPortal() {
 
               {/* Mobile-only PDF link */}
               <Link
-                to="/CM.pdf"
+                to="/GOV.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mobile-pdf-link"
@@ -420,7 +420,7 @@ function LoginPortal() {
                     नामांकन प्रक्रिया
                   </h3>
                   <Link
-                    to="/CM.pdf"
+                    to="/GOV.pdf"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="steps-pdf-link"
@@ -550,7 +550,7 @@ function LoginPortal() {
               {/* ── BOTTOM PDF LINK ── */}
               <div className="scheme-pdf-link">
                 <Link
-                  to="/CM.pdf"
+                  to="/GOV.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

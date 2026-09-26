@@ -277,7 +277,7 @@ function Home() {
             <div className="home-left-content" ref={contentRef} onScroll={handleContentScroll}>
               
               {/* MOBILE PDF LINK */}
-              <Link to="/CM.pdf" target="_blank" rel="noopener noreferrer" className="mobile-pdf-link">
+              <Link to="/GOV.pdf" target="_blank" rel="noopener noreferrer" className="mobile-pdf-link">
                 <FaFileAlt className="pdf-icon" /> योजना की पूरी जानकारी (PDF)
               </Link>
 
@@ -371,7 +371,7 @@ function Home() {
                     <FaClipboardList className="steps-heading-icon" />
                     नामांकन प्रक्रिया
                   </h3>
-                  <Link to="/CM.pdf" target="_blank" rel="noopener noreferrer" className="steps-pdf-link">
+                  <Link to="/GOV.pdf" target="_blank" rel="noopener noreferrer" className="steps-pdf-link">
                     <FaFileAlt className="pdf-icon" /> योजना की पूरी जानकारी (PDF)
                   </Link>
                 </div>
@@ -452,7 +452,7 @@ function Home() {
               </div>
 
               <div className="scheme-pdf-link">
-                <Link to="/CM.pdf" target="_blank" rel="noopener noreferrer">
+                <Link to="/GOV.pdf" target="_blank" rel="noopener noreferrer">
                   <FaFileAlt className="pdf-icon" /> योजना की पूरी जानकारी / Scheme Details (PDF)
                 </Link>
               </div>
