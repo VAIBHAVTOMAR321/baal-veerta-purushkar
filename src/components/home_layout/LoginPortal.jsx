@@ -679,7 +679,7 @@ function LoginPortal() {
               </div>
 
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
-              <div className="info-section">
+              {/* <div className="info-section">
                 <button
                   ref={schemeInfoHeaderRef}
                   className="info-section-header"
@@ -703,7 +703,7 @@ function LoginPortal() {
                     ))}
                   </ol>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Scroll fade overlay */}

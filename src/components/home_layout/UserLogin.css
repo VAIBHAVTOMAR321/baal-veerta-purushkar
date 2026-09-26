@@ -593,6 +593,8 @@
 .scheme-documents-link {
   display: inline-flex;
   align-items: center;
+  margin-top:12px;
+  margin-right: 2px;
   gap: 0.4rem;
   background: #fff8e1;
   color: #b45309;

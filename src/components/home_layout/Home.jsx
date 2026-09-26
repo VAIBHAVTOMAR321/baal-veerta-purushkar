@@ -679,7 +679,7 @@ function Home() {
               </div>
 
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
-              <div className="info-section">
+              {/* <div className="info-section">
                 <button
                   ref={schemeInfoHeaderRef}
                   className="info-section-header"
@@ -703,7 +703,7 @@ function Home() {
                     ))}
                   </ol>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Scroll fade overlay */}
