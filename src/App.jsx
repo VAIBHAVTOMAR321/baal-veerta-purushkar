@@ -5,7 +5,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import Home from "./components/home_layout/Home";
-import Login from "./components/login/Login";
+import Login from "./components/login/UserLogin";
 import NavBar from "./components/nav_bar/NavBar";
 
 import DisDashBoard from "./components/all_dashbords/dis_admin/DisDashBoard";
@@ -25,6 +25,8 @@ import NominationForm from "./components/child_regis/NominationForm/NominationFo
 import StudentRegistration from "./components/child_regis/StudentRegistration/StudentRegistration";
 import UserDashBoard from "./components/all_dashbords/dis_admin/user_dashboard/UserDashBoard";
 import ITCellDashBoard from "./components/all_dashbords/dis_admin/IT_celll/ITCellDashBoard";
+import UserLogin from "./components/login/UserLogin";
+import LoginPortal from "./components/home_layout/LoginPortal";
 
 
 // A wrapper component to conditionally render the NavBar
@@ -41,6 +43,7 @@ const AppContent = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/LoginPortal" element={<LoginPortal />} />
           <Route path="/StepC" element={<StepC />} />
           <Route path="/StudentRegistration" element={<StudentRegistration />} />
           <Route path="/StepB" element={<StepB />} />
