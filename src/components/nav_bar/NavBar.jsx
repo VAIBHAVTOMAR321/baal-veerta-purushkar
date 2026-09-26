@@ -58,6 +58,14 @@ function NavBar() {
             >
               Home
             </Nav.Link>
+              <Nav.Link
+              as={NavLink}
+              to="/LoginPortal"
+              end
+              className="nav-link-custom"
+            >
+              Login
+            </Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>
