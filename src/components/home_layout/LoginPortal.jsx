@@ -1,15 +1,24 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
+import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
 import {
-  Container, Row, Col, Form, Button, Card
-} from "react-bootstrap";
-import {
-  FaUserShield, FaKey, FaClipboardList, FaAddressCard,
-  FaPhone, FaMapMarkerAlt, FaEnvelope, FaFileAlt,
-  FaEdit, FaUpload, FaInfoCircle,
-  FaFileSignature, FaChevronDown, FaChevronUp,
-  FaEye, FaEyeSlash,
+  FaUserShield,
+  FaKey,
+  FaClipboardList,
+  FaAddressCard,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaEnvelope,
+  FaFileAlt,
+  FaEdit,
+  FaUpload,
+  FaInfoCircle,
+  FaFileSignature,
+  FaChevronDown,
+  FaChevronUp,
+  FaEye,
+  FaEyeSlash,
   FaShieldAlt,
-  FaBookOpen
+  FaBookOpen,
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../login/AuthContext";
@@ -26,7 +35,7 @@ function LoginPortal() {
   const [success, setSuccess] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Forgot password modal states 
+  // Forgot password modal states
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotPhone, setForgotPhone] = useState("");
@@ -47,7 +56,6 @@ function LoginPortal() {
   // Refs for scroll-based auto-expand
   const schemeInfoHeaderRef = useRef(null);
   const userInteractedRef = useRef(false);
-
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -95,12 +103,10 @@ function LoginPortal() {
         root: container,
         rootMargin: "0px 0px -75% 0px",
         threshold: 0,
-      }
+      },
     );
 
-    const headers = [
-      schemeInfoHeaderRef,
-    ];
+    const headers = [schemeInfoHeaderRef];
 
     headers.forEach((ref) => {
       if (ref.current) observer.observe(ref.current);
@@ -116,23 +122,26 @@ function LoginPortal() {
     setShowScrollHint(!atBottom);
   };
 
-  const toggleSection = useCallback(
-    (section) => {
-      userInteractedRef.current = true;
-      setOpenSection((prev) => (prev === section ? null : section));
-      setTimeout(() => {
-        userInteractedRef.current = false;
-      }, 1200);
-    },
-    []
-  );
+  const toggleSection = useCallback((section) => {
+    userInteractedRef.current = true;
+    setOpenSection((prev) => (prev === section ? null : section));
+    setTimeout(() => {
+      userInteractedRef.current = false;
+    }, 1200);
+  }, []);
 
   const handleLogin = useCallback(
     async (e) => {
       e.preventDefault();
       setError(null);
-      if (!phone.trim()) { setError("कृपया फ़ोन नंबर दर्ज करें।"); return; }
-      if (!password.trim()) { setError("कृपया पासवर्ड दर्ज करें।"); return; }
+      if (!phone.trim()) {
+        setError("कृपया फ़ोन नंबर दर्ज करें।");
+        return;
+      }
+      if (!password.trim()) {
+        setError("कृपया पासवर्ड दर्ज करें।");
+        return;
+      }
       try {
         const response = await fetch(
           "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/login/",
@@ -140,11 +149,15 @@ function LoginPortal() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ phone, password, role: "user" }),
-          }
+          },
         );
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.detail || data.message || "लॉगिन विफल। कृपया क्रेडेंशियल जांचें।");
+          throw new Error(
+            data.detail ||
+              data.message ||
+              "लॉगिन विफल। कृपया क्रेडेंशियल जांचें।",
+          );
         }
         login(data);
         navigate("/UserDashBoard");
@@ -152,7 +165,7 @@ function LoginPortal() {
         setError(err.message);
       }
     },
-    [phone, password, navigate, login]
+    [phone, password, navigate, login],
   );
 
   const handleSendOtp = async (e) => {
@@ -171,10 +184,11 @@ function LoginPortal() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: forgotPhone, role: "user" }),
-        }
+        },
       );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+      if (!response.ok)
+        throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
       setForgotSuccess("OTP सफलतापूर्वक भेजा गया है।");
       setForgotStep(2);
     } catch (err) {
@@ -188,7 +202,10 @@ function LoginPortal() {
     e.preventDefault();
     setForgotError(null);
     setForgotSuccess(null);
-    if (!forgotOtp.trim()) { setForgotError("कृपया OTP दर्ज करें।"); return; }
+    if (!forgotOtp.trim()) {
+      setForgotError("कृपया OTP दर्ज करें।");
+      return;
+    }
     setLoading(true);
     try {
       const response = await fetch(
@@ -196,11 +213,16 @@ function LoginPortal() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: forgotPhone, otp: forgotOtp, role: "user" }),
-        }
+          body: JSON.stringify({
+            phone: forgotPhone,
+            otp: forgotOtp,
+            role: "user",
+          }),
+        },
       );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+      if (!response.ok)
+        throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
       setForgotSuccess("OTP सत्यापित हो गया है।");
       setForgotStep(3);
     } catch (err) {
@@ -229,11 +251,18 @@ function LoginPortal() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: forgotPhone, role: "user", new_password: newPassword }),
-        }
+          body: JSON.stringify({
+            phone: forgotPhone,
+            role: "user",
+            new_password: newPassword,
+          }),
+        },
       );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || data.message || "पासवर्ड बदलने में विफल।");
+      if (!response.ok)
+        throw new Error(
+          data.detail || data.message || "पासवर्ड बदलने में विफल।",
+        );
       setForgotSuccess("पासवर्ड सफलतापूर्वक बदल दिया गया है।");
       setTimeout(() => {
         setShowForgotModal(false);
@@ -290,8 +319,7 @@ function LoginPortal() {
       title: "नामांकनकर्ता (Nominator) का विवरण",
       subtitle: "Nominator Details",
       icon: FaAddressCard,
-      description:
-        "नामांकनकर्ता की व्यक्तिगत जानकारी, पता और पहचान पत्र विवरण",
+      description: "नामांकनकर्ता की व्यक्तिगत जानकारी, पता और पहचान पत्र विवरण",
       color: "#0d6efd",
     },
     {
@@ -308,8 +336,7 @@ function LoginPortal() {
       title: "वीरता की घटना का विवरण",
       subtitle: "Details of Bravery Act",
       icon: FaClipboardList,
-      description:
-        "वीरता की घटना की तारीख, स्थान, प्रकृति और विस्तृत विवरण",
+      description: "वीरता की घटना की तारीख, स्थान, प्रकृति और विस्तृत विवरण",
       color: "#fd7e14",
     },
     {
@@ -328,35 +355,111 @@ function LoginPortal() {
       icon: FaUpload,
       description: (
         <div className="document-description">
-          
           {/* हेडिंग: अनिवार्य दस्तावेज़ */}
-          <p style={{ marginTop: "0px", marginBottom: "5px", fontWeight: "bold", color: "#182ffa" }}>
+          <p
+            style={{
+              marginTop: "0px",
+              marginBottom: "5px",
+              fontWeight: "bold",
+              color: "#182ffa",
+            }}
+          >
             नामांकन हेतु निम्नलिखित अभिलेख अनिवार्य रूप से जमा किए जाने होंगे:
           </p>
-          
+
           <ul style={{ marginBottom: "15px" }}>
-            <li>नामांकनकर्ता का पहचान पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का आधार कार्ड/पहचान पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बालक / बालिका का उत्तराखण्ड का स्थायी निवास प्रमाण पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का पासपोर्ट आकार का फोटो - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>पासबुक के प्रथम पृष्ठ की प्रति - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>
+              नामांकनकर्ता का पहचान पत्र -{" "}
+              <span style={{ color: "#fc041f", fontWeight: "bold" }}>
+                अनिवार्य
+              </span>
+            </li>
+            <li>
+              बच्चे का आधार कार्ड/पहचान पत्र -{" "}
+              <span style={{ color: "#fc041f", fontWeight: "bold" }}>
+                अनिवार्य
+              </span>
+            </li>
+            <li>
+              बालक / बालिका का उत्तराखण्ड का स्थायी निवास प्रमाण पत्र -{" "}
+              <span style={{ color: "#fc041f", fontWeight: "bold" }}>
+                अनिवार्य
+              </span>
+            </li>
+            <li>
+              बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र -{" "}
+              <span style={{ color: "#fc041f", fontWeight: "bold" }}>
+                अनिवार्य
+              </span>
+            </li>
+            <li>
+              वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत
+              विवरण -{" "}
+              <span style={{ color: "#fc041f", fontWeight: "bold" }}>
+                अनिवार्य
+              </span>
+            </li>
+            <li>
+              बच्चे का पासपोर्ट आकार का फोटो -{" "}
+              <span style={{ color: "#fc041f", fontWeight: "bold" }}>
+                अनिवार्य
+              </span>
+            </li>
+            <li>
+              पासबुक के प्रथम पृष्ठ की प्रति -{" "}
+              <span style={{ color: "#fc041f", fontWeight: "bold" }}>
+                अनिवार्य
+              </span>
+            </li>
           </ul>
-          
+
           {/* हेडिंग: जहां लागू हो / यदि लागू हो */}
-          <p style={{ marginTop: "10px", marginBottom: "5px", fontWeight: "bold", color: "#182ffa" }}>
-            आवेदनकर्ता द्वारा दिए गए प्रश्नों के उत्तर के आधार पर आवेदनकर्ता पर लागू होने की स्थिति निम्न अभिलेख भी जमा किए जाएंगे:
+          <p
+            style={{
+              marginTop: "10px",
+              marginBottom: "5px",
+              fontWeight: "bold",
+              color: "#182ffa",
+            }}
+          >
+            आवेदनकर्ता द्वारा दिए गए प्रश्नों के उत्तर के आधार पर आवेदनकर्ता पर
+            लागू होने की स्थिति निम्न अभिलेख भी जमा किए जाएंगे:
           </p>
-          
+
           <ul>
-            <li>FIR/पुलिस रिपोर्ट - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>जहां लागू हो</span></li>
-            <li>घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो / वीडियो लिंक - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>जहां लागू हो</span></li>
-            <li>प्रत्यक्षदर्शियों के बयान/प्रमाण - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>यदि लागू हो</span></li>
-            <li>विद्यालय का प्रमाण पत्र - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>यदि लागू हो</span></li>
-            <li>अन्य सहायक अभिलेख - <span style={{ color: "#fd7e14", fontWeight: "bold" }}>यदि लागू हो</span></li>
+            <li>
+              FIR/पुलिस रिपोर्ट -{" "}
+              <span style={{ color: "#fd7e14", fontWeight: "bold" }}>
+                जहां लागू हो
+              </span>
+            </li>
+            <li>
+              घटना से संबंधित समाचार पत्र की कटिंग / मीडिया रिपोर्ट / फोटो /
+              वीडियो लिंक -{" "}
+              <span style={{ color: "#fd7e14", fontWeight: "bold" }}>
+                जहां लागू हो
+              </span>
+            </li>
+            <li>
+              प्रत्यक्षदर्शियों के बयान/प्रमाण -{" "}
+              <span style={{ color: "#fd7e14", fontWeight: "bold" }}>
+                यदि लागू हो
+              </span>
+            </li>
+            <li>
+              विद्यालय का प्रमाण पत्र -{" "}
+              <span style={{ color: "#fd7e14", fontWeight: "bold" }}>
+                यदि लागू हो
+              </span>
+            </li>
+            <li>
+              अन्य सहायक अभिलेख -{" "}
+              <span style={{ color: "#fd7e14", fontWeight: "bold" }}>
+                यदि लागू हो
+              </span>
+            </li>
           </ul>
-          
+
           <strong>सभी आवश्यक दस्तावेज़ अपलोड करें।</strong>
         </div>
       ),
@@ -381,27 +484,26 @@ function LoginPortal() {
   return (
     <div className="home-page">
       <div className="home-main-card">
-
         {/* ── FULL-WIDTH SCHEME TITLE WITH IMAGES ── */}
         <div className="scheme-title-block">
           <div className="scheme-title-wrapper">
-            
             {/* Left Image: CM Pushkar Singh Dhami */}
             <div className="scheme-authority-img">
-              <img 
+              <img
                 src={CM}
-                alt="मुख्यमंत्री पुष्कर सिंह धामी" 
+                alt="मुख्यमंत्री पुष्कर सिंह धामी"
                 className="authority-photo"
               />
-              <span className="authority-name">Sh. Pushkar Singh Dhami<br/>Hon'ble Chief Minister
-Uttarakhand</span>
+              <span className="authority-name">
+                Sh. Pushkar Singh Dhami
+                <br />
+                Hon'ble Chief Minister Uttarakhand
+              </span>
             </div>
 
             {/* Center Text */}
             <div className="scheme-title-text">
-              <div className="scheme-badge">
-                ऑनलाइन नामांकन प्रपत्र 2026-27
-              </div>
+              <div className="scheme-badge">ऑनलाइन नामांकन प्रपत्र 2026-27</div>
               <h2 className="scheme-title">
                 मुख्यमंत्री राज्य बाल वीरता पुरस्कार
               </h2>
@@ -412,18 +514,18 @@ Uttarakhand</span>
 
             {/* Right Image: Director */}
             <div className="scheme-authority-img">
-              <img 
-                src={Rekha} 
-                alt="Rekha" 
-                className="authority-photo"
-              />
-              <span className="authority-name">Smt. Rekha Arya<br/>Cabinet Minister of Women and Child Welfare</span>
+              <img src={Rekha} alt="Rekha" className="authority-photo" />
+              <span className="authority-name">
+                Smt. Rekha Arya
+                <br />
+                Cabinet Minister of Women and Child Welfare
+              </span>
             </div>
-          </div> {/* END scheme-title-wrapper */}
-        </div> {/* END scheme-title-block */}
-
+          </div>{" "}
+          {/* END scheme-title-wrapper */}
+        </div>{" "}
+        {/* END scheme-title-block */}
         <Row className="g-0 home-row">
-
           {/* ═══════════ LEFT COLUMN ═══════════ */}
           <Col lg={8} className="home-left-col d-flex">
             <div
@@ -431,7 +533,31 @@ Uttarakhand</span>
               ref={contentRef}
               onScroll={handleContentScroll}
             >
-
+              {/* ── SCHEME DOCUMENTS (Desktop: after Step D) ── */}
+              <div className="scheme-documents-section desktop-only">
+                <h4 className="scheme-documents-heading">
+                  योजना संबंधी अभिलेख
+                </h4>
+                <Link
+                  to="/GOV.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="scheme-documents-link"
+                >
+                  <FaFileAlt className="pdf-icon" />
+                  मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
+                </Link>
+                <Link
+                  to="/vikupti.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="scheme-documents-link"
+                >
+                  <FaFileAlt className="pdf-icon" />
+                  मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी
+                  विज्ञप्ति
+                </Link>
+              </div>
               {/* ── REGISTRATION STEPS ── */}
               <div className="steps-section">
                 <div className="steps-heading-row">
@@ -466,10 +592,8 @@ Uttarakhand</span>
                               {step.description}
                             </p>
                           </div>
-                          
-                          {index < 3 && (
-                            <div className="step-connector" />
-                          )}
+
+                          {index < 3 && <div className="step-connector" />}
                         </div>
                       );
                     })}
@@ -502,16 +626,16 @@ Uttarakhand</span>
                           {index < registrationSteps.slice(4).length - 1 && (
                             <div className="step-connector" />
                           )}
-                          
                         </div>
-                        
                       );
                     })}
                   </div>
 
                   {/* ── SCHEME DOCUMENTS (Mobile: after Step F) ── */}
                   <div className="scheme-documents-section mobile-only">
-                    <h4 className="scheme-documents-heading">योजना संबंधी अभिलेख</h4>
+                    <h4 className="scheme-documents-heading">
+                      योजना संबंधी अभिलेख
+                    </h4>
                     <Link
                       to="/GOV.pdf"
                       target="_blank"
@@ -519,7 +643,8 @@ Uttarakhand</span>
                       className="scheme-documents-link"
                     >
                       <FaFileAlt className="pdf-icon" />
-                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
+                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश
+                      (PDF)
                     </Link>
                     <Link
                       to="/vikupti.pdf"
@@ -528,34 +653,11 @@ Uttarakhand</span>
                       className="scheme-documents-link"
                     >
                       <FaFileAlt className="pdf-icon" />
-                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी विज्ञप्ति
+                      मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी
+                      विज्ञप्ति
                     </Link>
                   </div>
-
                 </div>
-              </div>
-                     
-              {/* ── SCHEME DOCUMENTS (Desktop: after Step D) ── */}
-              <div className="scheme-documents-section desktop-only">
-                <h4 className="scheme-documents-heading">योजना संबंधी अभिलेख</h4>
-                <Link
-                  to="/GOV.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="scheme-documents-link"
-                >
-                  <FaFileAlt className="pdf-icon" />
-                  मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश (PDF)
-                </Link>
-                <Link
-                  to="/vikupti.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="scheme-documents-link"
-                >
-                  <FaFileAlt className="pdf-icon" />
-                  मुख्यमंत्री राज्य बाल वीरता पुरस्कार हेतु आवेदन संबंधी विज्ञप्ति
-                </Link>
               </div>
 
               {/* ── COLLAPSIBLE: SCHEME INFORMATION ── */}
@@ -567,9 +669,8 @@ Uttarakhand</span>
                   type="button"
                 >
                   <span className="info-section-title">
-                    <FaBookOpen
-                     className="info-section-icon" />
-                   मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश
+                    <FaBookOpen className="info-section-icon" />
+                    मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश
                   </span>
                   <FaChevronUp
                     className={`info-section-chevron ${openSection === "schemeInfo" ? "rotated" : ""}`}
@@ -585,7 +686,6 @@ Uttarakhand</span>
                   </ol>
                 </div>
               </div>
-
             </div>
 
             {/* Scroll fade overlay */}
@@ -656,14 +756,10 @@ Uttarakhand</span>
                           className="password-toggle"
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label={
-                            showPassword
-                              ? "पासवर्ड छिपाएं"
-                              : "पासवर्ड दिखाएं"
+                            showPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"
                           }
                           title={
-                            showPassword
-                              ? "पासवर्ड छिपाएं"
-                              : "पासवर्ड दिखाएं"
+                            showPassword ? "पासवर्ड छिपाएं" : "पासवर्ड दिखाएं"
                           }
                         >
                           {showPassword ? (
@@ -744,10 +840,7 @@ Uttarakhand</span>
       {/* ═══════════ FORGOT PASSWORD MODAL ═══════════ */}
       {showForgotModal && (
         <div className="modal-overlay" onClick={closeForgotModal}>
-          <div
-            className="modal-container"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>पासवर्ड बदलें</h3>
               <button
@@ -796,9 +889,7 @@ Uttarakhand</span>
               {forgotStep === 1 && (
                 <Form onSubmit={handleSendOtp} noValidate>
                   <Form.Group className="mb-3">
-                    <Form.Label className="modal-label">
-                      फ़ोन नंबर
-                    </Form.Label>
+                    <Form.Label className="modal-label">फ़ोन नंबर</Form.Label>
                     <Form.Control
                       type="tel"
                       placeholder="10 अंकों का फ़ोन नंबर दर्ज करें"
@@ -840,9 +931,7 @@ Uttarakhand</span>
                     className="modal-submit-btn"
                     disabled={loading}
                   >
-                    {loading
-                      ? "सत्यापित कर रहे हैं..."
-                      : "OTP सत्यापित करें"}
+                    {loading ? "सत्यापित कर रहे हैं..." : "OTP सत्यापित करें"}
                   </Button>
                 </Form>
               )}
@@ -850,9 +939,7 @@ Uttarakhand</span>
               {forgotStep === 3 && (
                 <Form onSubmit={handleChangePassword} noValidate>
                   <Form.Group className="mb-3">
-                    <Form.Label className="modal-label">
-                      नया पासवर्ड
-                    </Form.Label>
+                    <Form.Label className="modal-label">नया पासवर्ड</Form.Label>
                     <Form.Control
                       type="password"
                       placeholder="नया पासवर्ड दर्ज करें"
