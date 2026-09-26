@@ -500,7 +500,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     if (!data.actTime || data.actTime.trim() === "") {
       errors.actTime = "यह फ़ील्ड अनिवार्य है";
     } else if (!/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/.test(data.actTime)) {
-      errors.actTime = "समय HH:MM:SS फॉर्मेट में होना चाहिए (24-घंटे आधारित)";
+      errors.actTime = "समय HH:MM:SS फॉर्मेट में होना चाहिए (24-Hours Minutes आधारित)";
     }
     if (!data.actDistrict) {
       errors.actDistrict = "यह फ़ील्ड अनिवार्य है";
@@ -923,8 +923,8 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
 
         <div className="nf-grid nf-grid-3">
           <div className="nf-field">
-            <label htmlFor="nf-actTime">4. घटना का समय (घंटा.मिनट) <span>*</span></label>
-            <p className="nf-hint-note">फ़ॉर्मेट: HH:MM (24-घंटे आधारित)</p>
+            <label htmlFor="nf-actTime">4. घटना का समय (Hour.Minutes) <span>*</span></label>
+            <p className="nf-hint-note">फ़ॉर्मेट: HH:MM (24-Hour.Minutes आधारित)</p>
             <div style={{ display: "flex", gap: ".35rem", alignItems: "center", flexWrap: "wrap" }}>
               {(() => {
                 const parts = data.actTime ? data.actTime.split(":") : ["", "", ""];
@@ -944,7 +944,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
                       className={combinedErrors.actTime ? "error-style" : ""}
                       style={{ flex: 1, minWidth: "80px" }}
                     >
-                      <option value="">घंटा</option>
+                      <option value="">Hour</option>
                       {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => (
                         <option key={h} value={h}>{h}</option>
                       ))}
@@ -962,7 +962,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
                       className={combinedErrors.actTime ? "error-style" : ""}
                       style={{ flex: 1, minWidth: "80px" }}
                     >
-                      <option value="">मिनट</option>
+                      <option value="">Minutes</option>
                       {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0")).map((m) => (
                         <option key={m} value={m}>{m}</option>
                       ))}
