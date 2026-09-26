@@ -6,7 +6,7 @@ import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 import { submitNominatorPart1 } from "../../otpsendverify/api";
 
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
-const idTypes = ["आधार कार्ड", "मतदाता पहचान पत्र", "अन्य सरकारी पहचान पत्र"];
+const idTypes = ["आधार कार्ड", "पैन कार्ड", "ड्राइविंग लाइसेंस", "पहचान पत्र"];
 
 const StudentRegistration = () => {
   const navigate = useNavigate();
@@ -22,14 +22,13 @@ const StudentRegistration = () => {
     idNumber: "",
     address: {
       "ग्राम/मोहल्ला": "",
-      "डाकघर": "",
+      "तहसील ": "",
       "विकासखण्ड/नगर निकाय": "",
       "जनपद": "",
       "पिन कोड": "",
     },
   });
   const [errors, setErrors] = useState({});
-  const [idTypeCustom, setIdTypeCustom] = useState(false);
   const [showSendOtp, setShowSendOtp] = useState(false);
   const [showVerifyOtp, setShowVerifyOtp] = useState(false);
   const [otpMobile, setOtpMobile] = useState("");
@@ -171,12 +170,6 @@ const StudentRegistration = () => {
             next.relation = "";
           }
         }
-        if (name === "idType") {
-          setIdTypeCustom(value === "अन्य सरकारी पहचान पत्र");
-          if (value === "अन्य सरकारी पहचान पत्र") {
-            next.idType = "";
-          }
-        }
         return next;
       });
     }
@@ -252,6 +245,9 @@ const StudentRegistration = () => {
       }
       const idTypeMap = {
         "आधार कार्ड": "aadhaar",
+        "पैन कार्ड": "pan",
+        "ड्राइविंग लाइसेंस": "driving_license",
+        "पहचान पत्र": "pehchan_patraw",
         "मतदाता पहचान पत्र": "voter_id",
       };
 
@@ -261,14 +257,14 @@ const StudentRegistration = () => {
         relat_with_child: form.relation,
         email: form.email,
         password: form.password,
-        id_proof_type: idTypeCustom ? null : (idTypeMap[form.idType] || form.idType),
+        id_proof_type: idTypeMap[form.idType] || form.idType,
         id_proof_no: form.idNumber,
         village: form.address["ग्राम/मोहल्ला"],
-        post_office: form.address["डाकघर"],
+        post_office: form.address["तहसील "],
         project: form.address["विकासखण्ड/नगर निकाय"],
         district: form.address["जनपद"],
         pincode: form.address["पिन कोड"],
-        id_proof_type_other: idTypeCustom ? form.idType : null,
+        id_proof_type_other: null,
       };
 
       console.log("[StudentRegistration] Submitting payload:", payload);
@@ -447,46 +443,35 @@ const StudentRegistration = () => {
             {field("5. ई-मेल आईडी", "email", { type: "email", placeholder: "ई-मेल आईडी दर्ज करें" })}
 
             <div className="sr-field">
-              <label htmlFor="sr-idType">6. पहचान पत्र का प्रकार <span aria-hidden="true"> *</span></label>
-              {idTypeCustom ? (
-                <div className="sr-input-wrap">
-                  <input id="sr-idType" name="idType" type="text" value={form.idType} onChange={update} aria-invalid={Boolean(errors.idType)} />
-                  <button
-                    type="button"
-                    className="sr-reset"
-                    onClick={() => {
-                      setForm((c) => ({ ...c, idType: "" }));
-                      setIdTypeCustom(false);
-                    }}
-                    aria-label="Reset"
-                  >
-                    ↺
-                  </button>
-                </div>
-              ) : (
-                <select id="sr-idType" name="idType" value={form.idType} onChange={update} aria-invalid={Boolean(errors.idType)}>
-                  <option value="">चयन करें</option>
-                  {idTypes.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              )}
-              {errors.idType && <span className="sr-error" role="alert">{errors.idType}</span>}
-            </div>
+            <label htmlFor="sr-idType">6. <span aria-hidden="true">(नामांकनकर्ता)</span> पहचान पत्र का प्रकार <span aria-hidden="true"> *</span></label>
+            <select
+              id="sr-idType"
+              name="idType"
+              value={form.idType}
+              onChange={update}
+              aria-invalid={Boolean(errors.idType)}
+            >
+              <option value="">चयन करें</option>
+              {idTypes.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+            {errors.idType && <span className="sr-error" role="alert">{errors.idType}</span>}
+          </div>
 
-            <div className="sr-field">
-              <label htmlFor="sr-idNumber">7. पहचान पत्र संख्या <span aria-hidden="true"> *</span></label>
-              <input
-                id="sr-idNumber"
-                name="idNumber"
-                type="text"
-                value={form.idNumber}
-                onChange={update}
-                maxLength={form.idType === "आधार कार्ड" ? 12 : undefined}
-                placeholder="पहचान पत्र संख्या दर्ज करें"
-                disabled={form.idType === "अन्य सरकारी पहचान पत्र" ? false : !form.idType}
-                aria-invalid={Boolean(errors.idNumber)}
-              />
+          <div className="sr-field">
+            <label htmlFor="sr-idNumber">7. {form.idType ? `${form.idType} संख्या` : "पहचान पत्र संख्या"} <span aria-hidden="true"> *</span></label>
+            <input
+              id="sr-idNumber"
+              name="idNumber"
+              type="text"
+              value={form.idNumber}
+              onChange={update}
+              maxLength={form.idType === "आधार कार्ड" ? 12 : undefined}
+              placeholder="पहचान पत्र संख्या दर्ज करें"
+              disabled={!form.idType}
+              aria-invalid={Boolean(errors.idNumber)}
+            />
               {errors.idNumber && <span className="sr-error" role="alert">{errors.idNumber}</span>}
             </div>
           </div>
@@ -495,7 +480,7 @@ const StudentRegistration = () => {
             <legend>8. नामांकनकर्ता का पता <span aria-hidden="true">*</span></legend>
             <div className="sr-grid">
               {field("ग्राम/मोहल्ला/घर का पूरा पता", "address.ग्राम/मोहल्ला", { required: true, placeholder: "ग्राम/मोहल्ला/घर का पूरा पता" })}
-              {field("डाकघर", "address.डाकघर", { required: true, placeholder: "डाकघर का नाम" })}
+              {field("तहसील ", "address.तहसील ", { required: true, placeholder: "तहसील  का नाम" })}
 
               {field("जनपद", "address.जनपद", {
                 required: true,

@@ -190,8 +190,8 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
 
   const photoSrc = useMemo(() => getFileSrc(data?.document5), [data?.document5]);
 
-  const curAddr = [data?.["currentग्राम/मोहल्ला"], data?.["currentडाकघर"], data?.["currentजनपद"], data?.["currentपिन कोड"]].filter(Boolean).join(" / ");
-  const perAddr = [data?.["permanentग्राम/मोहल्ला"], data?.["permanentडाकघर"], data?.["permanentजनपद"], data?.["permanentपिन कोड"]].filter(Boolean).join(" / ");
+  const curAddr = [data?.["currentग्राम/मोहल्ला"], data?.["currentतहसील "], data?.["currentजनपद"], data?.["currentपिन कोड"]].filter(Boolean).join(" / ");
+  const perAddr = [data?.["permanentग्राम/मोहल्ला"], data?.["permanentतहसील "], data?.["permanentजनपद"], data?.["permanentपिन कोड"]].filter(Boolean).join(" / ");
 
   const allDocs = [
     { label: "नामांकनकर्ता का पहचान पत्र", key: "document0" },

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../login/AuthContext";
 
-const addressFields = ["ग्राम/मोहल्ला", "डाकघर", "जनपद", "विकासखण्ड/नगर निकाय", "पिन कोड"];
+const addressFields = ["ग्राम/मोहल्ला", "तहसील ", "जनपद", "विकासखण्ड/नगर निकाय", "पिन कोड"];
 
 const hasSchoolDetails = (formData) =>
   [formData?.schoolName, formData?.schoolAddress, formData?.currentClass]
@@ -80,12 +80,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               resident: record.permanent_resident_uttarakhand,
               residence_certificate_number: record.residence_certificate_number,
               "permanentग्राम/मोहल्ला": record.permanent_village,
-              "permanentडाकघर": record.permanent_post_office,
+              "permanentतहसील ": record.permanent_post_office,
               "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
               "permanentजनपद": record.permanent_district,
               "permanentपिन कोड": record.permanent_pincode,
               "currentग्राम/मोहल्ला": record.current_village,
-              "currentडाकघर": record.current_post_office,
+              "currentतहसील ": record.current_post_office,
               "currentविकासखण्ड/नगर निकाय": record.current_block_local_body,
               "currentजनपद": record.current_district,
               "currentपिन कोड": record.current_pincode,
@@ -128,12 +128,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
               resident: record.permanent_resident_uttarakhand,
               residence_certificate_number: record.residence_certificate_number,
               "permanentग्राम/मोहल्ला": record.permanent_village,
-              "permanentडाकघर": record.permanent_post_office,
+              "permanentतहसील ": record.permanent_post_office,
               "permanentविकासखण्ड/नगर निकाय": record.permanent_block_local_body,
               "permanentजनपद": record.permanent_district,
               "permanentपिन कोड": record.permanent_pincode,
               "currentग्राम/मोहल्ला": record.current_village,
-              "currentडाकघर": record.current_post_office,
+              "currentतहसील ": record.current_post_office,
               "currentविकासखण्ड/नगर निकाय": record.current_block_local_body,
               "currentजनपद": record.current_district,
               "currentपिन कोड": record.current_pincode,
@@ -419,12 +419,12 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
       permanent_resident_uttarakhand: data.resident || "",
       residence_certificate_number: data.residence_certificate_number || "",
       permanent_village: data["permanentग्राम/मोहल्ला"] || "",
-      permanent_post_office: data["permanentडाकघर"] || "",
+      permanent_post_office: data["permanentतहसील "] || "",
       permanent_block_local_body: data["permanentविकासखण्ड/नगर निकाय"] || "",
       permanent_district: data["permanentजनपद"] || "",
       permanent_pincode: data["permanentपिन कोड"] || "",
       current_village: data["currentग्राम/मोहल्ला"] || "",
-      current_post_office: data["currentडाकघर"] || "",
+      current_post_office: data["currentतहसील "] || "",
       current_district: data["currentजनपद"] || "",
       current_block_local_body: data["currentविकासखण्ड/नगर निकाय"] || "",
       current_pincode: data["currentपिन कोड"] || "",
@@ -460,7 +460,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
 
     if (data.resident === "हाँ") {
       if (!data["permanentग्राम/मोहल्ला"]?.trim()) errors["permanentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
-      if (!data["permanentडाकघर"]?.trim()) errors["permanentडाकघर"] = "यह फ़ील्ड अनिवार्य है";
+      if (!data["permanentतहसील "]?.trim()) errors["permanentतहसील "] = "यह फ़ील्ड अनिवार्य है";
       if (!data["permanentजनपद"]) errors["permanentजनपद"] = "यह फ़ील्ड अनिवार्य है";
       if (!data["permanentविकासखण्ड/नगर निकाय"]) errors["permanentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
       if (!data["permanentपिन कोड"]?.trim()) errors["permanentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
@@ -475,7 +475,7 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
     }
 
     if (!data["currentग्राम/मोहल्ला"]?.trim()) errors["currentग्राम/मोहल्ला"] = "यह फ़ील्ड अनिवार्य है";
-    if (!data["currentडाकघर"]?.trim()) errors["currentडाकघर"] = "यह फ़ील्ड अनिवार्य है";
+    if (!data["currentतहसील "]?.trim()) errors["currentतहसील "] = "यह फ़ील्ड अनिवार्य है";
     if (!data["currentजनपद"]) errors["currentजनपद"] = "यह फ़ील्ड अनिवार्य है";
     if (!data["currentविकासखण्ड/नगर निकाय"]) errors["currentविकासखण्ड/नगर निकाय"] = "यह फ़ील्ड अनिवार्य है";
     if (!data["currentपिन कोड"]?.trim()) errors["currentपिन कोड"] = "यह फ़ील्ड अनिवार्य है";
@@ -487,8 +487,8 @@ const StepB = ({ data, update, error, onNext, onCompleted, isStepBChecked, onErr
   const editableFields = [
     "childName", "fatherName", "motherName", "guardianName", "childMobile", "birthDate", "gender", "resident",
     "residence_certificate_number",
-    "permanentग्राम/मोहल्ला", "permanentडाकघर", "permanentजनपद", "permanentविकासखण्ड/नगर निकाय", "permanentपिन कोड",
-    "currentग्राम/मोहल्ला", "currentडाकघर", "currentजनपद", "currentविकासखण्ड/नगर निकाय", "currentपिन कोड",
+    "permanentग्राम/मोहल्ला", "permanentतहसील ", "permanentजनपद", "permanentविकासखण्ड/नगर निकाय", "permanentपिन कोड",
+    "currentग्राम/मोहल्ला", "currentतहसील ", "currentजनपद", "currentविकासखण्ड/नगर निकाय", "currentपिन कोड",
     "schoolName", "schoolAddress", "currentClass", "schoolEnrollmentStatus",
   ];
 

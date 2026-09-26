@@ -23,7 +23,7 @@ const requiredByStep = {
   0: [
     "childName", "fatherName", "motherName", "birthDate",
     "gender", "resident",
-    "permanentग्राम/मोहल्ला", "permanentडाकघर",
+    "permanentग्राम/मोहल्ला", "permanentतहसील ",
     "permanentविकासखण्ड/नगर निकाय", "permanentजनपद", "permanentपिन कोड",
   ],
   1: [

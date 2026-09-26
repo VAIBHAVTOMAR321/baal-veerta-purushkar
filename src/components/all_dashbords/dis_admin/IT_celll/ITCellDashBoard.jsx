@@ -32,13 +32,13 @@ const mapApiDataToPreviewData = (item) => {
 
     // Addresses
     "currentग्राम/मोहल्ला": s1.current_village || "",
-    "currentडाकघर": s1.current_post_office || "",
+    "currentतहसील ": s1.current_post_office || "",
     "currentजनपद": s1.current_district || "",
     "currentविकासखण्ड/नगर निकाय": s1.current_block_local_body || "",
     "currentपिन कोड": s1.current_pincode || "",
 
     "permanentग्राम/मोहल्ला": s1.permanent_village || "",
-    "permanentडाकघर": s1.permanent_post_office || "",
+    "permanentतहसील ": s1.permanent_post_office || "",
     "permanentजनपद": s1.permanent_district || "",
     "permanentविकासखण्ड/नगर निकाय": s1.permanent_block_local_body || "",
     "permanentपिन कोड": s1.permanent_pincode || "",
