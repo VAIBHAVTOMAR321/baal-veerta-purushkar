@@ -8,6 +8,14 @@ import { submitNominatorPart1 } from "../../otpsendverify/api";
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
 const idTypes = ["आधार कार्ड", "पैन कार्ड", "ड्राइविंग लाइसेंस", "पहचान पत्र (फोटो के साथ)"];
 
+const validatePassword = (pwd) => {
+  const issues = [];
+  if (pwd.length > 0 && pwd.length < 8) issues.push("कम से कम 8 अक्षर");
+  if (pwd.length > 0 && !/[A-Z]/.test(pwd)) issues.push("कम से कम एक बड़ा अक्षर");
+  if (pwd.length > 0 && !/^[a-zA-Z0-9]*$/.test(pwd)) issues.push("केवल अक्षर और संख्या (Alphanumeric)");
+  return issues;
+};
+
 const StudentRegistration = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -193,7 +201,13 @@ const StudentRegistration = () => {
         }
       }
       if (name === "confirmPassword" && value && form.password && value !== form.password) {
-        next.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होने चाहिए";
+        next.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होना चाहिए";
+      }
+      if (name === "password") {
+        const pwdIssues = validatePassword(value);
+        if (pwdIssues.length > 0) {
+          next.password = pwdIssues.join(", ");
+        }
       }
       if (name === "idNumber" && idTypeRef.current === "आधार कार्ड") {
         const aadhaarValue = String(value || "").trim();
@@ -226,7 +240,13 @@ const StudentRegistration = () => {
       nextErrors["address.पिन कोड"] = "पिन कोड 6 अंकों का होना चाहिए";
     }
     if (form.password && form.password !== form.confirmPassword) {
-      nextErrors.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होने चाहिए";
+      nextErrors.confirmPassword = "पासवर्ड और कन्फर्म पासवर्ड समान होना चाहिए";
+    }
+    if (form.password && !nextErrors.password) {
+      const pwdIssues = validatePassword(form.password);
+      if (pwdIssues.length > 0) {
+        nextErrors.password = pwdIssues.join(", ");
+      }
     }
     if (form.idType === "आधार कार्ड" && form.idNumber && !/^[0-9]{12}$/.test(form.idNumber.trim())) {
       nextErrors.idNumber = "आधार कार्ड संख्या 12 अंकों की होनी चाहिए";
@@ -247,7 +267,7 @@ const StudentRegistration = () => {
         "आधार कार्ड": "aadhaar",
         "पैन कार्ड": "pan",
         "ड्राइविंग लाइसेंस": "driving_license",
-        "पहचान पत्र": "pehchan_patraw",
+        "पहचान पत्र (फोटो के साथ)": "pehchan_patraw",
       };
 
       const payload = {
@@ -507,7 +527,9 @@ const StudentRegistration = () => {
 
           <div className="sr-grid">
             <div className="sr-field">
-              <label htmlFor="sr-password">9. पासवर्ड <span aria-hidden="true"> *</span></label>
+              <label htmlFor="sr-password">9. पासवर्ड <span aria-hidden="true"> * (कम से कम 8 अक्षर, एक बड़ा अक्षर और केवल अक्षर-संख्या)</span>
+              </label>
+              
               <div className="sr-input-wrap">
                 <input
                   id="sr-password"
