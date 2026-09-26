@@ -326,22 +326,22 @@ function LoginPortal() {
         <div className="document-description">
           
           {/* हेडिंग: अनिवार्य दस्तावेज़ */}
-          <p style={{ marginTop: "0px", marginBottom: "5px", fontWeight: "bold", color: "#dc3545" }}>
+          <p style={{ marginTop: "0px", marginBottom: "5px", fontWeight: "bold", color: "#182ffa" }}>
             नामांकन हेतु निम्नलिखित अभिलेख अनिवार्य रूप से जमा किए जाने होंगे:
           </p>
           
           <ul style={{ marginBottom: "15px" }}>
-            <li>नामांकनकर्ता का पहचान पत्र - <span style={{ color: "#3c181c", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का आधार कार्ड/पहचान पत्र - <span style={{ color: "#3c181c", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बालक / बालिका का उत्तराखण्ड का स्थायी निवास प्रमाण पत्र - <span style={{ color: "#3c181c", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र - <span style={{ color: "#3c181c", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण - <span style={{ color: "#3c181c", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>बच्चे का पासपोर्ट आकार का फोटो - <span style={{ color: "#3c181c", fontWeight: "bold" }}>अनिवार्य</span></li>
-            <li>पासबुक के प्रथम पृष्ठ की प्रति - <span style={{ color: "#3c181c", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>नामांकनकर्ता का पहचान पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बच्चे का आधार कार्ड/पहचान पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बालक / बालिका का उत्तराखण्ड का स्थायी निवास प्रमाण पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बच्चे का जन्म प्रमाण पत्र/आयु प्रमाण पत्र - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>वीरता की घटना के संबंध में नामांकनकर्ता द्वारा हस्ताक्षरित विस्तृत विवरण - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>बच्चे का पासपोर्ट आकार का फोटो - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
+            <li>पासबुक के प्रथम पृष्ठ की प्रति - <span style={{ color: "#fc041f", fontWeight: "bold" }}>अनिवार्य</span></li>
           </ul>
           
           {/* हेडिंग: जहां लागू हो / यदि लागू हो */}
-          <p style={{ marginTop: "10px", marginBottom: "5px", fontWeight: "bold", color: "#0d6efd" }}>
+          <p style={{ marginTop: "10px", marginBottom: "5px", fontWeight: "bold", color: "#182ffa" }}>
             आवेदनकर्ता द्वारा दिए गए प्रश्नों के उत्तर के आधार पर आवेदनकर्ता पर लागू होने की स्थिति निम्न अभिलेख भी जमा किए जाएंगे:
           </p>
           
@@ -412,12 +412,13 @@ function LoginPortal() {
                 योजना की पूरी जानकारी / Scheme Details (PDF)
               </Link>
 
+
               {/* ── REGISTRATION STEPS ── */}
               <div className="steps-section">
                 <div className="steps-heading-row">
                   <h3 className="steps-heading">
                     <FaClipboardList className="steps-heading-icon" />
-                    नामांकन प्रक्रिया
+                    आवेदन प्रक्रिया के चरण
                   </h3>
                   <Link
                     to="/GOV.pdf"
@@ -530,7 +531,7 @@ function LoginPortal() {
                   <span className="info-section-title">
                     <FaBookOpen
                      className="info-section-icon" />
-                    योजना की जानकारी
+                   मुख्यमंत्री राज्य बाल वीरता पुरस्कार योजना का शासनादेश
                   </span>
                   <FaChevronUp
                     className={`info-section-chevron ${openSection === "schemeInfo" ? "rotated" : ""}`}
