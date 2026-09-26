@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../login/AuthContext";
+import { isUnderAgeAtIncident, UNDER_AGE_MESSAGE } from "./ageEligibility";
 
 const natureOptions = ["किसी व्यक्ति के जीवन की रक्षा", "स्वयं के जीवन की रक्षा हेतु साहसिक कार्य", "आपदा/प्राकृतिक आपदा में साहसिक कार्य", "दुर्घटना में बचाव कार्य", "डूबते हुए व्यक्ति को बचाना", "आग/अग्निकांड में बचाव कार्य", "अपराध/आपराधिक घटना के दौरान साहसिक कार्य", "अन्य असाधारण साहसिक कार्य"];
 
@@ -90,6 +91,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   const [districts, setDistricts] = useState([]);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [isOverAge, setIsOverAge] = useState(false);
+  const [isUnderAge, setIsUnderAge] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [alertInfo, setAlertInfo] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
@@ -217,8 +219,10 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
       update({ target: { name: "incidentAge", value: formatted } });
       const isOverAge = years > 18 || (years === 18 && (months > 0 || days > 0));
       setIsOverAge(isOverAge);
+      setIsUnderAge(years < 6);
     } else {
       setIsOverAge(false);
+      setIsUnderAge(false);
     }
   }, [data.actDate, data.birthDate, update]);
 
@@ -228,6 +232,11 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         ...prev,
         incidentAge: "आप 18 वर्ष से अधिक आयु के कारण इस फॉर्म को भरने के लिए पात्र नहीं हैं।",
       }));
+    } else if (isUnderAge) {
+      setLocalErrors((prev) => ({
+        ...prev,
+        incidentAge: UNDER_AGE_MESSAGE,
+      }));
     } else {
       setLocalErrors((prev) => {
         const next = { ...prev };
@@ -235,7 +244,7 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
         return next;
       });
     }
-  }, [isOverAge]);
+  }, [isOverAge, isUnderAge]);
 
   useEffect(() => {
     if (alertInfo) {
@@ -561,6 +570,10 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
     }
     if (isOverAge) {
       setAlertInfo({ type: "error", message: "आयु 18 वर्ष से अधिक होने के कारण इस फॉर्म को सबमिट नहीं किया जा सकता।" });
+      return;
+    }
+    if (isUnderAgeAtIncident(data.birthDate, data.actDate)) {
+      setAlertInfo({ type: "error", message: UNDER_AGE_MESSAGE });
       return;
     }
 

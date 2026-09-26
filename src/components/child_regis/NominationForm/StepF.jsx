@@ -3,6 +3,7 @@ import { useAuth } from "../../login/AuthContext";
 import { FaEye, FaFileAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import RaiseQueryModal from "./RaiseQueryModal.jsx";
+import { isAgeNotEligible, getAgeIneligibilityMessage } from "./ageEligibility";
 import { SendOTP } from "../../otpsendverify/SendOTP";
 import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 
@@ -91,6 +92,8 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   });
 
   const userMobile = data?.mobile_number || data?.mobileNumber || user?.mobile_number || user?.mobile || "";
+  const isAgeIneligible = isAgeNotEligible(data?.birthDate, data?.actDate);
+  const ageIneligibilityMessage = getAgeIneligibilityMessage(data?.birthDate, data?.actDate);
 
   const applicantId = data?.applicant_id || user?.applicant_id || localStorage.getItem("applicantId") || "";
   const applicantMobile = data?.mobile_number || data?.phone_number || data?.childMobile || nominatorPhoneNumber || userMobile;
@@ -393,6 +396,11 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const handleFinalSubmit = async () => {
     if (!canSubmit || isCompleted || submitting) return;
 
+    if (isAgeIneligible) {
+      setSubmitError(ageIneligibilityMessage);
+      return;
+    }
+
     const declarationValue = getEffectiveDocumentValue("declarationDocument");
     const parentDeclarationValue = getEffectiveDocumentValue("parentDeclarationDocument");
 
@@ -639,6 +647,14 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
           </div>
         )}
       </div>
+      {isAgeIneligible && !isCompleted && (
+        <div
+          className="nf-notice"
+          style={{ background: "#fef2f2", borderLeftColor: "#ef4444", color: "#991b1b", marginTop: "-.75rem" }}
+        >
+          {ageIneligibilityMessage}
+        </div>
+      )}
       {(data.declarationDocument || data.parentDeclarationDocument) && !isCompleted && (
         <div
           className="nf-notice"
@@ -664,7 +680,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
             <button
               type="button"
               className="nf-primary"
-              disabled={!canSubmit}
+              disabled={!canSubmit || isAgeIneligible}
               onClick={handleFinalSubmit}
             >
               {submitting ? "Submitting..." : "Final Submit"}
