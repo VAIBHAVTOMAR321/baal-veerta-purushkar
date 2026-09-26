@@ -620,7 +620,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                         id={`nf-document-${index}`}
                         name={`document${index}`}
                         type="file"
-                        accept={index === 5 ? ".jpg,.jpeg,.png" : ".pdf,.jpg,.jpeg,.png"}
+                        accept={index === 5 ? ".jpg,.jpeg" : ".pdf"}
                         onChange={(e) => handleFileChange(e, index)}
                         disabled={isSubmitting}
                         aria-describedby={`nf-document-help-${index}`}
@@ -647,7 +647,7 @@ const StepD = ({ data, update, error, onSubmitSuccess, onCompleted, isStepDCheck
                   </div>
 
                   <small id={`nf-document-help-${index}`}>
-                    {index === 5 ? "JPG/JPEG/PNG only" : "File Format: PDF/JPG/JPEG/PNG only"} | Max Size: {index === 7 ? "2MB" : "1MB"} प्रति दस्तावेज
+                    {index === 5 ? "JPG/JPEG only" : "File Format: PDF only"} | Max Size: 3MB प्रति दस्तावेज
                   </small>
                   {pendingFile && (
                     <button type="button" className="nf-primary" onClick={() => handleDocumentSubmit(index)} disabled={isSubmitting}>
