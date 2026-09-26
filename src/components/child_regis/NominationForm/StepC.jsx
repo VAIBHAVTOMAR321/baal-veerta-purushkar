@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../login/AuthContext";
 import { isUnderAgeAtIncident, UNDER_AGE_MESSAGE } from "./ageEligibility";
 
+const INCIDENT_DATE_RANGE_START = "2024-10-11";
+const INCIDENT_DATE_RANGE_END = "2026-10-11";
+
 const natureOptions = ["किसी व्यक्ति के जीवन की रक्षा", "स्वयं के जीवन की रक्षा हेतु साहसिक कार्य", "आपदा/प्राकृतिक आपदा में साहसिक कार्य", "दुर्घटना में बचाव कार्य", "डूबते हुए व्यक्ति को बचाना", "आग/अग्निकांड में बचाव कार्य", "अपराध/आपराधिक घटना के दौरान साहसिक कार्य", "अन्य असाधारण साहसिक कार्य"];
 
 const incidentTypeMap = {
@@ -106,9 +109,12 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
   //  COMBINED ERRORS - merge parent errors with local errors
   const combinedErrors = { ...error, ...localErrors };
 
-  const today = new Date().toISOString().split("T")[0];
-  const minIncidentDate = "2024-01-01";
-  const maxIncidentDate = today;
+  const todayDate = new Date();
+  const today = new Date(todayDate.getTime() - todayDate.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
+  const minIncidentDate = INCIDENT_DATE_RANGE_START;
+  const maxIncidentDate = today < INCIDENT_DATE_RANGE_END ? today : INCIDENT_DATE_RANGE_END;
 
   useEffect(() => {
     if (dataFetchStarted.current) return;
@@ -902,7 +908,17 @@ const StepC = ({ data, update, error, onSubmitSuccess, onCompleted, isStepCCheck
             {combinedErrors.actTitle && <small className="nf-error">{combinedErrors.actTitle}</small>}
           </div>
           {input("2. घटना की दिनांक", "actDate", { required: true, type: "date", alwaysEnabled: true, min: minIncidentDate, max: maxIncidentDate })}
-          {input("3. घटना के समय आयु", "incidentAge", { type: "text", disabled: true })}
+          <div className="nf-field">
+            <label htmlFor="nf-incidentAge">3. घटना के समय आयु</label>
+            <div
+              id="nf-incidentAge"
+              className="nf-readonly-value"
+              style={{ width: "100%", border: "1px solid #bdcbd5", borderRadius: "4px", padding: ".62rem .7rem", background: "#f5f7f8", color: "#17324d" }}
+            >
+              {data.incidentAge || "-"}
+            </div>
+            {combinedErrors.incidentAge && <small className="nf-error">{combinedErrors.incidentAge}</small>}
+          </div>
         </div>
 
         <div className="nf-grid nf-grid-3">
