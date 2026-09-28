@@ -27,12 +27,13 @@ import UserDashBoard from "./components/all_dashbords/dis_admin/user_dashboard/U
 import ITCellDashBoard from "./components/all_dashbords/dis_admin/IT_celll/ITCellDashBoard";
 import UserLogin from "./components/login/UserLogin";
 import LoginPortal from "./components/home_layout/LoginPortal";
+import DPODashboard from "./components/all_dashbords/dis_admin/DPO_cell/DPODashboard";
 
 
 // A wrapper component to conditionally render the NavBar
 const AppContent = () => {
   const location = useLocation();
-  const isDisRoute = ["/UserDashBoard", "/ITCellDashBoard"].some((route) =>
+  const isDisRoute = ["/UserDashBoard", "/ITCellDashBoard", "/DPODashboard"].some((route) =>
     location.pathname.startsWith(route)
   );
 
@@ -55,7 +56,9 @@ const AppContent = () => {
           <Route path="/StepF" element={<StepF />} />
           <Route path="/UserDashBoard" element={<UserDashBoard />} />
           <Route path="/ITCellDashBoard" element={<ITCellDashBoard />} />
-   
+          <Route path="/DPODashBoard" element={<DPODashboard />} />
+<Route path="/DPODashBoard/applications" element={<DPODashboard />} />
+<Route path="/DPODashBoard/reports" element={<DPODashboard />} />
           
 
           {/* Dis Routes */}
