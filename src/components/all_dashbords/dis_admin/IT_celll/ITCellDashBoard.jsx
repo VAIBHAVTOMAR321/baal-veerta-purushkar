@@ -523,7 +523,7 @@ const ITCellDashBoard = () => {
               </Alert>
             )}
             {!loading && !error && (
-              <div className="table-responsive" style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}>
+              <div className="table-responsive" style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden", overflowX: "auto" }}>
                 <Table striped bordered hover size="sm" style={{ marginBottom: 0 }}>
                   <thead>
                     <tr style={{ backgroundColor: "#f9fafb" }}>
