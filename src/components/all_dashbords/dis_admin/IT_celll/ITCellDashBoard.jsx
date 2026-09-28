@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Table, Badge, Form, Modal, Button } from "react-bootstrap";
-import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye, FaIdCard, FaFileAlt } from "react-icons/fa";
+import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye, FaIdCard, FaFileAlt, FaFilePdf, FaFileExcel } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import ITCellTopNav from "./ITCellTopNav";
 import ITCellLeftNav from "./ITCellLeftNav";
 import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
+import { exportDashboardExcel, exportDashboardPdf } from "../../../../utils/itCellReportExport";
 
 const mapApiDataToPreviewData = (item) => {
   if (!item) return null;
@@ -132,6 +133,8 @@ const ITCellDashBoard = () => {
   const [loadingFormStatus, setLoadingFormStatus] = useState(false);
   const [formStatusError, setFormStatusError] = useState(null);
   const [noFormDataAlert, setNoFormDataAlert] = useState(false);
+  const [exporting, setExporting] = useState("");
+  const [exportError, setExportError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -249,6 +252,49 @@ const ITCellDashBoard = () => {
       const matchesStepStatus = !stepStatusFilter || app.step_status === stepStatusFilter;
       return matchesSearch && matchesProject && matchesDistrict && matchesStepStatus;
     });
+
+    const reportFilters = {
+      "Search": searchTerm.trim() || "All",
+      "Project": projectFilter || "All",
+      "District": districtFilter || "All",
+      "Step Status": stepStatusFilter || "All",
+    };
+
+    const handleExportPdf = async () => {
+      if (exporting) return;
+      setExporting("pdf");
+      setExportError(null);
+      try {
+        await exportDashboardPdf({
+          applications: filteredApplications,
+          formStatusList,
+          filters: reportFilters,
+        });
+      } catch (err) {
+        console.error("Failed to export PDF report:", err);
+        setExportError(err.message || "PDF export failed");
+      } finally {
+        setExporting("");
+      }
+    };
+
+    const handleExportExcel = async () => {
+      if (exporting) return;
+      setExporting("excel");
+      setExportError(null);
+      try {
+        await exportDashboardExcel({
+          applications: filteredApplications,
+          formStatusList,
+          filters: reportFilters,
+        });
+      } catch (err) {
+        console.error("Failed to export Excel report:", err);
+        setExportError(err.message || "Excel export failed");
+      } finally {
+        setExporting("");
+      }
+    };
 
     const handleViewClick = (app) => {
       setSelectedApplication(app);
@@ -371,6 +417,46 @@ const ITCellDashBoard = () => {
               </h2>
               <p style={{ margin: 0, fontSize: "0.875rem", color: "#667085" }}>Student Registration Details</p>
             </div>
+
+            <div
+              className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"
+              style={{ padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px" }}
+            >
+              <div>
+                <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 700, color: "#1e293b" }}>
+                  रिपोर्ट निर्यात (Export Report)
+                </p>
+                <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>
+                  रिपोर्ट में शीर्षक, ग्राफ़ तथा सम्पूर्ण पंजीकरण विवरण सम्मिलित होंगे।
+                </p>
+              </div>
+              <div className="d-flex flex-wrap gap-2">
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={handleExportExcel}
+                  disabled={Boolean(exporting) || loading || filteredApplications.length === 0}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", borderRadius: "8px", fontWeight: 600, fontSize: "0.82rem" }}
+                >
+                  {exporting === "excel" ? <Spinner animation="border" size="sm" /> : <FaFileExcel />} Export Excel
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleExportPdf}
+                  disabled={Boolean(exporting) || loading || filteredApplications.length === 0}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", borderRadius: "8px", fontWeight: 600, fontSize: "0.82rem" }}
+                >
+                  {exporting === "pdf" ? <Spinner animation="border" size="sm" /> : <FaFilePdf />} Export PDF
+                </Button>
+              </div>
+            </div>
+
+            {exportError && (
+              <Alert variant="danger" className="mt-2" onClose={() => setExportError(null)} dismissible>
+                {exportError}
+              </Alert>
+            )}
 
             <Row className="mb-3">
               <Col xs={12} md={6} lg={4}>
