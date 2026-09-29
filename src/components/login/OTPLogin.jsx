@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { sendOtpLoginApi, verifyOtpLoginApi } from "../otpsendverify/api";
+import { FaMobileAlt, FaShieldAlt } from "react-icons/fa";
 import ukLogo from "../../assets/images/uk_logo.jpeg";
 import "./Login.css";
 import "../otpsendverify/otp.css";
@@ -66,8 +67,19 @@ const SendOTPModal = ({
     <div className="otp-modal-overlay" onClick={onClose}>
       <div className="otp-modal" onClick={(e) => e.stopPropagation()}>
         <div className="otp-modal-header">
+          <span className="otp-modal-icon" aria-hidden="true">
+            <FaMobileAlt />
+          </span>
           <h3>OTP भेजें</h3>
           <span className="otp-role-badge">{roleConfig[selectedRole]?.hindi}</span>
+          <button
+            className="otp-close"
+            onClick={onClose}
+            aria-label="Close"
+            type="button"
+          >
+            ×
+          </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="otp-modal-body">
@@ -116,13 +128,6 @@ const SendOTPModal = ({
             {error && <div className="otp-error" role="alert">{error}</div>}
           </div>
           <div className="otp-modal-footer">
-            <button
-              type="button"
-              className="otp-btn-secondary"
-              onClick={onClose}
-            >
-              रद्द करें
-            </button>
             <button
               type="submit"
               className="otp-btn-primary"
@@ -198,11 +203,15 @@ const VerifyOTPModal = ({
     <div className="otp-modal-overlay" onClick={onClose}>
       <div className="otp-modal" onClick={(e) => e.stopPropagation()}>
         <div className="otp-modal-header">
+          <span className="otp-modal-icon" aria-hidden="true">
+            <FaShieldAlt />
+          </span>
           <h3>OTP सत्यापन</h3>
           <button
             className="otp-close"
             onClick={onClose}
             aria-label="Close"
+            type="button"
           >
             ×
           </button>

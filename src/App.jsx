@@ -26,15 +26,20 @@ import NominationForm from "./components/child_regis/NominationForm/NominationFo
 import StudentRegistration from "./components/child_regis/StudentRegistration/StudentRegistration";
 import UserDashBoard from "./components/all_dashbords/dis_admin/user_dashboard/UserDashBoard";
 import ITCellDashBoard from "./components/all_dashbords/dis_admin/IT_celll/ITCellDashBoard";
+import DpoPhoneList from "./components/all_dashbords/dis_admin/IT_celll/DpoPhoneList";
 import LoginPortal from "./components/home_layout/LoginPortal";
 import DPODashboard from "./components/all_dashbords/dis_admin/DPO_cell/DPODashboard";
 
 // A wrapper component to conditionally render the NavBar
 const AppContent = () => {
   const location = useLocation();
-  const isDisRoute = ["/UserDashBoard", "/ITCellDashBoard", "/DPODashBoard", "/DisDashboard"].some((route) =>
-    location.pathname.startsWith(route)
-  );
+  const isDisRoute = [
+    "/UserDashBoard",
+    "/ITCellDashBoard",
+    "/ITCellDpoPhoneList",
+    "/DPODashBoard",
+    "/DisDashboard",
+  ].some((route) => location.pathname.startsWith(route));
 
   return (
     <>
@@ -56,6 +61,7 @@ const AppContent = () => {
           <Route path="/StepF" element={<StepF />} />
           <Route path="/UserDashBoard" element={<UserDashBoard />} />
           <Route path="/ITCellDashBoard" element={<ITCellDashBoard />} />
+          <Route path="/ITCellDpoPhoneList" element={<DpoPhoneList />} />
           <Route path="/DPODashBoard" element={<DPODashboard />} />
           <Route path="/DisDashboard" element={<DisDashBoard />} />
           

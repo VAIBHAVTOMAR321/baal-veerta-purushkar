@@ -28,6 +28,7 @@ import {
   FaGraduationCap, 
   FaUsersCog, // Added for Our Team icon
   FaTasks,
+  FaPhoneAlt,
   FaClock
 } from "react-icons/fa";
 
@@ -49,6 +50,7 @@ const ITCellLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavC
   
   const { logout } = useAuth();
   const location = useLocation();
+  const userRole = null;
 
  
   const [openSubmenu, setOpenSubmenu] = useState(null);
@@ -78,11 +80,14 @@ const ITCellLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavC
         icon: <FaTachometerAlt />,
         label: "DashBoard",
         path: "/ITCellDashBoard",
-        active: true,
+        active: location.pathname === "/ITCellDashBoard",
       },
-      
-      
-      
+      {
+        icon: <FaPhoneAlt />,
+        label: "DPO Phone List",
+        path: "/ITCellDpoPhoneList",
+        active: location.pathname === "/ITCellDpoPhoneList",
+      },
      ];
 
   //  Auto-close sidebar when switching to mobile or tablet
@@ -109,9 +114,7 @@ const ITCellLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavC
         <Nav className="sidebar-nav flex-column">
           
          {menuItems
-  .filter(item =>
-    item.allowedRoles ? item.allowedRoles.includes(userRole) : true
-  )
+  .filter((item) => (item.allowedRoles ? item.allowedRoles.includes(userRole) : true))
   .map((item, index) => (
     <div key={index}>
       {/* If submenu exists */}
