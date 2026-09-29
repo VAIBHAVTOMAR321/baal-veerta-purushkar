@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Table, Badge, Form, Modal, Button } from "react-bootstrap";
-import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye, FaIdCard, FaFileAlt, FaFilePdf, FaFileExcel, FaHourglassHalf, FaPaperclip, FaCheck } from "react-icons/fa";
+import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye, FaIdCard, FaFileAlt, FaFilePdf, FaFileExcel, FaHourglassHalf, FaPaperclip, FaCheck, FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import ITCellTopNav from "./ITCellTopNav";
 import ITCellLeftNav from "./ITCellLeftNav";
@@ -313,6 +313,12 @@ const ITCellDashBoard = () => {
     const completedApplications = applications.filter(app => app.step_status === "Final Submitted").length;
     const inProgressApplications = applications.filter(app => app.step_status && app.step_status.startsWith("step-")).length;
 
+    // Registered but have not started the application form yet.
+    const registeredApplications = applications.filter(app => {
+      const status = String(app.status || app.step_status || "").trim().toLowerCase();
+      return status === "pending" || status === "registered" || status === "";
+    }).length;
+
     const uniqueProjects = Array.from(new Set(applications.map(app => app.project).filter(Boolean))).sort();
     const uniqueDistricts = Array.from(new Set(applications.map(app => app.district).filter(Boolean))).sort();
     const uniqueStepStatuses = Array.from(new Set(applications.map(app => app.step_status).filter(Boolean))).sort();
@@ -534,6 +540,19 @@ const ITCellDashBoard = () => {
                     <div>
                       <p style={{ margin: 0, fontSize: "0.875rem", color: "#6b7280", fontWeight: 500 }}>In Progress</p>
                       <p style={{ margin: 0, fontSize: "1.75rem", fontWeight: 700, color: "#111827" }}>{inProgressApplications}</p>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col xs={12} sm={6} lg={3}>
+                <Card className="stat-card h-100" style={{ border: "1px solid #e5e7eb", borderRadius: "12px" }}>
+                  <Card.Body className="d-flex align-items-center">
+                    <div className="stat-icon" style={{ backgroundColor: "#fff7ed", color: "#ea580c", borderRadius: "12px", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem", marginRight: "1rem" }}>
+                      <FaUserPlus />
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: "0.875rem", color: "#6b7280", fontWeight: 500 }}>Registered Users</p>
+                      <p style={{ margin: 0, fontSize: "1.75rem", fontWeight: 700, color: "#111827" }}>{registeredApplications}</p>
                     </div>
                   </Card.Body>
                 </Card>
