@@ -49,6 +49,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
   
   const { logout } = useAuth();
   const location = useLocation();
+  const userRole = null;
 
  
   const [openSubmenu, setOpenSubmenu] = useState(null);
@@ -109,9 +110,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         <Nav className="sidebar-nav flex-column">
           
          {menuItems
-  .filter(item =>
-    item.allowedRoles ? item.allowedRoles.includes(userRole) : true
-  )
+  .filter((item) => (item.allowedRoles ? item.allowedRoles.includes(userRole) : true))
   .map((item, index) => (
     <div key={index}>
       {/* If submenu exists */}

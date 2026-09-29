@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Container,
   Row,
   Col,
   Button,
-  Badge,
   Dropdown,
   Image,
-  Spinner,
   Alert,
 } from "react-bootstrap";
 import {
@@ -23,19 +21,13 @@ import { useAuth } from "../../login/AuthContext";
 function DisTopNav({ toggleSidebar }) {
   const { logout } = useAuth();
 
-  // State to track if the API itself failed (404/500)
-  const [apiError, setApiError] = useState(null);
-
   // User Profile State
-  const [userDetails, setUserDetails] = useState({
+  const [userDetails] = useState({
     full_name: "",
     profile_picture: null,
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [imageError, setImageError] = useState(false);
-
- 
 
   const getDisplayName = () => {
     return userDetails.full_name || "Admin";
@@ -78,50 +70,44 @@ function DisTopNav({ toggleSidebar }) {
           </Col>
           
           <Col xs="auto">
-             <div className="header-actions d-flex align-items-center">
-                
-              
-
-                {/* User Profile Dropdown */}
-                <Dropdown align="end">
-                  <Dropdown.Toggle
-                    variant="light"
-                    className="user-profile-btn d-flex align-items-center"
-                    style={{
-                      gap: "4px",
-                      border: "1px solid #e5e7eb",
-                      padding: "2px 6px",
-                    }}
-                  >
-                    {getUserPhotoUrl() ? (
-                      <Image
-                        src={getUserPhotoUrl()}
-                        roundedCircle
-                        className="user-avatar"
-                        onError={handleImageError}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          objectFit: "cover",
-                        }}
-                        alt="User"
-                      />
-                    ) : (
-                      <FaUserCircle style={{ fontSize: 24, color: "rgb(250 93 77)" }} />
-                    )}
-                    {/* Name hidden on mobile to save space for other buttons, but Avatar remains visible */}
-                    <span style={{ fontWeight: 500, fontSize: "0.85rem" }} className="">
-                      {getDisplayName()}
-                    </span>
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    <Dropdown.Item onClick={handleLogout}>
-                      <FaSignOutAlt className="me-2" /> Logout
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
-              </div>
-            </Col>
+            <div className="header-actions d-flex align-items-center">
+              {/* User Profile Dropdown */}
+              <Dropdown align="end">
+                <Dropdown.Toggle
+                  variant="light"
+                  className="user-profile-btn d-flex align-items-center"
+                  style={{
+                    gap: "4px",
+                    border: "1px solid #e5e7eb",
+                    padding: "2px 6px",
+                  }}
+                >
+                  {getUserPhotoUrl() ? (
+                    <Image
+                      src={getUserPhotoUrl()}
+                      roundedCircle
+                      className="user-avatar"
+                      onError={() => setImageError(true)}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        objectFit: "cover",
+                      }}
+                      alt="User"
+                    />
+                  ) : (
+                    <FaUserCircle style={{ fontSize: 24, color: "rgb(250 93 77)" }} />
+                  )}
+                  <span style={{ fontWeight: 500, fontSize: "0.85rem" }}>{getDisplayName()}</span>
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={handleLogout}>
+                    <FaSignOutAlt className="me-2" /> Logout
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </div>
+          </Col>
           </Row>
         </Container>
       </header>
