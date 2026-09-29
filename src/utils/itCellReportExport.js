@@ -7,7 +7,6 @@ export const REGISTRATION_COLUMNS = [
   { key: "phone", header: "मोबाइल (Phone)", width: 16 },
   { key: "email", header: "ईमेल (Email)", width: 24 },
   { key: "id_proof_type", header: "पहचान पत्र प्रकार (ID Proof Type)", width: 24 },
-  { key: "id_proof_type_other", header: "अन्य पहचान पत्र (Other ID Proof)", width: 20 },
   { key: "id_proof_no", header: "पहचान पत्र संख्या (ID Proof No.)", width: 20 },
   { key: "village", header: "ग्राम/मोहल्ला (Village)", width: 20 },
   { key: "post_office", header: "तहसील/डाकघर (Post Office)", width: 20 },
@@ -74,7 +73,6 @@ export const buildReportData = ({ applications = [], formStatusList = [], filter
     phone: formatText(app.phone),
     email: formatText(app.email),
     id_proof_type: formatText(app.id_proof_type),
-    id_proof_type_other: formatText(app.id_proof_type_other),
     id_proof_no: formatText(app.id_proof_no),
     village: formatText(app.village),
     post_office: formatText(app.post_office),
@@ -601,7 +599,7 @@ export const exportDashboardExcel = async ({ applications, formStatusList, filte
     properties: { tabColor: { argb: "FF4F46E5" } },
   });
 
-  const lastCol = REGISTRATION_COLUMNS.length; // 17
+  const lastCol = REGISTRATION_COLUMNS.length;
 
   // Set column widths from REGISTRATION_COLUMNS
   REGISTRATION_COLUMNS.forEach((col, i) => {
