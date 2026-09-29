@@ -98,7 +98,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
           {sidebarOpen ? (
             <div className="logo-container">
               <div className="logo">
-                  Admin Panel
+                  Directorate Panel
               </div>
             </div>
           ) : (

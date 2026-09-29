@@ -30,7 +30,7 @@ function DisTopNav({ toggleSidebar }) {
   const [imageError, setImageError] = useState(false);
 
   const getDisplayName = () => {
-    return userDetails.full_name || "Admin";
+    return userDetails.full_name || "Directorate";
   };
 
   const getUserPhotoUrl = () => {

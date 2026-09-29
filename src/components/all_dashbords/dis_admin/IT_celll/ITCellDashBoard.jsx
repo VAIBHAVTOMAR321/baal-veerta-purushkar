@@ -1,11 +1,69 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Table, Badge, Form, Modal, Button } from "react-bootstrap";
-import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye, FaIdCard, FaFileAlt, FaFilePdf, FaFileExcel } from "react-icons/fa";
+import { FaCogs, FaProjectDiagram, FaBoxOpen, FaServer, FaCube, FaUserGraduate, FaCheckCircle, FaSpinner, FaSearch, FaEye, FaIdCard, FaFileAlt, FaFilePdf, FaFileExcel, FaHourglassHalf, FaPaperclip, FaCheck } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import ITCellTopNav from "./ITCellTopNav";
 import ITCellLeftNav from "./ITCellLeftNav";
 import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
 import { exportDashboardExcel, exportDashboardPdf } from "../../../../utils/itCellReportExport";
+
+const RECOMMENDATION_URL =
+  "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/recommended-application/";
+
+const MEDIA_BASE_URL =
+  "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend";
+
+const SITE_ORIGIN = "https://wecdukaward.in";
+
+// Directory the backend stores recommendation uploads in.
+const RECOMMENDATION_MEDIA_DIR = "media/bravery/recommended_application";
+
+const joinMediaPath = (path) => {
+  const withoutLeadingSlash = path.replace(/^\/+/, "");
+
+  if (withoutLeadingSlash.startsWith("balvirtaawardproject/")) {
+    return `${SITE_ORIGIN}/${withoutLeadingSlash}`;
+  }
+
+  if (withoutLeadingSlash.startsWith("media/")) {
+    return `${MEDIA_BASE_URL}/${withoutLeadingSlash}`;
+  }
+
+  if (withoutLeadingSlash.startsWith("bravery/")) {
+    return `${MEDIA_BASE_URL}/media/${withoutLeadingSlash}`;
+  }
+
+  if (!withoutLeadingSlash.includes("/")) {
+    return `${MEDIA_BASE_URL}/${RECOMMENDATION_MEDIA_DIR}/${withoutLeadingSlash}`;
+  }
+
+  return `${MEDIA_BASE_URL}/${withoutLeadingSlash}`;
+};
+
+const getFileSrc = (file) => {
+  if (!file) return null;
+  const trimmed = String(file).trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("data:")) return trimmed;
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      const isOurSite = url.hostname.toLowerCase() === "wecdukaward.in";
+      if (
+        isOurSite &&
+        !url.pathname.replace(/^\/+/, "").startsWith("balvirtaawardproject/")
+      ) {
+        return joinMediaPath(url.pathname);
+      }
+      return trimmed;
+    } catch {
+      return trimmed;
+    }
+  }
+
+  return joinMediaPath(trimmed);
+};
 
 const mapApiDataToPreviewData = (item) => {
   if (!item) return null;
@@ -128,6 +186,10 @@ const ITCellDashBoard = () => {
   const [showModal, setShowModal] = useState(false);
   const [showChoiceModal, setShowChoiceModal] = useState(false);
   const [showFormPreviewModal, setShowFormPreviewModal] = useState(false);
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+  const [recommendationApp, setRecommendationApp] = useState(null);
+  const [recommendedApplications, setRecommendedApplications] = useState([]);
+  const [recommendedLoading, setRecommendedLoading] = useState(false);
   const [selectedFormPreviewData, setSelectedFormPreviewData] = useState(null);
   const [formStatusList, setFormStatusList] = useState([]);
   const [loadingFormStatus, setLoadingFormStatus] = useState(false);
@@ -180,6 +242,35 @@ const ITCellDashBoard = () => {
     }
   };
 
+  const fetchRecommendedApplications = async () => {
+    try {
+      setRecommendedLoading(true);
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await fetch(RECOMMENDATION_URL, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        setRecommendedApplications(result.data);
+        return result.data;
+      }
+      setRecommendedApplications([]);
+      return [];
+    } catch (err) {
+      console.error("Failed to fetch recommended applications:", err);
+      setRecommendedApplications([]);
+      return [];
+    } finally {
+      setRecommendedLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -211,6 +302,7 @@ const ITCellDashBoard = () => {
 
     fetchApplications();
     fetchFormStatusData();
+    fetchRecommendedApplications();
   }, []);
 
    const toggleSidebar = () => {
@@ -237,6 +329,33 @@ const ITCellDashBoard = () => {
         return <Badge style={{ backgroundColor: "#f59e0b", color: "#fff", fontSize: "0.7rem", padding: "0.35em 0.6em", fontWeight: 600 }}>Pending</Badge>;
       }
       return <Badge style={{ backgroundColor: "#6b7280", color: "#fff", fontSize: "0.7rem", padding: "0.35em 0.6em", fontWeight: 600 }}>{stepStatus || "-"}</Badge>;
+    };
+
+    const recommendedById = new Map(
+      recommendedApplications.map((item) => [String(item.applicant_id || "").trim(), item])
+    );
+
+    const getRecommendation = (applicantId) =>
+      recommendedById.get(String(applicantId || "").trim()) || null;
+
+    const getRecommendationFileSrc = (applicantId) =>
+      getFileSrc(getRecommendation(applicantId)?.applicant_file);
+
+    const isRecommended = (applicantId) => Boolean(getRecommendation(applicantId));
+
+    const getRecommendationBadge = (applicantId) => {
+      if (!isRecommended(applicantId)) {
+        return (
+          <Badge style={{ backgroundColor: "#6b7280", color: "#fff", fontSize: "0.7rem", padding: "0.35em 0.6em", fontWeight: 600 }}>
+            Not Recommended
+          </Badge>
+        );
+      }
+      return (
+        <Badge style={{ backgroundColor: "#16715b", color: "#fff", fontSize: "0.7rem", padding: "0.35em 0.6em", fontWeight: 600 }}>
+          <FaCheck className="me-1" /> Recommended
+        </Badge>
+      );
     };
 
     const filteredApplications = applications.filter(app => {
@@ -305,6 +424,7 @@ const ITCellDashBoard = () => {
     const handleOpenRegistrationDetails = (app = selectedApplication) => {
       setSelectedApplication(app);
       setShowChoiceModal(false);
+      setShowRecommendationModal(false);
       setShowModal(true);
     };
 
@@ -346,6 +466,15 @@ const ITCellDashBoard = () => {
     const handleSwitchToRegistration = () => {
       setShowFormPreviewModal(false);
       setShowModal(true);
+    };
+
+    const handleOpenRecommendationDetails = (app = selectedApplication) => {
+      if (!app) return;
+      setRecommendationApp(app);
+      setSelectedApplication(app);
+      setShowChoiceModal(false);
+      setShowModal(false);
+      setShowRecommendationModal(true);
     };
 
    return (
@@ -801,10 +930,146 @@ const ITCellDashBoard = () => {
                       <Badge bg="success" style={{ fontSize: "0.72rem", padding: "6px 10px" }}>देखें →</Badge>
                     </Card.Body>
                   </Card>
+
+                  <Card
+                    onClick={() => handleOpenRecommendationDetails(selectedApplication)}
+                    style={{ cursor: "pointer", border: "1.5px solid #cbd5e1", borderRadius: "10px", transition: "all 0.2s" }}
+                    className="shadow-sm"
+                  >
+                    <Card.Body className="d-flex align-items-center" style={{ padding: "14px 16px" }}>
+                      <div style={{ width: "42px", height: "42px", borderRadius: "8px", background: "#f5f3ff", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", marginRight: "14px", flexShrink: 0 }}>
+                        <FaPaperclip />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h6 style={{ margin: 0, fontWeight: 700, color: "#1e293b", fontSize: "0.95rem" }}>
+                          3. अनुशंसा विवरण (Recommendation Details)
+                        </h6>
+                        <p style={{ margin: "3px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                          {isRecommended(selectedApplication?.applicant_id)
+                            ? "पुरस्कार हेतु चयनित: फ़ाइल, टिप्पणी एवं दिनांक"
+                            : "अभी अनुशंसा नहीं की गई"}
+                        </p>
+                      </div>
+                      {isRecommended(selectedApplication?.applicant_id) ? (
+                        <Badge bg="success" style={{ fontSize: "0.72rem", padding: "6px 10px" }}>Recommended</Badge>
+                      ) : (
+                        <Badge bg="secondary" style={{ fontSize: "0.72rem", padding: "6px 10px" }}>देखें →</Badge>
+                      )}
+                    </Card.Body>
+                  </Card>
                 </div>
               </Modal.Body>
               <Modal.Footer style={{ borderTop: "1px solid #e2e8f0", padding: "10px 20px" }}>
                 <Button variant="secondary" size="sm" onClick={() => setShowChoiceModal(false)} style={{ borderRadius: "6px" }}>
+                  Close
+                </Button>
+              </Modal.Footer>
+            </Modal>
+
+            {/* ── Recommendation Details Modal (read only) ── */}
+            <Modal show={showRecommendationModal} onHide={() => setShowRecommendationModal(false)} size="lg" centered>
+              <Modal.Header closeButton style={{ backgroundColor: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                <Modal.Title style={{ fontSize: "1.1rem", fontWeight: 700, color: "#17324d" }}>
+                  Recommendation Details
+                </Modal.Title>
+              </Modal.Header>
+              <Modal.Body style={{ padding: "20px" }}>
+                {recommendationApp && (
+                  <div>
+                    <div style={{ marginBottom: "16px", padding: "10px 14px", background: "#f1f5f9", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                      <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b" }}>
+                        Applicant ID: <strong style={{ color: "#0f172a" }}>{recommendationApp.applicant_id}</strong>
+                      </p>
+                      <p style={{ margin: "4px 0 0", fontSize: "0.92rem", color: "#0f172a", fontWeight: 600 }}>
+                        {recommendationApp.full_name}
+                      </p>
+                      <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                        District: <span style={{ color: "#0f172a", fontWeight: 600 }}>{recommendationApp.district || "-"}</span>
+                      </p>
+                    </div>
+
+                    {(() => {
+                      const recommendation = getRecommendation(recommendationApp.applicant_id);
+                      if (recommendedLoading) {
+                        return (
+                          <div className="text-center py-2">
+                            <Spinner animation="border" size="sm" variant="primary" />
+                            <span className="ms-2" style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                              अनुशंसा डेटा लोड हो रहा है...
+                            </span>
+                          </div>
+                        );
+                      }
+                      if (!recommendation) {
+                        return (
+                          <Alert variant="secondary" style={{ fontSize: "0.85rem", marginBottom: 0 }}>
+                            <FaHourglassHalf className="me-1" /> This applicant has not been recommended for the award yet.
+                          </Alert>
+                        );
+                      }
+                      return (
+                        <Row className="g-3">
+                          <Col xs={12} md={6}>
+                            <div style={{ marginBottom: "10px" }}>
+                              <small style={{ color: "#6b7280", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Recommendation Status</small>
+                              <div style={{ marginTop: "4px" }}>{getRecommendationBadge(recommendationApp.applicant_id)}</div>
+                            </div>
+                          </Col>
+                          <Col xs={12} md={6}>
+                            <div style={{ marginBottom: "10px" }}>
+                              <small style={{ color: "#6b7280", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Recommended On</small>
+                              <p style={{ margin: 0, fontWeight: 500, color: "#374151", fontSize: "0.9rem" }}>
+                                {recommendation.created_at ? new Date(recommendation.created_at).toLocaleString("en-IN") : "-"}
+                              </p>
+                            </div>
+                          </Col>
+                          <Col xs={12} md={6}>
+                            <div style={{ marginBottom: "10px" }}>
+                              <small style={{ color: "#6b7280", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>District</small>
+                              <p style={{ margin: 0, fontWeight: 500, color: "#374151", fontSize: "0.9rem" }}>{recommendation.district || "-"}</p>
+                            </div>
+                          </Col>
+                          <Col xs={12} md={6}>
+                            <div style={{ marginBottom: "10px" }}>
+                              <small style={{ color: "#6b7280", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Recommendation File</small>
+                              {getRecommendationFileSrc(recommendationApp.applicant_id) ? (
+                                <a
+                                  href={getRecommendationFileSrc(recommendationApp.applicant_id)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#2563eb", fontWeight: 600, fontSize: "0.9rem", textDecoration: "none" }}
+                                >
+                                  <FaPaperclip /> View / Download File
+                                </a>
+                              ) : (
+                                <p style={{ margin: 0, fontWeight: 500, color: "#374151", fontSize: "0.9rem" }}>No file uploaded</p>
+                              )}
+                            </div>
+                          </Col>
+                          <Col xs={12}>
+                            <div style={{ marginBottom: "10px" }}>
+                              <small style={{ color: "#6b7280", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Remark</small>
+                              <p style={{ margin: 0, fontWeight: 500, color: "#374151", fontSize: "0.9rem", whiteSpace: "pre-wrap" }}>
+                                {recommendation.remark || "-"}
+                              </p>
+                            </div>
+                          </Col>
+                        </Row>
+                      );
+                    })()}
+                  </div>
+                )}
+              </Modal.Body>
+              <Modal.Footer style={{ borderTop: "1px solid #e5e7eb", padding: "12px 20px", display: "flex", justifyContent: "space-between" }}>
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={() => handleOpenRegistrationDetails(recommendationApp)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", borderRadius: "6px", fontSize: "0.85rem", fontWeight: 600 }}
+                >
+                  <FaIdCard /> पंजीकरण विवरण देखें →
+                </Button>
+                <Button variant="secondary" onClick={() => setShowRecommendationModal(false)} style={{ borderRadius: "6px", fontSize: "0.875rem" }}>
                   Close
                 </Button>
               </Modal.Footer>
