@@ -34,7 +34,8 @@ import {
 
 
 
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../../login/AuthContext";
 import {
   FaInfoCircle,
   FaBullseye,
@@ -46,7 +47,7 @@ import {
 
 const ITCellLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClick }) => {
   
-  const navigate = useNavigate();
+  const { logout } = useAuth();
   const location = useLocation();
 
  
@@ -163,10 +164,7 @@ const ITCellLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavC
           <Nav.Link
             className="nav-item logout-btn"
             onClick={() => {
-              if (typeof logout === "function") {
-                logout();
-                navigate("/login");
-              }
+              logout();
             }}
           >
             <span className="nav-icon">

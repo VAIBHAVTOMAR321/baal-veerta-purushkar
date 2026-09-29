@@ -13,10 +13,10 @@ import {
   FaUserCircle,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../login/AuthContext";
 
 function DPOTopNav({ toggleSidebar }) {
-  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const [userDetails, setUserDetails] = useState({
     full_name: "",
@@ -74,10 +74,7 @@ function DPOTopNav({ toggleSidebar }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userDetails");
-    navigate("/LoginPortal");
+    logout();
   };
 
   return (

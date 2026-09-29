@@ -392,7 +392,7 @@
 }
 
 @media (max-width: 480px) {
-  .login-role-radios .form-check {
+    .login-role-radios .form-check {
     margin-right: 0.5rem !important;
   }
 
@@ -401,7 +401,77 @@
   }
 }
 
+/* ============================================
+   OTP LOGIN MODAL — role selector
+   ============================================ */
+.otp-role-selector {
+  margin-bottom: 1.5rem;
+}
+
+.otp-role-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.otp-role-options {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.otp-role-option {
+  flex: 1;
+  min-width: 120px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.otp-role-option:hover {
+  border-color: #0d6efd;
+  background: #f0f7ff;
+}
+
+.otp-role-option.selected,
+.otp-role-option input:checked + .otp-role-text {
+  border-color: #0d6efd;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.otp-role-option input {
+  display: none;
+}
+
+.otp-role-text {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.otp-role-badge {
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  font-weight: 600;
+}
+
 @keyframes fadeIn {
+
+
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }

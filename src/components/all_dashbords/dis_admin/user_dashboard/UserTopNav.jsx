@@ -16,14 +16,12 @@ import {
   FaUserCircle,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../login/AuthContext";
 
 
 
 function UserTopNav({ toggleSidebar }) {
-  const navigate = useNavigate();
-  const { authFetch } = useAuth();
+  const { authFetch, logout } = useAuth();
 
   // State to track if the API itself failed (404/500)
   const [apiError, setApiError] = useState(null);
@@ -88,7 +86,7 @@ function UserTopNav({ toggleSidebar }) {
 
 
   const handleLogout = () => {
-    navigate("/", { replace: true });
+    logout();
   };
 
   return (

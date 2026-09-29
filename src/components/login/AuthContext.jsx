@@ -73,11 +73,26 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    const storedUser = localStorage.getItem('user');
+    let role = null;
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      role = parsedUser.role || parsedUser.user?.role;
+    }
+
     localStorage.removeItem('user');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     setUser(null);
-    navigate('/StudentRegistration');
+
+    const normalizedRole = (role || '').toLowerCase().replace(/-/g, '_');
+    if (normalizedRole === 'it_cell') {
+      navigate('/loginit', { replace: true });
+    } else if (normalizedRole === 'user') {
+      navigate('/', { replace: true });
+    } else {
+      navigate('/Login', { replace: true });
+    }
   };
 
   const authFetch = async (url, options = {}) => {

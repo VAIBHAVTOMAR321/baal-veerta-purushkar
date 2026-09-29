@@ -34,7 +34,8 @@ import {
 import "../../../../src/assets/css/adminleftnav.css";
 
 
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../login/AuthContext";
 import {
   FaInfoCircle,
   FaBullseye,
@@ -46,7 +47,7 @@ import {
 
 const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClick }) => {
   
-  const navigate = useNavigate();
+  const { logout } = useAuth();
   const location = useLocation();
 
  
@@ -163,10 +164,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
           <Nav.Link
             className="nav-item logout-btn"
             onClick={() => {
-              if (typeof logout === "function") {
-                logout();
-                navigate("/login");
-              }
+              logout();
             }}
           >
             <span className="nav-icon">

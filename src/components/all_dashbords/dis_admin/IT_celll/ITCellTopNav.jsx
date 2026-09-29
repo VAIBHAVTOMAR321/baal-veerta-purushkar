@@ -16,12 +16,12 @@ import {
   FaUserCircle,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../login/AuthContext";
 
 
 
 function ITCellTopNav({ toggleSidebar }) {
-  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // State to track if the API itself failed (404/500)
   const [apiError, setApiError] = useState(null);
@@ -52,7 +52,7 @@ function ITCellTopNav({ toggleSidebar }) {
 
 
   const handleLogout = () => {
-    navigate("/", { replace: true });
+    logout();
   };
 
   return (

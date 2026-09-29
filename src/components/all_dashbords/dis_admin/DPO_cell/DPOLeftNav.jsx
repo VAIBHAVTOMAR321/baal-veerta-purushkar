@@ -7,10 +7,11 @@ import {
   FaChevronRight,
   FaUserCircle,
 } from "react-icons/fa";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../../login/AuthContext";
 
 const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClick }) => {
-  const navigate = useNavigate();
+  const { logout } = useAuth();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState(null);
@@ -80,10 +81,7 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
           <Nav.Link
             className="nav-item logout-btn"
             onClick={() => {
-              localStorage.removeItem("accessToken");
-              localStorage.removeItem("userRole");
-              localStorage.removeItem("userDetails");
-              navigate("/LoginPortal");
+              logout();
             }}
           >
             <span className="nav-icon">

@@ -85,3 +85,49 @@ export const submitNominatorPart1 = async (data, token) => {
   }
   return responseData;
 };
+
+export const sendOtpLoginApi = async (mobile, role) => {
+  console.info("[OTP-LOGIN][send] request", { mobile: maskMobile(mobile), role });
+  try {
+    const res = await fetch(`${API_BASE}/send-otp-login-api/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: mobile, role }),
+    });
+    const data = await res.json().catch(() => ({}));
+    console.info("[OTP-LOGIN][send] response", summarizeResponse(res, data));
+    if (!res.ok) {
+      throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+    }
+    if (data.success === false) {
+      throw new Error(data.detail || data.message || "OTP भेजने में विफल।");
+    }
+    return data;
+  } catch (error) {
+    console.error("[OTP-LOGIN][send] failed", { mobile: maskMobile(mobile), message: error.message, error });
+    throw error;
+  }
+};
+
+export const verifyOtpLoginApi = async (mobile, role, otp) => {
+  console.info("[OTP-LOGIN][verify] request", { mobile: maskMobile(mobile), role });
+  try {
+    const res = await fetch(`${API_BASE}/verify-otp-login-api/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: mobile, role, otp }),
+    });
+    const data = await res.json().catch(() => ({}));
+    console.info("[OTP-LOGIN][verify] response", summarizeResponse(res, data));
+    if (!res.ok) {
+      throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+    }
+    if (data.success === false) {
+      throw new Error(data.detail || data.message || "OTP सत्यापन विफल।");
+    }
+    return data;
+  } catch (error) {
+    console.error("[OTP-LOGIN][verify] failed", { mobile: maskMobile(mobile), message: error.message, error });
+    throw error;
+  }
+};

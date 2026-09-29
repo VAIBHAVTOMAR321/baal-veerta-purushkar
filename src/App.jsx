@@ -5,7 +5,8 @@ import {
   useLocation,
 } from "react-router-dom";
 import Home from "./components/home_layout/Home";
-import Login from "./components/login/UserLogin";
+import OTPLogin from "./components/login/OTPLogin";
+import ITCellLogin from "./components/login/ITCellLogin";
 import NavBar from "./components/nav_bar/NavBar";
 
 import DisDashBoard from "./components/all_dashbords/dis_admin/DisDashBoard";
@@ -25,15 +26,13 @@ import NominationForm from "./components/child_regis/NominationForm/NominationFo
 import StudentRegistration from "./components/child_regis/StudentRegistration/StudentRegistration";
 import UserDashBoard from "./components/all_dashbords/dis_admin/user_dashboard/UserDashBoard";
 import ITCellDashBoard from "./components/all_dashbords/dis_admin/IT_celll/ITCellDashBoard";
-import UserLogin from "./components/login/UserLogin";
 import LoginPortal from "./components/home_layout/LoginPortal";
 import DPODashboard from "./components/all_dashbords/dis_admin/DPO_cell/DPODashboard";
-
 
 // A wrapper component to conditionally render the NavBar
 const AppContent = () => {
   const location = useLocation();
-  const isDisRoute = ["/UserDashBoard", "/ITCellDashBoard", "/DPODashboard"].some((route) =>
+  const isDisRoute = ["/UserDashBoard", "/ITCellDashBoard", "/DPODashBoard", "/DisDashboard"].some((route) =>
     location.pathname.startsWith(route)
   );
 
@@ -50,15 +49,15 @@ const AppContent = () => {
           <Route path="/StepB" element={<StepB />} />
           <Route path="/NominationForm" element={<NominationForm />} />
          
-          <Route path="/Login" element={<Login />} />
+          <Route path="/Login" element={<OTPLogin />} />
+          <Route path="/loginit" element={<ITCellLogin />} />
           <Route path="/StepD" element={<StepD />} />
           <Route path="/StepE" element={<StepE />} />
           <Route path="/StepF" element={<StepF />} />
           <Route path="/UserDashBoard" element={<UserDashBoard />} />
           <Route path="/ITCellDashBoard" element={<ITCellDashBoard />} />
           <Route path="/DPODashBoard" element={<DPODashboard />} />
-<Route path="/DPODashBoard/applications" element={<DPODashboard />} />
-<Route path="/DPODashBoard/reports" element={<DPODashboard />} />
+          <Route path="/DisDashboard" element={<DisDashBoard />} />
           
 
           {/* Dis Routes */}
