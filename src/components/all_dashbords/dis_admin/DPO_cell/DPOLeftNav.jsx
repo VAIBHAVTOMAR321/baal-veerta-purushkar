@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../../login/AuthContext";
+import "../../../../assets/css/dpoleftnav.css";
 
 const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClick }) => {
   const { logout } = useAuth();
