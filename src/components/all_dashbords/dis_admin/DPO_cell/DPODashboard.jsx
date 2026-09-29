@@ -287,6 +287,7 @@ const DPODashboard = () => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentApp, setCommentApp] = useState(null);
   const [commentText, setCommentText] = useState("");
+  const [commentStatus, setCommentStatus] = useState("rejected");
   const [savingComment, setSavingComment] = useState(false);
   const [commentError, setCommentError] = useState(null);
 
@@ -432,20 +433,40 @@ const DPODashboard = () => {
   const RECOMMENDATION_URL =
     "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/recommended-application/";
 
+  const readErrorBody = async (response) => {
+    const text = await response.text().catch(() => "");
+    if (!text) return "";
+    try {
+      const parsed = JSON.parse(text);
+      const details = parsed.errors
+        ? Object.entries(parsed.errors)
+            .map(([field, messages]) => `${field}: ${[].concat(messages).join(", ")}`)
+            .join(" | ")
+        : parsed.message || "";
+      return details ? ` - ${details}` : ` - ${text}`;
+    } catch {
+      return ` - ${text}`;
+    }
+  };
+
   const requestRecommendation = async ({ method, payload, file }) => {
     const accessToken = localStorage.getItem("accessToken");
     const authHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 
     // The endpoint expects a file upload, so send multipart first to avoid a
-    // rejected JSON request.
+    // rejected JSON request. applicant_file is appended separately because a
+    // File cannot go through the string form of FormData.
     const formData = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
+      if (key === "applicant_file") return;
       if (value !== null && value !== undefined) {
         formData.append(key, value);
       }
     });
+    // Only send the file part when there is a real file. A remark-only update
+    // omits it so the stored file is left untouched.
     if (file) {
-      formData.append("applicant_file", file);
+      formData.append("applicant_file", file, file.name);
     }
 
     let response = await fetch(RECOMMENDATION_URL, {
@@ -454,19 +475,20 @@ const DPODashboard = () => {
       body: formData,
     });
 
-    // Fall back to a JSON body if multipart is not accepted.
+    // Fall back to a JSON body if multipart is not accepted. A file cannot be
+    // carried in JSON, so applicant_file is sent as null on that path.
     if (!response.ok && [400, 415, 422].includes(response.status)) {
+      const jsonPayload = { ...payload, applicant_file: null };
       response = await fetch(RECOMMENDATION_URL, {
         method,
         headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(jsonPayload),
       });
     }
 
     if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
       throw new Error(
-        `HTTP error! status: ${response.status}${errorBody ? ` - ${errorBody}` : ""}`
+        `HTTP error! status: ${response.status}${await readErrorBody(response)}`
       );
     }
 
@@ -492,12 +514,11 @@ const DPODashboard = () => {
     setSavingRecommendation(true);
     setUploadRecommendationError(null);
     try {
+      // A remark-only update sends no file, so the stored file is kept.
       const payload = {
         applicant_id: applicantId,
         remark: recommendationRemark,
-        applicant_file: recommendationFile
-          ? recommendationFile.name
-          : existing?.applicant_file || "",
+        applicant_file: recommendationFile ? recommendationFile.name : null,
       };
       if (existing?.id) {
         payload.id = existing.id;
@@ -779,10 +800,7 @@ const DPODashboard = () => {
     setSavingComment(true);
     setCommentError(null);
     try {
-      // A forwarded applicant keeps its accepted status, the comment is only
-      // recorded against it. Every other applicant is marked as rejected.
-      const statusDpo = isRecommended(applicantId) ? "accepted" : "rejected";
-      await setDpoStatus(applicantId, statusDpo, commentText.trim());
+      await setDpoStatus(applicantId, commentStatus, commentText.trim());
 
       setActionMessage({
         type: "success",
@@ -802,6 +820,12 @@ const DPODashboard = () => {
   const handleOpenCommentModal = (app) => {
     setCommentApp(app);
     setCommentText(app?.dpo_comment || "");
+    // Preselect the status the save would apply, but let the DPO override it,
+    // including sending an already accepted or rejected record back to pending.
+    const current = app?.dpo_status === "approved" ? "accepted" : app?.dpo_status;
+    setCommentStatus(
+      isRecommended(app?.applicant_id) ? "accepted" : current || "rejected"
+    );
     setCommentError(null);
     setShowCommentModal(true);
   };
@@ -1521,7 +1545,7 @@ const DPODashboard = () => {
                       <>
                         <div className="mb-3">
                           <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
-                            Recommendation File {recommendation ? "(leave empty to keep the current file)" : ""}
+                            Recommendation File (optional - leave empty to keep the current file)
                           </Form.Label>
                           <Form.Control
                             type="file"
@@ -1621,21 +1645,35 @@ const DPODashboard = () => {
                  </div>
                )}
 
-               <div className="p-4 rounded-3 mb-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                 <h6 className="text-uppercase text-muted mb-3" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                   DPO Comment
-                 </h6>
-                 {isRecommended(commentApp?.applicant_id) ? (
-                   <Alert variant="info" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
-                     <FaCheck className="me-1" /> This applicant is forwarded for the award. The comment is recorded
-                     against it and its status stays accepted.
-                   </Alert>
-                 ) : (
-                   <Alert variant="warning" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
-                     Saving this comment marks the application as <strong>Rejected</strong> for DPO review.
-                   </Alert>
-                 )}
-               </div>
+                <div className="p-4 rounded-3 mb-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                  <h6 className="text-uppercase text-muted mb-3" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
+                    DPO Comment
+                  </h6>
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
+                      DPO Status
+                    </Form.Label>
+                    <Form.Select
+                      value={commentStatus}
+                      onChange={(e) => setCommentStatus(e.target.value)}
+                      className="filter-select"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="accepted">Approved / Forwarded</option>
+                      <option value="rejected">Rejected</option>
+                    </Form.Select>
+                  </Form.Group>
+                  {isRecommended(commentApp?.applicant_id) ? (
+                    <Alert variant="info" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
+                      <FaCheck className="me-1" /> This applicant is forwarded for the award. The comment is
+                      recorded against it and the status can be changed if needed.
+                    </Alert>
+                  ) : (
+                    <Alert variant="warning" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
+                      Saving this comment updates the DPO status to <strong>{commentStatus}</strong>.
+                    </Alert>
+                  )}
+                </div>
 
                 <Form.Group>
                   <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
