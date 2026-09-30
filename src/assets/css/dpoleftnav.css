@@ -1,4 +1,4 @@
-.dashboard-header .rounded-circle {
+.dpo-dashboard-header .rounded-circle {
     width: 40px !important;
     height: 40px !important;
     object-fit: cover;
@@ -142,8 +142,8 @@
 /* Reduce heading sizes to 14px */
 .dashboard-main-title,
 .section-title,
-.dashboard-header-section h1,
-.dashboard-header-section h2 {
+.dpo-dashboard-header-section h1,
+.dpo-dashboard-header-section h2 {
     font-size: 18px !important;
     font-weight: 600;
     margin-bottom: 4px;
@@ -492,17 +492,17 @@
 }
 
 /* Header Styles */
-.dashboard-header {
-    background: white;
+.dpo-dashboard-header {
+    background: #03070b;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     
     position: sticky;
     top: 0;
     z-index: 999;
-    padding: 8px;
+    padding-left: 2px;
 }
 
-.dashboard-header .container-fluid {
+.dpo-dashboard-header .container-fluid {
     padding-left: 1rem;
     padding-right: 1rem;
 }
@@ -563,7 +563,7 @@
 
 /* Tablet Responsive */
 @media (max-width: 1024px) {
-    .dashboard-header {
+    .dpo-dashboard-header {
         padding: 0.5rem 0;
     }
 
@@ -584,11 +584,11 @@
 
 /* Mobile Responsive */
 @media (max-width: 767px) {
-    .dashboard-header {
+    .dpo-dashboard-header {
         padding: 0.5rem 0;
     }
 
-    .dashboard-header .container-fluid {
+    .dpo-dashboard-header .container-fluid {
         padding-left: 0.75rem;
         padding-right: 0.75rem;
     }
@@ -1137,7 +1137,7 @@ border: none !important;
 /* ==================== NEW ENHANCED DASHBOARD STYLES ==================== */
 
 /* Dashboard Header Section */
-.dashboard-header-section {
+.dpo-dashboard-header-section {
     background: linear-gradient(135deg, #1d85e9 0%, #0d5ab8 100%);
     color: white;
     padding: 15px 30px;
@@ -1416,7 +1416,7 @@ border: none !important;
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .dashboard-header-section {
+    .dpo-dashboard-header-section {
         padding: 30px 20px;
     }
 
@@ -1434,7 +1434,7 @@ border: none !important;
         grid-template-columns: 1fr;
     }
 
-    .dashboard-header-section {
+    .dpo-dashboard-header-section {
         padding: 12px 20px;
         margin-bottom: 30px;
     }

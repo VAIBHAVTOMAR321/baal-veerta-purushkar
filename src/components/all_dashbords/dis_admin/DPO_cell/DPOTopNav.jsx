@@ -26,36 +26,7 @@ function DPOTopNav({ toggleSidebar }) {
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        setIsLoading(true);
-        const accessToken = localStorage.getItem("accessToken");
-        const response = await fetch("https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/dpo/profile/", {
-          headers: {
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        if (result.success && result.data) {
-          setUserDetails(result.data);
-        } else {
-          setError("Failed to load user profile");
-        }
-      } catch (err) {
-        console.error("Failed to fetch user profile:", err);
-        setError(err.message || "Failed to load user profile");
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchUserProfile();
-  }, []);
 
   const handleImageError = () => {
     setImageError(true);
@@ -78,7 +49,7 @@ function DPOTopNav({ toggleSidebar }) {
   };
 
   return (
-    <header className="dashboard-header">
+    <header className="dpo-dashboard-header">
       <Container fluid>
         <Row className="align-items-center">
           <Col xs="auto">
