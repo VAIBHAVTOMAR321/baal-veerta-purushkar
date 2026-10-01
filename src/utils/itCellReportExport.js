@@ -1,8 +1,6 @@
 export const DISTRICTS = [
-  "Udham Singh Nagar",
   "Haridwar",
   "Almora",
-  "Nainital",
   "Rudraprayag",
   "Chamoli",
   "Champawat",
