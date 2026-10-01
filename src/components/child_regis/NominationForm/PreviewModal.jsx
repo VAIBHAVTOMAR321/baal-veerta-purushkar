@@ -456,6 +456,20 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
 
           <div className="nf-pv-body">
 
+            <div className="nf-pv-block" id="nf-pv-registration">
+              <div className="nf-pv-block-label">पंजीकरण विवरण (Registration Details):</div>
+              <table className="nf-pv-t4">
+                <tbody>
+                  <Row4 l1="1. नामांकनकर्ता की श्रेणी" v1={data?.registration?.nominator_category} l2="2. नामांकनकर्ता का पूरा नाम" v2={data?.registration?.full_name} />
+                  <Row4 l1="3. बच्चे से संबंध" v1={data?.registration?.relat_with_child} l2="4. मोबाइल नंबर" v2={data?.registration?.phone} />
+                  <Row4 l1="5. ई-मेल आईडी" v1={data?.registration?.email} l2="6. (नामांकनकर्ता) पहचान पत्र का प्रकार" v2={data?.registration?.id_proof_type} />
+                  <Row4 l1={data?.registration?.id_proof_number_label || "7. पहचान पत्र संख्या"} v1={data?.registration?.id_proof_no} l2="ग्राम/मोहल्ला/घर का पूरा पता" v2={data?.registration?.village} />
+                  <Row4 l1="तहसील" v1={data?.registration?.post_office} l2="विकासखण्ड/नगर निकाय" v2={data?.registration?.project} />
+                  <Row4 l1="जनपद" v1={data?.registration?.district} l2="पिन कोड" v2={data?.registration?.pincode} />
+                </tbody>
+              </table>
+            </div>
+
             {/* ═══════════════════════════════════════
                  PAGE 1 — आवेदक + वीरता
                  ═══════════════════════════════════════ */}

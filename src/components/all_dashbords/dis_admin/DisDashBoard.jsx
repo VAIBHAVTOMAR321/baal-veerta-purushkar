@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Row,
   Col,
@@ -16,8 +16,6 @@ import {
   FaUserGraduate,
   FaCheckCircle,
   FaSpinner,
-  FaEye,
-  FaIdCard,
   FaFileAlt,
   FaFilePdf,
   FaFileExcel,
@@ -100,9 +98,34 @@ const mapApiDataToPreviewData = (item) => {
   const s3 = item["step-3"] || {};
   const s4 = item["step-4"] || {};
   const s5 = item["step-5"] || {};
+  const nomination = item.nomination || item;
+  const idProofTypes = {
+    aadhaar: "आधार कार्ड",
+    pan: "पैन कार्ड",
+    driving_license: "ड्राइविंग लाइसेंस",
+    pehchan_patraw: "पहचान पत्र (फोटो के साथ)",
+    passport: "पासपोर्ट",
+    voter_id: "मतदाता पहचान पत्र",
+  };
+  const idProofType = idProofTypes[nomination.id_proof_type] || nomination.id_proof_type || "";
 
   return {
     applicant_id: item.applicant_id || s1.applicant_id || "",
+    registration: {
+      nominator_category: nomination.nominator_category || "",
+      full_name: nomination.full_name || "",
+      relat_with_child: nomination.relat_with_child || "",
+      phone: nomination.phone || "",
+      email: nomination.email || "",
+      id_proof_type: idProofType,
+      id_proof_number_label: idProofType ? `7. ${idProofType} संख्या` : "7. पहचान पत्र संख्या",
+      id_proof_no: nomination.id_proof_no || "",
+      village: nomination.village || "",
+      post_office: nomination.post_office || "",
+      project: nomination.project || "",
+      district: nomination.district || "",
+      pincode: nomination.pincode || "",
+    },
     childName: s1.child_full_name || "",
     fatherName: s1.father_name || "",
     motherName: s1.mother_name || "",
@@ -190,6 +213,11 @@ const mapApiToApp = (item) => {
   const s5 = item["step-5"] || {};
   const nomination = item.nomination || {};
 
+  // Number of steps the applicant has finished, used for the funnel counts.
+  const completedSteps = [s1, s2, s3, s4, s5].filter(
+    (step) => step.status === "completed"
+  ).length;
+
   const age = s1.date_of_birth
     ? Math.floor((Date.now() - new Date(s1.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
@@ -226,7 +254,7 @@ const mapApiToApp = (item) => {
     return hasAnyStep ? "step-1" : "pending";
   };
 
-  const registrationStatus = nomination.status || "";
+  const registrationStatus = String(nomination.status || "").trim().toLowerCase();
 
   // Prefer the status reported by the API, otherwise derive it from the steps
   // and the registration state.
@@ -244,6 +272,7 @@ const mapApiToApp = (item) => {
     district: nomination.district || s1.permanent_district || "",
     incident_title: "",
     step_status: stepStatus,
+    completed_steps: completedSteps,
     dpo_status: dpoStatus,
     nominator_category: nomination.nominator_category || "",
     relat_with_child: nomination.relat_with_child || "",
@@ -281,7 +310,6 @@ const DisDashBoard = () => {
 
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [showChoiceModal, setShowChoiceModal] = useState(false);
   const [showFormPreviewModal, setShowFormPreviewModal] = useState(false);
   const [selectedFormPreviewData, setSelectedFormPreviewData] = useState(null);
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
@@ -389,13 +417,23 @@ const DisDashBoard = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  const totalApplications = applications.length;
+  // Funnel: registered -> step 1-3 done -> step 4 done -> fully submitted.
   const completedApplications = applications.filter(
     (app) => app.step_status === "Final Submitted"
   ).length;
-  const inProgressApplications = applications.filter(
-    (app) => app.step_status && app.step_status.startsWith("step-")
+
+  const registeredApplications = applications.filter(
+    (app) => app.registration_status === "registered" || app.completed_steps === 0
   ).length;
+
+  const inProgressApplications = applications.filter(
+    (app) => app.completed_steps >= 1 && app.completed_steps <= 3
+  ).length;
+
+  const totalApplications = applications.filter(
+    (app) => app.completed_steps >= 4 && app.step_status !== "Final Submitted"
+  ).length;
+
   const recommendedCount = recommendedApplications.length;
 
   const recommendedById = new Map(
@@ -407,8 +445,6 @@ const DisDashBoard = () => {
 
   const getRecommendationFileSrc = (applicantId) =>
     getFileSrc(getRecommendation(applicantId)?.applicant_file);
-
-  const isRecommended = (applicantId) => Boolean(getRecommendation(applicantId));
 
   const getStepBadge = (stepStatus) => {
     if (stepStatus === "Final Submitted") {
@@ -517,19 +553,6 @@ const DisDashBoard = () => {
     }
   };
 
-  const handleViewClick = (app) => {
-    setSelectedApplication(app);
-    setNoFormDataAlert(false);
-    setShowChoiceModal(true);
-  };
-
-  const handleOpenRegistrationDetails = (app = selectedApplication) => {
-    setSelectedApplication(app);
-    setShowChoiceModal(false);
-    setShowRecommendationModal(false);
-    setShowModal(true);
-  };
-
   const handleCloseRegistrationModal = () => setShowModal(false);
 
   const handleOpenFormDetails = async (app = selectedApplication) => {
@@ -551,7 +574,6 @@ const DisDashBoard = () => {
       return;
     }
 
-    setShowChoiceModal(false);
     setShowModal(false);
     setSelectedFormPreviewData(mapApiDataToPreviewData(foundRecord));
     setShowFormPreviewModal(true);
@@ -562,19 +584,21 @@ const DisDashBoard = () => {
     handleOpenFormDetails(app);
   };
 
-  const handleSwitchToRegistration = () => {
-    setShowFormPreviewModal(false);
-    setShowModal(true);
-  };
-
   const handleOpenRecommendationDetails = (app = selectedApplication) => {
     if (!app) return;
     setRecommendationApp(app);
     setSelectedApplication(app);
-    setShowChoiceModal(false);
     setShowModal(false);
     setShowRecommendationModal(true);
   };
+
+  const noFormDataAlertRef = useRef(null);
+
+  useEffect(() => {
+    if (noFormDataAlert && noFormDataAlertRef.current) {
+      noFormDataAlertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [noFormDataAlert]);
 
   return (
     <div className="dashboard-container">
@@ -634,6 +658,28 @@ const DisDashBoard = () => {
             </Alert>
           )}
 
+          {formStatusListLoading && (
+            <div className="text-center py-2">
+              <Spinner animation="border" size="sm" variant="primary" />
+              <span className="ms-2" style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                फॉर्म डेटा लोड हो रहा है...
+              </span>
+            </div>
+          )}
+
+          {noFormDataAlert && (
+            <Alert
+              ref={noFormDataAlertRef}
+              variant="warning"
+              dismissible
+              onClose={() => setNoFormDataAlert(false)}
+              className="rounded-3 border-0 shadow-sm"
+              style={{ fontSize: "0.875rem" }}
+            >
+              <strong>सूचना:</strong> इस आवेदक द्वारा अभी तक आवेदन प्रपत्र (Step 1) नहीं भरा गया है।
+            </Alert>
+          )}
+
           {loading && (
             <div className="text-center mt-4">
               <Spinner animation="border" variant="primary" />
@@ -652,12 +698,13 @@ const DisDashBoard = () => {
               {/* Compact Stat Cards */}
               <Row className="g-3 mb-4">
                 {[
-                  { label: "Total Applications", value: totalApplications, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
-                  { label: "Final Submitted", value: completedApplications, icon: <FaCheckCircle />, bg: "success-soft", color: "success" },
+                  { label: "Total Registration", value: registeredApplications, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
                   { label: "In Progress", value: inProgressApplications, icon: <FaSpinner />, bg: "info-soft", color: "info" },
-                  { label: "Recommended", value: recommendedLoading ? "-" : recommendedCount, icon: <FaTasks />, bg: "warning-soft", color: "warning" },
+                  { label: "Total Applications", value: totalApplications, icon: <FaTasks />, bg: "warning-soft", color: "warning" },
+                  { label: "Final Submitted", value: completedApplications, icon: <FaCheckCircle />, bg: "success-soft", color: "success" },
+                  { label: "Recommended", value: recommendedLoading ? "-" : recommendedCount, icon: <FaCheck />, bg: "success-soft", color: "success" },
                 ].map((stat, idx) => (
-                  <Col xs={6} lg={3} key={idx}>
+                  <Col xs={6} md={4} lg={4} key={idx}>
                     <Card className="border-0 shadow-sm h-100" style={{ borderRadius: "12px" }}>
                       <Card.Body className="d-flex align-items-center p-3">
                         <div
@@ -792,7 +839,7 @@ const DisDashBoard = () => {
                             <FaMapMarkerAlt className="me-1" /> District
                           </th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Step Status</th>
-                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommendation</th>
+                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommended by District Committee</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "right" }}>Actions</th>
                         </tr>
                       </thead>
@@ -831,16 +878,30 @@ const DisDashBoard = () => {
                               <td style={{ padding: "12px 16px" }}>{getStepBadge(app.step_status)}</td>
                               <td style={{ padding: "12px 16px" }}>{getRecommendationBadge(app.applicant_id)}</td>
                               <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => handleViewClick(app)}
-                                  className="d-flex align-items-center"
-                                  style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500 }}
-                                  title="View Details"
-                                >
-                                  <FaEye className="me-1" /> View
-                                </Button>
+                                <div className="d-flex gap-2 justify-content-end">
+                                  <Button
+                                    variant="success"
+                                    size="sm"
+                                    onClick={() => handleOpenFormDetails(app)}
+                                    className="d-flex align-items-center"
+                                    style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500 }}
+                                    title="View Form"
+                                  >
+                                    <FaFileAlt className="me-1" /> View Form
+                                  </Button>
+                                  {Boolean(getRecommendation(app.applicant_id)) && (
+                                    <Button
+                                      variant="primary"
+                                      size="sm"
+                                      onClick={() => handleOpenRecommendationDetails(app)}
+                                      className="d-flex align-items-center"
+                                      style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500 }}
+                                      title="View Recommendation"
+                                    >
+                                      <FaPaperclip className="me-1" /> Recommendation
+                                    </Button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           ))
@@ -1084,97 +1145,6 @@ const DisDashBoard = () => {
           </Modal.Footer>
         </Modal>
 
-        {/* Choice Modal */}
-        <Modal show={showChoiceModal} onHide={() => setShowChoiceModal(false)} centered contentClassName="border-0 shadow-lg">
-          <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
-            <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-              Choose Details to View
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="p-4">
-            {selectedApplication && (
-              <div className="p-3 mb-4 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                <p className="mb-1 text-muted" style={{ fontSize: "0.8rem" }}>
-                  Applicant ID: <span className="fw-bold text-dark">{selectedApplication.applicant_id}</span>
-                </p>
-                <h5 className="mb-0 text-dark" style={{ fontSize: "1rem" }}>{selectedApplication.full_name}</h5>
-              </div>
-            )}
-
-            {noFormDataAlert && (
-              <Alert variant="warning" className="rounded-3 border-0 mb-4" style={{ fontSize: "0.85rem" }}>
-                <strong>सूचना:</strong> इस आवेदक द्वारा अभी तक आवेदन प्रपत्र (Step 1) नहीं भरा गया है। आप नीचे दिए गए विकल्प से केवल <strong>पंजीकरण विवरण</strong> देख सकते हैं।
-              </Alert>
-            )}
-
-            {formStatusListLoading && (
-              <div className="text-center py-2 mb-3">
-                <Spinner animation="border" size="sm" variant="primary" />
-                <span className="ms-2" style={{ fontSize: "0.85rem", color: "#64748b" }}>फॉर्म डेटा लोड हो रहा है...</span>
-              </div>
-            )}
-
-            <p className="text-muted mb-3" style={{ fontSize: "0.85rem" }}>Please select which details you would like to view:</p>
-
-            <div className="d-grid gap-3">
-              <div
-                onClick={() => handleOpenRegistrationDetails(selectedApplication)}
-                className="d-flex align-items-center p-3 rounded-3 choice-card-ui"
-              >
-                <div className="d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px", borderRadius: "8px", background: "#eff6ff", color: "#2563eb" }}>
-                  <FaIdCard />
-                </div>
-                <div className="flex-grow-1">
-                  <h6 className="mb-0 text-dark" style={{ fontSize: "0.9rem", fontWeight: 600 }}>Registration Details</h6>
-                  <p className="mb-0 text-muted" style={{ fontSize: "0.75rem" }}>Nominator details, address, and ID proof</p>
-                </div>
-                <FaEye className="text-muted" size={16} />
-              </div>
-
-              <div
-                onClick={() => handleOpenFormDetails(selectedApplication)}
-                className="d-flex align-items-center p-3 rounded-3 choice-card-ui"
-              >
-                <div className="d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px", borderRadius: "8px", background: "#f0fdf4", color: "#16a34a" }}>
-                  <FaFileAlt />
-                </div>
-                <div className="flex-grow-1">
-                  <h6 className="mb-0 text-dark" style={{ fontSize: "0.9rem", fontWeight: 600 }}>Application Form Details</h6>
-                  <p className="mb-0 text-muted" style={{ fontSize: "0.75rem" }}>Step-by-step form (1 to 5) and documents</p>
-                </div>
-                  <FaEye className="text-muted" size={16} />
-                </div>
-
-                <div
-                  onClick={() => handleOpenRecommendationDetails(selectedApplication)}
-                  className="d-flex align-items-center p-3 rounded-3 choice-card-ui"
-                >
-                  <div className="d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px", borderRadius: "8px", background: "#f5f3ff", color: "#7c3aed" }}>
-                    <FaPaperclip />
-                  </div>
-                  <div className="flex-grow-1">
-                    <h6 className="mb-0 text-dark" style={{ fontSize: "0.9rem", fontWeight: 600 }}>Recommendation Details</h6>
-                    <p className="mb-0 text-muted" style={{ fontSize: "0.75rem" }}>
-                      {isRecommended(selectedApplication?.applicant_id)
-                        ? "Selected for the award: file, remark and date"
-                        : "Not recommended yet"}
-                    </p>
-                  </div>
-                  {isRecommended(selectedApplication?.applicant_id) ? (
-                    <Badge bg="success" className="badge-soft">Recommended</Badge>
-                  ) : (
-                    <FaEye className="text-muted" size={16} />
-                  )}
-                </div>
-              </div>
-          </Modal.Body>
-          <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-            <Button variant="secondary" onClick={() => setShowChoiceModal(false)} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
         {/* Recommendation Details Modal (read only) */}
         <Modal show={showRecommendationModal} onHide={() => setShowRecommendationModal(false)} size="lg" centered contentClassName="border-0 shadow-lg">
           <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
@@ -1271,14 +1241,6 @@ const DisDashBoard = () => {
             )}
           </Modal.Body>
           <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-            <Button
-              variant="link"
-              onClick={() => handleOpenRegistrationDetails(recommendationApp)}
-              className="me-auto p-0 text-decoration-none fw-bold"
-              style={{ fontSize: "0.85rem" }}
-            >
-              <FaIdCard className="me-1" /> पंजीकरण विवरण देखें →
-            </Button>
             <Button variant="secondary" onClick={() => setShowRecommendationModal(false)} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
               Close
             </Button>
@@ -1292,7 +1254,6 @@ const DisDashBoard = () => {
             onClose={() => setShowFormPreviewModal(false)}
             isApplicationCompleted={true}
             isITCell={true}
-            onSwitchToRegistration={handleSwitchToRegistration}
           />
         )}
       </div>
