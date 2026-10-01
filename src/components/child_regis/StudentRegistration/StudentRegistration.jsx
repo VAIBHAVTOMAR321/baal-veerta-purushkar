@@ -55,6 +55,7 @@ const StudentRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneCheckError, setPhoneCheckError] = useState("");
+  const [phoneRegistered, setPhoneRegistered] = useState(false);
   const [checkingPhone, setCheckingPhone] = useState(false);
   const today = new Date().toISOString().split("T")[0];
   const idTypeRef = React.useRef(form.idType);
@@ -75,6 +76,7 @@ const StudentRegistration = () => {
     const mobile = form.mobile.trim();
     if (!/^[0-9]{10}$/.test(mobile)) {
       setPhoneCheckError("");
+      setPhoneRegistered(false);
       return;
     }
     phoneCheckTimerRef.current = setTimeout(async () => {
@@ -85,11 +87,14 @@ const StudentRegistration = () => {
         const data = await response.json();
         if (data.success && data.registered) {
           setPhoneCheckError(data.message || "फ़ोन नंबर पहले से पंजीकृत है। कृपया लॉगिन करें।");
+          setPhoneRegistered(true);
         } else {
           setPhoneCheckError("");
+          setPhoneRegistered(false);
         }
       } catch (err) {
         setPhoneCheckError("");
+        setPhoneRegistered(false);
       } finally {
         setCheckingPhone(false);
       }
@@ -192,6 +197,12 @@ const StudentRegistration = () => {
         next[name] = "केवल अक्षर दर्ज करें, नंबर नहीं।";
       }
       if (name === "mobile" || name === "address.mobile") {
+        // Re-enable the form as soon as the number is edited; the debounced
+        // check above re-validates it once it is 10 digits again.
+        if (name === "mobile") {
+          setPhoneCheckError("");
+          setPhoneRegistered(false);
+        }
         if (!/^[0-9]{10}$/.test(value)) {
           next.mobile = value.length > 0 ? "मोबाइल नंबर 10 अंकों का होना चाहिए" : "";
         }
@@ -225,6 +236,17 @@ const StudentRegistration = () => {
 
   const submit = (event) => {
     event.preventDefault();
+
+    // A number that is already registered must never reach the OTP step.
+    if (phoneRegistered) {
+      setErrors((current) => ({
+        ...current,
+        mobile: phoneCheckError || "यह मोबाइल नंबर पहले से पंजीकृत है। कृपया दूसरा नंबर दर्ज करें।",
+      }));
+      return;
+    }
+    if (checkingPhone) return;
+
     const nextErrors = {};
     ["category", "name", "mobile", "password", "confirmPassword", "idType", "idNumber"].forEach((fieldName) => {
       if (!form[fieldName].trim()) nextErrors[fieldName] = "यह फ़ील्ड आवश्यक है";
@@ -604,8 +626,8 @@ const StudentRegistration = () => {
         )}
 
         <div className="sr-actions">
-          <button className="sr-primary" type="submit" disabled={loading}>
-            {loading ? "पंजीकरण हो रहा है..." : "रजिस्टर करें"}
+          <button className="sr-primary" type="submit" disabled={loading || phoneRegistered || checkingPhone}>
+            {loading ? "पंजीकरण हो रहा है..." : phoneRegistered ? "पहले से पंजीकृत नंबर" : checkingPhone ? "जांच हो रही है..." : "रजिस्टर करें"}
           </button>
         </div>
 

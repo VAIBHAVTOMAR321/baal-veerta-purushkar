@@ -179,6 +179,12 @@
   font-size: .9rem;
 }
 .sr-primary:hover { background: #145c4b; }
+.sr-primary:disabled,
+.sr-primary:disabled:hover {
+  background: #9db4ae;
+  color: #eef4f2;
+  cursor: not-allowed;
+}
 .sr-eligibility-btn {
   background: #e7b858;
   color: #17324d;

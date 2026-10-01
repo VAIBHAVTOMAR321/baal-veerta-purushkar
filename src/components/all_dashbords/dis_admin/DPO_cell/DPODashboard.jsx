@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Container,
   Row,
@@ -17,8 +17,6 @@ import {
   FaUserGraduate,
   FaCheckCircle,
   FaSpinner,
-  FaEye,
-  FaIdCard,
   FaFileAlt,
   FaFilePdf,
   FaFileExcel,
@@ -45,9 +43,34 @@ const mapApiDataToPreviewData = (item) => {
   const s3 = item["step-3"] || {};
   const s4 = item["step-4"] || {};
   const s5 = item["step-5"] || {};
+  const nomination = item.nomination || item;
+  const idProofTypes = {
+    aadhaar: "आधार कार्ड",
+    pan: "पैन कार्ड",
+    driving_license: "ड्राइविंग लाइसेंस",
+    pehchan_patraw: "पहचान पत्र (फोटो के साथ)",
+    passport: "पासपोर्ट",
+    voter_id: "मतदाता पहचान पत्र",
+  };
+  const idProofType = idProofTypes[nomination.id_proof_type] || nomination.id_proof_type || "";
 
   return {
     applicant_id: item.applicant_id || s1.applicant_id || "",
+    registration: {
+      nominator_category: nomination.nominator_category || "",
+      full_name: nomination.full_name || "",
+      relat_with_child: nomination.relat_with_child || "",
+      phone: nomination.phone || "",
+      email: nomination.email || "",
+      id_proof_type: idProofType,
+      id_proof_number_label: idProofType ? `7. ${idProofType} संख्या` : "7. पहचान पत्र संख्या",
+      id_proof_no: nomination.id_proof_no || "",
+      village: nomination.village || "",
+      post_office: nomination.post_office || "",
+      project: nomination.project || "",
+      district: nomination.district || "",
+      pincode: nomination.pincode || "",
+    },
     childName: s1.child_full_name || "",
     fatherName: s1.father_name || "",
     motherName: s1.mother_name || "",
@@ -138,7 +161,8 @@ const mapApiToApp = (item) => {
     : null;
 
   const DpoStatusObj = item.dpo_status || {};
-  let dpoStatus = DpoStatusObj.status_dpo || "pending";
+  const rawDpoStatus = DpoStatusObj.status_dpo || "pending";
+  let dpoStatus = rawDpoStatus;
   if (dpoStatus === "accepted") dpoStatus = "approved";
   const dpoComment = DpoStatusObj.comment_dpo || s1.comment_dpo || "";
 
@@ -146,6 +170,12 @@ const mapApiToApp = (item) => {
   const s3 = item["step-3"] || {};
   const s4 = item["step-4"] || {};
   const s5 = item["step-5"] || {};
+
+  // Number of steps the applicant has finished, used for the funnel counts.
+  const completedSteps = [s1, s2, s3, s4, s5].filter(
+    (step) => step.status === "completed"
+  ).length;
+
   const allStepsCompleted =
     s1.status === "completed" &&
     s2.status === "completed" &&
@@ -175,7 +205,10 @@ const mapApiToApp = (item) => {
     district: nomination.district || s1.permanent_district || "",
     incident_title: "",
     step_status: stepStatus,
+    completed_steps: completedSteps,
+    registration_status: String(nomination.status || "").trim().toLowerCase(),
     dpo_status: dpoStatus,
+    dpo_status_raw: rawDpoStatus,
     dpo_comment: dpoComment,
     nominator_category: nomination.nominator_category || "",
     relat_with_child: nomination.relat_with_child || "",
@@ -274,10 +307,8 @@ const DPODashboard = () => {
 
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [showChoiceModal, setShowChoiceModal] = useState(false);
   const [showFormPreviewModal, setShowFormPreviewModal] = useState(false);
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
-  const [recommendationApp, setRecommendationApp] = useState(null);
   const [selectedFormPreviewData, setSelectedFormPreviewData] = useState(null);
   const [noFormDataAlert, setNoFormDataAlert] = useState(false);
   const [exporting, setExporting] = useState("");
@@ -287,7 +318,6 @@ const DPODashboard = () => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentApp, setCommentApp] = useState(null);
   const [commentText, setCommentText] = useState("");
-  const [commentStatus, setCommentStatus] = useState("rejected");
   const [savingComment, setSavingComment] = useState(false);
   const [commentError, setCommentError] = useState(null);
 
@@ -299,6 +329,17 @@ const DPODashboard = () => {
   const [savingRecommendation, setSavingRecommendation] = useState(false);
   const [uploadRecommendationError, setUploadRecommendationError] = useState(null);
   const [deletingRecommendation, setDeletingRecommendation] = useState(false);
+  const [recommendationProgress, setRecommendationProgress] = useState("");
+
+  const [showSelectionModal, setShowSelectionModal] = useState(false);
+  const [showConfirmSelectionModal, setShowConfirmSelectionModal] = useState(false);
+  const [showDeleteRecommendationModal, setShowDeleteRecommendationModal] = useState(false);
+  const [deleteSelectionIds, setDeleteSelectionIds] = useState([]);
+  const [deleteSelectionSearch, setDeleteSelectionSearch] = useState("");
+  const [selectionIds, setSelectionIds] = useState([]);
+  const [selectionSearch, setSelectionSearch] = useState("");
+  const [recommendationTargets, setRecommendationTargets] = useState([]);
+  const [recommendationViewOnly, setRecommendationViewOnly] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -401,7 +442,10 @@ const DPODashboard = () => {
   const DPO_STATUS_URL =
     "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/dpo/application/status/";
 
-  const setDpoStatus = async (applicantId, statusDpo, comment) => {
+  // Saves only the remark. The status is echoed back unchanged because the
+// endpoint resolves the application from this payload and rejects the request
+// with 404 "Application not found" when it is missing.
+const saveDpoComment = async (applicantId, currentStatus, comment) => {
     const accessToken = localStorage.getItem("accessToken");
     const response = await fetch(DPO_STATUS_URL, {
       method: "PUT",
@@ -410,8 +454,8 @@ const DPODashboard = () => {
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       body: JSON.stringify({
-        applicant_id: applicantId,
-        status_dpo: statusDpo,
+        applicant_id: String(applicantId || "").trim(),
+        status_dpo: currentStatus || "pending",
         comment_dpo: comment || "",
       }),
     });
@@ -499,83 +543,182 @@ const DPODashboard = () => {
     return result;
   };
 
-  const handleSaveRecommendation = async () => {
-    const applicantId = recommendationApp?.applicant_id;
-    if (!applicantId || savingRecommendation) return;
+  // Runs one request per applicant in order, but the DPO sees a single action.
+const runForEachTarget = async ({ targets, verb, emptyMessage }) => {
+  const failed = [];
+  let done = 0;
 
-    const existing = getRecommendation(applicantId);
-    if (!existing && hasAnyRecommendation) {
-      setUploadRecommendationError(
-        "An applicant has already been recommended for the award. No other applicant can be forwarded."
-      );
-      return;
-    }
-
-    setSavingRecommendation(true);
-    setUploadRecommendationError(null);
+  for (const app of targets) {
+    const applicantId = String(app.applicant_id || "").trim();
+    if (!applicantId) continue;
+    done += 1;
+    setRecommendationProgress(`Processing ${done} of ${targets.length}...`);
     try {
-      // A remark-only update sends no file, so the stored file is kept.
-      const payload = {
-        applicant_id: applicantId,
-        remark: recommendationRemark,
-        applicant_file: recommendationFile ? recommendationFile.name : null,
-      };
-      if (existing?.id) {
-        payload.id = existing.id;
-      }
+      await verb(app, applicantId);
+    } catch (err) {
+      failed.push(`${applicantId}: ${err.message}`);
+    }
+  }
 
-      await requestRecommendation({
-        method: existing ? "PUT" : "POST",
-        payload,
-        file: recommendationFile,
-      });
+  return { done, failed, emptyMessage };
+};
 
+const handleSaveRecommendation = async () => {
+  const targets = recommendationTargets;
+  if (!targets.length || savingRecommendation) return;
+
+  if (!recommendationFile) {
+    setUploadRecommendationError("Please upload a recommendation file.");
+    return;
+  }
+  if (!recommendationRemark.trim()) {
+    setUploadRecommendationError("Please enter a remark.");
+    return;
+  }
+
+  setSavingRecommendation(true);
+  setUploadRecommendationError(null);
+  setRecommendationProgress("");
+  try {
+    const remark = recommendationRemark.trim();
+    // A remark-only update sends no file, so the stored file is kept.
+    const { done, failed } = await runForEachTarget({
+      targets,
+      verb: async (app, applicantId) => {
+        const existing = getRecommendation(applicantId);
+        const payload = {
+          applicant_id: applicantId,
+          remark,
+          applicant_file: recommendationFile.name,
+        };
+        if (existing?.id) {
+          payload.id = existing.id;
+        }
+
+        await requestRecommendation({
+          method: existing ? "PUT" : "POST",
+          payload,
+          file: recommendationFile,
+        });
+      },
+    });
+
+    await fetchRecommendedApplications();
+    await fetchApplicationsData();
+
+    if (failed.length) {
+      setUploadRecommendationError(
+        `${done - failed.length} of ${done} applicants were saved. Failed: ${failed.join(" | ")}`
+      );
+    } else {
       setActionMessage({
         type: "success",
-        text: existing
-          ? "Recommendation updated successfully."
-          : "Recommendation saved and application forwarded successfully.",
+        text: `Recommendation saved for ${done} applicant${done === 1 ? "" : "s"} and forwarded successfully.`,
       });
-
-      await fetchRecommendedApplications();
-      await fetchApplicationsData();
+      setShowRecommendationModal(false);
+      setRecommendationTargets([]);
+      setSelectionIds([]);
       setRecommendationFile(null);
       setRecommendationRemark("");
-    } catch (err) {
-      setUploadRecommendationError(err.message || "Failed to save recommendation");
-    } finally {
-      setSavingRecommendation(false);
     }
-  };
+  } catch (err) {
+    setUploadRecommendationError(err.message || "Failed to save recommendation");
+  } finally {
+    setSavingRecommendation(false);
+    setRecommendationProgress("");
+  }
+};
 
-  const handleDeleteRecommendation = async () => {
-    const existing = getRecommendation(recommendationApp?.applicant_id);
-    if (!existing?.id || deletingRecommendation) return;
+// Removes the stored recommendation for every target. Returns null when nothing
+// was attempted so callers can leave their modal open.
+const deleteRecommendations = async (targets) => {
+  const withRecords = targets.filter((app) => getRecommendation(app.applicant_id)?.id);
+  if (!withRecords.length || deletingRecommendation) return null;
 
-    const isConfirmed = window.confirm(
-      "Are you sure you want to remove this recommendation?\n\nThe application will no longer be forwarded."
-    );
-    if (!isConfirmed) return;
+  const isConfirmed = window.confirm(
+    `Are you sure you want to remove the recommendation for ${withRecords.length} applicant${
+      withRecords.length === 1 ? "" : "s"
+    }?\n\nThese applications will no longer be forwarded.`
+  );
+  if (!isConfirmed) return null;
 
-    setDeletingRecommendation(true);
-    setUploadRecommendationError(null);
-    try {
-      await requestRecommendation({
-        method: "DELETE",
-        payload: { id: existing.id, applicant_id: existing.applicant_id },
+  setDeletingRecommendation(true);
+  setUploadRecommendationError(null);
+  setRecommendationProgress("");
+  try {
+    const { done, failed } = await runForEachTarget({
+      targets: withRecords,
+      verb: async (app, applicantId) => {
+        const existing = getRecommendation(applicantId);
+        await requestRecommendation({
+          method: "DELETE",
+          payload: { id: existing.id, applicant_id: applicantId },
+        });
+      },
+    });
+
+    await fetchRecommendedApplications();
+    await fetchApplicationsData();
+
+    if (failed.length) {
+      setUploadRecommendationError(
+        `${done - failed.length} of ${done} applicants were removed. Failed: ${failed.join(" | ")}`
+      );
+    } else {
+      setActionMessage({
+        type: "success",
+        text: `Recommendation removed for ${done} applicant${done === 1 ? "" : "s"}.`,
       });
-
-      setActionMessage({ type: "success", text: "Recommendation removed successfully." });
-      await fetchRecommendedApplications();
-      await fetchApplicationsData();
-      setRecommendationFile(null);
-      setRecommendationRemark("");
-    } catch (err) {
-      setUploadRecommendationError(err.message || "Failed to delete recommendation");
-    } finally {
-      setDeletingRecommendation(false);
     }
-  };
+    return { done, failed };
+  } catch (err) {
+    setUploadRecommendationError(err.message || "Failed to delete recommendation");
+    return null;
+  } finally {
+    setDeletingRecommendation(false);
+    setRecommendationProgress("");
+  }
+};
+
+const handleOpenDeleteRecommendationModal = () => {
+  setDeleteSelectionSearch("");
+  setUploadRecommendationError(null);
+  setShowDeleteRecommendationModal(true);
+};
+
+const closeDeleteRecommendationModal = () => {
+  if (deletingRecommendation) return;
+  setShowDeleteRecommendationModal(false);
+  setDeleteSelectionIds([]);
+  setDeleteSelectionSearch("");
+  setUploadRecommendationError(null);
+  setRecommendationProgress("");
+};
+
+const toggleDeleteSelectionId = (applicantId) => {
+  const id = String(applicantId || "").trim();
+  if (!id) return;
+  setDeleteSelectionIds((prev) =>
+    prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+  );
+};
+
+const handleDeleteSelectedRecommendations = async () => {
+  const targets = applications.filter((app) =>
+    deleteSelectionIds.includes(String(app.applicant_id || "").trim())
+  );
+  if (!targets.length) {
+    setUploadRecommendationError("Please select at least one recommended applicant.");
+    return;
+  }
+
+  const result = await deleteRecommendations(targets);
+  if (!result || result.failed.length) return;
+
+  setShowDeleteRecommendationModal(false);
+  setDeleteSelectionIds([]);
+  setDeleteSelectionSearch("");
+};
 
   useEffect(() => {
     fetchApplicationsData();
@@ -584,16 +727,22 @@ const DPODashboard = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  const totalApplications = applications.length;
+  // Funnel: registered -> step 1-3 done -> step 4 done -> fully submitted.
   const completedApplications = applications.filter(
     (app) => app.step_status === "Final Submitted"
   ).length;
-  const inProgressApplications = applications.filter(
-    (app) => app.step_status && app.step_status.startsWith("step-")
+
+  const registeredApplications = applications.filter(
+    (app) => app.registration_status === "registered" || app.completed_steps === 0
   ).length;
-  
-  const registeredStepStatusCount = applications.filter(
-    (app) => app.step_status && app.step_status.trim() !== ""
+
+  const inProgressApplications = applications.filter(
+    (app) => app.completed_steps >= 1 && app.completed_steps <= 3
+  ).length;
+
+  const totalApplications = applications.filter(
+    (app) =>
+      app.completed_steps >= 4 && app.step_status !== "Final Submitted"
   ).length;
 
   const getStepBadge = (stepStatus) => {
@@ -636,8 +785,6 @@ const DPODashboard = () => {
     getFileSrc(getRecommendation(applicantId)?.applicant_file);
 
   const isRecommended = (applicantId) => Boolean(getRecommendation(applicantId));
-
-  const hasAnyRecommendation = recommendedApplications.length > 0;
 
   const getRecommendationBadge = (applicantId) => {
     if (!isRecommended(applicantId)) {
@@ -722,19 +869,6 @@ const DPODashboard = () => {
     }
   };
 
-  const handleViewClick = (app) => {
-    setSelectedApplication(app);
-    setNoFormDataAlert(false);
-    setShowChoiceModal(true);
-  };
-
-  const handleOpenRegistrationDetails = (app = selectedApplication) => {
-    setSelectedApplication(app);
-    setShowChoiceModal(false);
-    setShowRecommendationModal(false);
-    setShowModal(true);
-  };
-
   const handleCloseRegistrationModal = () => setShowModal(false);
 
   const handleOpenFormDetails = async (app = selectedApplication) => {
@@ -756,7 +890,6 @@ const DPODashboard = () => {
       return;
     }
 
-    setShowChoiceModal(false);
     setShowModal(false);
     const mapped = mapApiDataToPreviewData(foundRecord);
     setSelectedFormPreviewData(mapped);
@@ -768,29 +901,91 @@ const DPODashboard = () => {
     handleOpenFormDetails(app);
   };
 
-  const handleSwitchToRegistration = () => {
-    setShowFormPreviewModal(false);
-    setShowModal(true);
-  };
-
   const handleOpenRecommendationDetails = (app = selectedApplication) => {
     if (!app) return;
     setSelectedApplication(app);
-    setShowChoiceModal(false);
     setShowModal(false);
+    setRecommendationTargets([app]);
+    setRecommendationFile(null);
+    setRecommendationRemark("");
+    setUploadRecommendationError(null);
+    setRecommendationViewOnly(true);
     setShowRecommendationModal(true);
   };
 
-  const handleOpenRecommendationForm = (app) => {
-    if (!app) return;
-    const existing = getRecommendation(app.applicant_id);
-    setRecommendationApp(app);
-    setSelectedApplication(app);
+  const toggleSelectionId = (applicantId) => {
+    const id = String(applicantId || "").trim();
+    if (!id) return;
+    setSelectionIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleOpenSelectionModal = () => {
+    setSelectionSearch("");
+    setUploadRecommendationError(null);
+    setShowSelectionModal(true);
+  };
+
+  const handleConfirmSelection = () => {
+    const targets = applications.filter((app) =>
+      selectionIds.includes(String(app.applicant_id || "").trim())
+    );
+    if (!targets.length) {
+      setUploadRecommendationError("Please select at least one applicant.");
+      return;
+    }
+    setRecommendationTargets(targets);
+    setShowSelectionModal(false);
+    setShowConfirmSelectionModal(true);
+  };
+
+  const handleProceedToRecommendation = () => {
+    setShowConfirmSelectionModal(false);
     setRecommendationFile(null);
-    setRecommendationRemark(existing?.remark || "");
+    setRecommendationRemark("");
     setUploadRecommendationError(null);
     setShowRecommendationModal(true);
   };
+
+  const closeRecommendationModal = () => {
+    if (savingRecommendation || deletingRecommendation) return;
+    setShowRecommendationModal(false);
+    setRecommendationTargets([]);
+    setRecommendationViewOnly(false);
+    setRecommendationFile(null);
+    setRecommendationRemark("");
+    setUploadRecommendationError(null);
+    setRecommendationProgress("");
+  };
+
+  const selectionCandidates = applications.filter((app) => {
+    const term = selectionSearch.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      (app.applicant_id || "").toLowerCase().includes(term) ||
+      (app.full_name || "").toLowerCase().includes(term)
+    );
+  });
+
+  const selectedRecommendationApps = recommendationTargets;
+  const alreadyRecommendedCount = selectedRecommendationApps.filter((app) =>
+    isRecommended(app.applicant_id)
+  ).length;
+
+  // Only applicants that already carry a recommendation can be deleted here.
+  const recommendedCandidates = applications.filter((app) =>
+    isRecommended(app.applicant_id)
+  );
+
+  const recommendedCandidatesFiltered = recommendedCandidates.filter((app) => {
+    const term = deleteSelectionSearch.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      (app.applicant_id || "").toLowerCase().includes(term) ||
+      (app.full_name || "").toLowerCase().includes(term)
+    );
+  });
 
   const handleSaveComment = async () => {
     const applicantId = commentApp?.applicant_id;
@@ -800,7 +995,7 @@ const DPODashboard = () => {
     setSavingComment(true);
     setCommentError(null);
     try {
-      await setDpoStatus(applicantId, commentStatus, commentText.trim());
+      await saveDpoComment(applicantId, commentApp?.dpo_status_raw, commentText.trim());
 
       setActionMessage({
         type: "success",
@@ -810,7 +1005,7 @@ const DPODashboard = () => {
       await fetchApplicationsData();
     } catch (err) {
       setCommentError(
-        `Comment could not be saved. ${err.message} Please check the applicant ID and try again.`
+        `Comment could not be saved. ${err.message}`
       );
     } finally {
       setSavingComment(false);
@@ -820,12 +1015,6 @@ const DPODashboard = () => {
   const handleOpenCommentModal = (app) => {
     setCommentApp(app);
     setCommentText(app?.dpo_comment || "");
-    // Preselect the status the save would apply, but let the DPO override it,
-    // including sending an already accepted or rejected record back to pending.
-    const current = app?.dpo_status === "approved" ? "accepted" : app?.dpo_status;
-    setCommentStatus(
-      isRecommended(app?.applicant_id) ? "accepted" : current || "rejected"
-    );
     setCommentError(null);
     setShowCommentModal(true);
   };
@@ -836,6 +1025,14 @@ const DPODashboard = () => {
     setCommentText("");
     setCommentError(null);
   };
+
+  const noFormDataAlertRef = useRef(null);
+
+  useEffect(() => {
+    if (noFormDataAlert && noFormDataAlertRef.current) {
+      noFormDataAlertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [noFormDataAlert]);
 
   return (
     <div className="dashboard-container">
@@ -896,6 +1093,28 @@ const DPODashboard = () => {
              </Alert>
            )}
 
+           {formStatusListLoading && (
+             <div className="text-center py-2">
+               <Spinner animation="border" size="sm" variant="primary" />
+               <span className="ms-2" style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                 फॉर्म डेटा लोड हो रहा है...
+               </span>
+             </div>
+           )}
+
+           {noFormDataAlert && (
+             <Alert
+               ref={noFormDataAlertRef}
+               variant="warning"
+               dismissible
+               onClose={() => setNoFormDataAlert(false)}
+               className="rounded-3 border-0 shadow-sm"
+               style={{ fontSize: "0.875rem" }}
+             >
+               <strong>सूचना:</strong> इस आवेदक द्वारा अभी तक आवेदन प्रपत्र (Step 1) नहीं भरा गया है।
+             </Alert>
+           )}
+
            {loading && (
              <div className="text-center mt-4">
                <Spinner animation="border" variant="primary" />
@@ -912,10 +1131,10 @@ const DPODashboard = () => {
                 {/* Compact Stat Cards */}
                 <Row className="g-3 mb-4">
             {[
-              { label: "Total Applications", value: totalApplications, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
-              { label: "Final Submitted", value: completedApplications, icon: <FaCheckCircle />, bg: "success-soft", color: "success" },
+              { label: "Total Registration", value: registeredApplications, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
               { label: "In Progress", value: inProgressApplications, icon: <FaSpinner />, bg: "info-soft", color: "info" },
-              { label: "Registered Step Status", value: registeredStepStatusCount, icon: <FaTasks />, bg: "warning-soft", color: "warning" },
+              { label: "Total Applications", value: totalApplications, icon: <FaTasks />, bg: "warning-soft", color: "warning" },
+              { label: "Final Submitted", value: completedApplications, icon: <FaCheckCircle />, bg: "success-soft", color: "success" },
             ].map((stat, idx) => (
               <Col xs={6} lg={3} key={idx}>
                 <Card className="border-0 shadow-sm h-100" style={{ borderRadius: "12px" }}>
@@ -1033,6 +1252,48 @@ const DPODashboard = () => {
                 </Row>
               </div>
 
+              {/* Recommendation Toolbar */}
+              <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleOpenSelectionModal}
+                  disabled={loading || applications.length === 0}
+                  className="d-flex align-items-center"
+                  style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
+                >
+                  <FaPaperclip size={13} className="me-1" /> Recommendation
+                </Button>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={handleOpenDeleteRecommendationModal}
+                  disabled={loading || recommendedCandidates.length === 0}
+                  className="d-flex align-items-center"
+                  style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
+                >
+                  <FaTimes size={13} className="me-1" /> Delete Recommendation
+                </Button>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="text-muted" style={{ fontSize: "0.8rem" }}>
+                    {selectionIds.length > 0
+                      ? `${selectionIds.length} applicant${selectionIds.length === 1 ? "" : "s"} selected`
+                      : "Select applicants to recommend them for the award"}
+                  </span>
+                  {selectionIds.length > 0 && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setSelectionIds([])}
+                      className="p-0 text-decoration-none"
+                      style={{ fontSize: "0.78rem", fontWeight: 600 }}
+                    >
+                      Clear Selection
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               {/* Table */}
               <div className="table-responsive">
                 <Table hover className="align-items-center" style={{ borderBottom: "1px solid #e2e8f0" }}>
@@ -1043,17 +1304,16 @@ const DPODashboard = () => {
                       <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Name</th>
                       <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Age</th>
                       <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Class</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>District</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>घटना का शीर्षक</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommendation</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>DPO Comment</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "right" }}>Actions</th>
+                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Type of Bravery</th>
+                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommended by District Committee</th>
+                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Comment by District Committee</th>
+                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "right", minWidth: "300px" }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredApplications.length === 0 ? (
                       <tr>
-                            <td colSpan="10" className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
+                            <td colSpan="9" className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
                           No applications found matching your criteria.
                         </td>
                       </tr>
@@ -1076,7 +1336,6 @@ const DPODashboard = () => {
                           </td>
                           <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.age || "-"}</td>
                           <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.class_name || "-"}</td>
-                          <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.district}</td>
                           <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem", maxWidth: "250px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
                             {app.incident_title || "-"}
                           </td>
@@ -1094,45 +1353,39 @@ const DPODashboard = () => {
                             )}
                           </td>
                           <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                            <div className="d-flex gap-2 justify-content-end">
-                              <Button
+                            <div className="d-flex flex-nowrap gap-2 justify-content-end">
+<Button
                                 variant="light"
                                 size="sm"
                                 onClick={() => handleOpenCommentModal(app)}
-                                className="d-flex align-items-center justify-content-center border"
+                                className="d-flex align-items-center justify-content-center border flex-shrink-0"
                                 style={{ width: "32px", height: "32px", padding: 0, borderRadius: "8px", borderColor: "#e2e8f0", color: "#64748b" }}
                                 title="Add / Edit Comment"
                               >
                                 <FaCommentDots size={14} />
                               </Button>
                               <Button
-                                variant={isRecommended(app.applicant_id) ? "success" : "warning"}
+                                variant="success"
                                 size="sm"
-                                onClick={() => handleOpenRecommendationForm(app)}
-                                disabled={!isRecommended(app.applicant_id) && hasAnyRecommendation}
-                                className="d-flex align-items-center"
-                                style={{ borderRadius: "8px", padding: "0px 10px", height: "32px", fontSize: "0.78rem", fontWeight: 500 }}
-                                title={
-                                  isRecommended(app.applicant_id)
-                                    ? "Edit Recommendation"
-                                    : hasAnyRecommendation
-                                      ? "Only one application can be forwarded"
-                                      : "Add Recommendation & Forward"
-                                }
+                                onClick={() => handleOpenFormDetails(app)}
+                                className="d-flex align-items-center flex-shrink-0"
+                                style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500, whiteSpace: "nowrap" }}
+                                title="View Form"
                               >
-                                <FaPaperclip size={13} className="me-1" />
-                                {isRecommended(app.applicant_id) ? "Edit Reco" : "Recommend"}
+                                <FaFileAlt className="me-1" /> View Form
                               </Button>
-                              <Button 
-                                variant="primary" 
-                                size="sm" 
-                                onClick={() => handleViewClick(app)}
-                                className="d-flex align-items-center"
-                                style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500 }}
-                                title="View Details"
-                              >
-                                <FaEye className="me-1" /> View
-                              </Button>
+                              {isRecommended(app.applicant_id) && (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleOpenRecommendationDetails(app)}
+                                  className="d-flex align-items-center flex-shrink-0"
+                                  style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500, whiteSpace: "nowrap" }}
+                                  title="View Recommendation"
+                                >
+                                  <FaPaperclip className="me-1" /> Recommendation
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1306,7 +1559,7 @@ const DPODashboard = () => {
                          </h6>
                          <Button
                            variant="link"
-                           onClick={() => handleOpenRecommendationForm(selectedApplication)}
+                            onClick={() => handleOpenRecommendationDetails(selectedApplication)}
                            className="p-0 text-decoration-none fw-bold"
                            style={{ fontSize: "0.8rem" }}
                          >
@@ -1383,246 +1636,435 @@ const DPODashboard = () => {
             </Modal.Footer>
           </Modal>
 
-          {/* Choice Modal */}
-          <Modal show={showChoiceModal} onHide={() => setShowChoiceModal(false)} centered contentClassName="border-0 shadow-lg">
+          {/* Applicant Selection Modal */}
+          <Modal show={showSelectionModal} onHide={() => setShowSelectionModal(false)} size="lg" centered contentClassName="border-0 shadow-lg">
             <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
               <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                Choose Details to View
+                Select Applicants for Recommendation
               </Modal.Title>
             </Modal.Header>
-            <Modal.Body className="p-4">
-              {selectedApplication && (
-                <div className="p-3 mb-4 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                  <p className="mb-1 text-muted" style={{ fontSize: "0.8rem" }}>
-                    Applicant ID: <span className="fw-bold text-dark">{selectedApplication.applicant_id}</span>
-                  </p>
-                  <h5 className="mb-0 text-dark" style={{ fontSize: "1rem" }}>{selectedApplication.full_name}</h5>
-                </div>
-              )}
+            <Modal.Body className="p-4" style={{ background: "#fff" }}>
+              <Form.Control
+                type="text"
+                placeholder="Search by name or applicant ID..."
+                value={selectionSearch}
+                onChange={(e) => setSelectionSearch(e.target.value)}
+                className="mb-3"
+                style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
+              />
 
-               {noFormDataAlert && (
-                 <Alert variant="warning" className="rounded-3 border-0 mb-4" style={{ fontSize: "0.85rem" }}>
-                   <strong>सूचना:</strong> इस आवेदक द्वारा अभी तक आवेदन प्रपत्र (Step 1) नहीं भरा गया है। आप नीचे दिए गए विकल्प से केवल <strong>पंजीकरण विवरण</strong> देख सकते हैं।
-                 </Alert>
-               )}
-
-               {formStatusListLoading && (
-                 <div className="text-center py-2 mb-3">
-                   <Spinner animation="border" size="sm" variant="primary" />
-                   <span className="ms-2" style={{ fontSize: "0.85rem", color: "#64748b" }}>फॉर्म डेटा लोड हो रहा है...</span>
-                 </div>
-               )}
-
-              <p className="text-muted mb-3" style={{ fontSize: "0.85rem" }}>Please select which details you would like to view:</p>
-
-              <div className="d-grid gap-3">
-                <div 
-                  onClick={() => handleOpenRegistrationDetails(selectedApplication)} 
-                  className="d-flex align-items-center p-3 rounded-3 cursor-pointer choice-card-ui"
+              <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() =>
+                    setSelectionIds(
+                      selectionCandidates.map((app) => String(app.applicant_id || "").trim())
+                    )
+                  }
+                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
                 >
-                  <div className="d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px", borderRadius: "8px", background: "#eff6ff", color: "#2563eb" }}>
-                    <FaIdCard />
-                  </div>
-                  <div className="flex-grow-1">
-                    <h6 className="mb-0 text-dark" style={{ fontSize: "0.9rem", fontWeight: 600 }}>Registration Details</h6>
-                    <p className="mb-0 text-muted" style={{ fontSize: "0.75rem" }}>Nominator details, address, and ID proof</p>
-                  </div>
-                  <FaEye className="text-muted" size={16} />
-                </div>
-
-                <div 
-                  onClick={() => handleOpenFormDetails(selectedApplication)} 
-                  className="d-flex align-items-center p-3 rounded-3 cursor-pointer choice-card-ui"
+                  Select All ({selectionCandidates.length})
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setSelectionIds([])}
+                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
                 >
-                  <div className="d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px", borderRadius: "8px", background: "#f0fdf4", color: "#16a34a" }}>
-                    <FaFileAlt />
-                  </div>
-                  <div className="flex-grow-1">
-                    <h6 className="mb-0 text-dark" style={{ fontSize: "0.9rem", fontWeight: 600 }}>Application Form Details</h6>
-                    <p className="mb-0 text-muted" style={{ fontSize: "0.75rem" }}>Step-by-step form (1 to 5) and documents</p>
-                  </div>
-                  <FaEye className="text-muted" size={16} />
-                </div>
-
-                <div
-                  onClick={() => handleOpenRecommendationDetails(selectedApplication)}
-                  className="d-flex align-items-center p-3 rounded-3 cursor-pointer choice-card-ui"
-                >
-                  <div className="d-flex align-items-center justify-content-center me-3" style={{ width: "40px", height: "40px", borderRadius: "8px", background: "#f5f3ff", color: "#7c3aed" }}>
-                    <FaPaperclip />
-                  </div>
-                  <div className="flex-grow-1">
-                    <h6 className="mb-0 text-dark" style={{ fontSize: "0.9rem", fontWeight: 600 }}>Recommendation Details</h6>
-                    <p className="mb-0 text-muted" style={{ fontSize: "0.75rem" }}>
-                      {isRecommended(selectedApplication?.applicant_id)
-                        ? "Selected for the award: file, remark and date"
-                        : "Not recommended yet"}
-                    </p>
-                  </div>
-                  {isRecommended(selectedApplication?.applicant_id) ? (
-                    <Badge bg="success" className="badge-soft">Recommended</Badge>
-                  ) : (
-                    <FaEye className="text-muted" size={16} />
-                  )}
-                </div>
+                  Clear All
+                </Button>
+                <span className="text-muted ms-auto" style={{ fontSize: "0.8rem" }}>
+                  {selectionIds.length} selected
+                </span>
               </div>
+
+              <div
+                className="p-3 rounded-3"
+                style={{ border: "1px solid #e2e8f0", maxHeight: "320px", overflowY: "auto" }}
+              >
+                {selectionCandidates.length === 0 ? (
+                  <p className="text-muted text-center py-4 mb-0" style={{ fontSize: "0.85rem" }}>
+                    No applicants found.
+                  </p>
+                ) : (
+                  selectionCandidates.map((app) => {
+                    const id = String(app.applicant_id || "").trim();
+                    return (
+                      <label
+                        key={id}
+                        className="d-flex align-items-center gap-3 px-2 py-2 rounded-2"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Form.Check
+                          type="checkbox"
+                          checked={selectionIds.includes(id)}
+                          onChange={() => toggleSelectionId(id)}
+                        />
+                        <div className="flex-grow-1">
+                          <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>
+                            {app.full_name || "-"}
+                          </div>
+                          <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{id}</div>
+                        </div>
+                        <div>{getRecommendationBadge(id)}</div>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+
+              {uploadRecommendationError && (
+                <Alert variant="danger" className="rounded-3 py-2 mt-3 mb-0" style={{ fontSize: "0.8rem" }}>
+                  {uploadRecommendationError}
+                </Alert>
+              )}
             </Modal.Body>
             <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-              <Button variant="secondary" onClick={() => setShowChoiceModal(false)} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
-                Close
+              <Button variant="light" onClick={() => setShowSelectionModal(false)} className="px-4 border" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmSelection}
+                disabled={selectionIds.length === 0}
+                className="px-4"
+                style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500 }}
+              >
+                Continue
               </Button>
             </Modal.Footer>
           </Modal>
 
-          {/* Recommendation Modal: add / edit / delete */}
-          <Modal show={showRecommendationModal} onHide={() => setShowRecommendationModal(false)} size="lg" centered contentClassName="border-0 shadow-lg">
+          {/* Confirm Selection Modal */}
+          <Modal show={showConfirmSelectionModal} onHide={() => setShowConfirmSelectionModal(false)} centered contentClassName="border-0 shadow-lg">
             <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
               <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                {getRecommendation((recommendationApp || selectedApplication)?.applicant_id)
-                  ? "Edit Recommendation"
-                  : "Add Recommendation"}
+                Confirm Selected Applicants
               </Modal.Title>
             </Modal.Header>
             <Modal.Body className="p-4" style={{ background: "#fff" }}>
-              {(() => {
-                const target = recommendationApp || selectedApplication;
-                const recommendation = getRecommendation(target?.applicant_id);
-                const locked = !recommendation && hasAnyRecommendation;
-
-                if (!target) return null;
-
-                return (
-                  <div>
-                    <div className="p-3 mb-4 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                      <p className="mb-1 text-muted" style={{ fontSize: "0.8rem" }}>
-                        Applicant ID: <span className="fw-bold text-dark">{target.applicant_id}</span>
-                      </p>
-                      <h5 className="mb-0 text-dark" style={{ fontSize: "1rem" }}>{target.full_name}</h5>
-                      <p className="mb-0 mt-1 text-muted" style={{ fontSize: "0.8rem" }}>
-                        District: <span className="fw-bold text-dark">{target.district || "-"}</span>
-                      </p>
+              <Alert variant="info" className="rounded-3 border-0" style={{ fontSize: "0.85rem" }}>
+                The same file and remark will be posted for every applicant listed below. Please confirm the
+                selection before continuing.
+              </Alert>
+              <div
+                className="p-3 rounded-3"
+                style={{ border: "1px solid #e2e8f0", maxHeight: "300px", overflowY: "auto" }}
+              >
+                {recommendationTargets.map((app) => (
+                  <div
+                    key={app.applicant_id}
+                    className="d-flex align-items-center justify-content-between px-2 py-2"
+                    style={{ borderBottom: "1px solid #f1f5f9" }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>
+                        {app.full_name || "-"}
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{app.applicant_id}</div>
                     </div>
-
-                    {recommendation && (
-                      <Row className="g-3 mb-3">
-                        <Col xs={12} md={6}>
-                          <div className="detail-block">
-                            <small className="detail-label">Recommended On</small>
-                            <p className="detail-value text-dark">
-                              {recommendation.created_at
-                                ? new Date(recommendation.created_at).toLocaleString("en-IN")
-                                : "-"}
-                            </p>
-                          </div>
-                        </Col>
-                        <Col xs={12} md={6}>
-                          <div className="detail-block">
-                            <small className="detail-label">Current File</small>
-                            {getRecommendationFileSrc(target.applicant_id) ? (
-                              <a
-                                href={getRecommendationFileSrc(target.applicant_id)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="d-inline-flex align-items-center text-decoration-none fw-bold"
-                                style={{ fontSize: "0.85rem", color: "#2563eb" }}
-                              >
-                                <FaPaperclip className="me-1" /> View / Download File
-                              </a>
-                            ) : (
-                              <p className="detail-value text-dark">No file uploaded</p>
-                            )}
-                          </div>
-                        </Col>
-                      </Row>
-                    )}
-
-                    {locked ? (
-                      <Alert variant="warning" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
-                        An applicant has already been forwarded for the award. Only one application can be
-                        recommended, so this applicant can only be commented on.
-                      </Alert>
-                    ) : (
-                      <>
-                        <div className="mb-3">
-                          <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
-                            Recommendation File (optional - leave empty to keep the current file)
-                          </Form.Label>
-                          <Form.Control
-                            type="file"
-                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                            onChange={(e) => setRecommendationFile(e.target.files[0])}
-                            className="border"
-                            style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
-                          />
-                        </div>
-                        <div className="mb-3">
-                          <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
-                            Remark
-                          </Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={3}
-                            value={recommendationRemark}
-                            onChange={(e) => setRecommendationRemark(e.target.value)}
-                            placeholder="Enter remarks for recommendation..."
-                            className="border"
-                            style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
-                          />
-                        </div>
-                        {uploadRecommendationError && (
-                          <Alert variant="danger" className="rounded-3 py-2 mb-3" style={{ fontSize: "0.8rem" }}>
-                            {uploadRecommendationError}
-                          </Alert>
-                        )}
-                        <div className="d-flex gap-2 flex-wrap">
-                          <Button
-                            variant="success"
-                            size="sm"
-                            onClick={handleSaveRecommendation}
-                            disabled={savingRecommendation}
-                            className="d-flex align-items-center"
-                            style={{ borderRadius: "8px", fontWeight: 500 }}
-                          >
-                            {savingRecommendation ? <Spinner size="sm" /> : <FaCheck className="me-1" />}
-                            {savingRecommendation
-                              ? "Saving..."
-                              : recommendation
-                                ? "Update Recommendation"
-                                : "Save & Forward"}
-                          </Button>
-                          {recommendation && (
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={handleDeleteRecommendation}
-                              disabled={deletingRecommendation}
-                              className="d-flex align-items-center"
-                              style={{ borderRadius: "8px", fontWeight: 500 }}
-                            >
-                              {deletingRecommendation ? <Spinner size="sm" /> : <FaTimes className="me-1" />}
-                              {deletingRecommendation ? "Deleting..." : "Delete"}
-                            </Button>
-                          )}
-                        </div>
-                      </>
-                    )}
+                    <div>{getRecommendationBadge(app.applicant_id)}</div>
                   </div>
-                );
-              })()}
+                ))}
+              </div>
             </Modal.Body>
             <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
               <Button
-                variant="link"
-                onClick={() => {
-                  setShowRecommendationModal(false);
-                  handleOpenRegistrationDetails(recommendationApp || selectedApplication);
-                }}
-                className="me-auto p-0 text-decoration-none fw-bold"
-                style={{ fontSize: "0.85rem" }}
+                variant="light"
+                onClick={() => setShowConfirmSelectionModal(false)}
+                className="px-4 border"
+                style={{ borderRadius: "8px", fontSize: "0.85rem" }}
               >
-                <FaIdCard className="me-1" /> पंजीकरण विवरण देखें →
+                Back
               </Button>
-              <Button variant="secondary" onClick={() => setShowRecommendationModal(false)} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
+              <Button
+                variant="primary"
+                onClick={handleProceedToRecommendation}
+                className="px-4"
+                style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500 }}
+              >
+                Confirm &amp; Continue
+              </Button>
+            </Modal.Footer>
+          </Modal>
+
+          {/* Delete Recommendation Modal: lists only the recommended applicants */}
+          <Modal show={showDeleteRecommendationModal} onHide={closeDeleteRecommendationModal} size="lg" centered contentClassName="border-0 shadow-lg">
+            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
+              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
+                Delete Recommendation
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4" style={{ background: "#fff" }}>
+              <Form.Control
+                type="text"
+                placeholder="Search by name or applicant ID..."
+                value={deleteSelectionSearch}
+                onChange={(e) => setDeleteSelectionSearch(e.target.value)}
+                className="mb-3"
+                style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
+              />
+
+              <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() =>
+                    setDeleteSelectionIds(
+                      recommendedCandidatesFiltered.map((app) => String(app.applicant_id || "").trim())
+                    )
+                  }
+                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
+                >
+                  Select All ({recommendedCandidatesFiltered.length})
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setDeleteSelectionIds([])}
+                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
+                >
+                  Clear All
+                </Button>
+                <span className="text-muted ms-auto" style={{ fontSize: "0.8rem" }}>
+                  {deleteSelectionIds.length} selected
+                </span>
+              </div>
+
+              <div
+                className="p-3 rounded-3"
+                style={{ border: "1px solid #e2e8f0", maxHeight: "320px", overflowY: "auto" }}
+              >
+                {recommendedCandidatesFiltered.length === 0 ? (
+                  <p className="text-muted text-center py-4 mb-0" style={{ fontSize: "0.85rem" }}>
+                    No recommended applicants found.
+                  </p>
+                ) : (
+                  recommendedCandidatesFiltered.map((app) => {
+                    const id = String(app.applicant_id || "").trim();
+                    return (
+                      <label
+                        key={id}
+                        className="d-flex align-items-center gap-3 px-2 py-2 rounded-2"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Form.Check
+                          type="checkbox"
+                          checked={deleteSelectionIds.includes(id)}
+                          onChange={() => toggleDeleteSelectionId(id)}
+                        />
+                        <div className="flex-grow-1">
+                          <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>
+                            {app.full_name || "-"}
+                          </div>
+                          <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{id}</div>
+                        </div>
+                        <div>{getRecommendationBadge(id)}</div>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+
+              {recommendationProgress && (
+                <Alert variant="info" className="rounded-3 py-2 mt-3 mb-0" style={{ fontSize: "0.8rem" }}>
+                  {recommendationProgress}
+                </Alert>
+              )}
+              {uploadRecommendationError && (
+                <Alert variant="danger" className="rounded-3 py-2 mt-3 mb-0" style={{ fontSize: "0.8rem" }}>
+                  {uploadRecommendationError}
+                </Alert>
+              )}
+            </Modal.Body>
+            <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
+              <Button variant="light" onClick={closeDeleteRecommendationModal} className="px-4 border" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleDeleteSelectedRecommendations}
+                disabled={deletingRecommendation || deleteSelectionIds.length === 0}
+                className="px-4 d-flex align-items-center"
+                style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500 }}
+              >
+                {deletingRecommendation ? <Spinner size="sm" className="me-1" /> : <FaTimes className="me-1" />}
+                {deletingRecommendation
+                  ? "Deleting..."
+                  : `Delete Recommendation${deleteSelectionIds.length > 0 ? ` (${deleteSelectionIds.length})` : ""}`}
+              </Button>
+            </Modal.Footer>
+          </Modal>
+
+          {/* Recommendation Modal: one file + remark for every selected applicant */}
+          <Modal show={showRecommendationModal} onHide={closeRecommendationModal} size="lg" centered contentClassName="border-0 shadow-lg">
+            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
+              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
+                {recommendationViewOnly
+                  ? "Recommendation Details"
+                  : alreadyRecommendedCount > 0
+                    ? "Update Recommendation"
+                    : "Add Recommendation"}
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4" style={{ background: "#fff" }}>
+              {selectedRecommendationApps.length === 0 ? (
+                <p className="text-muted mb-0" style={{ fontSize: "0.85rem" }}>
+                  No applicants selected.
+                </p>
+              ) : (
+                <div>
+                  <div className="p-3 mb-4 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <h6 className="text-uppercase text-muted mb-2" style={{ fontSize: "0.7rem", letterSpacing: "0.5px", fontWeight: 700 }}>
+                      Selected Applicants ({selectedRecommendationApps.length})
+                    </h6>
+                    <div style={{ maxHeight: "160px", overflowY: "auto" }}>
+                      {selectedRecommendationApps.map((app) => (
+                        <div
+                          key={app.applicant_id}
+                          className="d-flex align-items-center justify-content-between px-2 py-1"
+                        >
+                          <span style={{ fontSize: "0.85rem", color: "#0f172a" }}>
+                            <span className="fw-bold">{app.full_name || "-"}</span>{" "}
+                            <span className="text-muted">
+                              Applicant ID: {app.applicant_id}
+                            </span>
+                          </span>
+                          {isRecommended(app.applicant_id) && (
+                            <Badge bg="success" className="badge-soft">Recommended</Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {recommendationViewOnly ? (
+                    selectedRecommendationApps.map((app) => {
+                      const recommendation = getRecommendation(app.applicant_id);
+                      if (!recommendation) {
+                        return (
+                          <Alert key={app.applicant_id} variant="secondary" className="rounded-3 border-0" style={{ fontSize: "0.85rem" }}>
+                            {app.full_name} (Applicant ID: {app.applicant_id}) has not been recommended yet.
+                          </Alert>
+                        );
+                      }
+                      return (
+                        <div
+                          key={app.applicant_id}
+                          className="p-3 mb-3 rounded-3"
+                          style={{ border: "1px solid #e2e8f0" }}
+                        >
+                          <div className="d-flex flex-wrap gap-3 mb-2">
+                            <div className="detail-block">
+                              <small className="detail-label">Applicant</small>
+                              <p className="detail-value text-dark">
+                                {app.full_name} (Applicant ID: {app.applicant_id})
+                              </p>
+                            </div>
+                            <div className="detail-block">
+                              <small className="detail-label">Recommended On</small>
+                              <p className="detail-value text-dark">
+                                {recommendation.created_at
+                                  ? new Date(recommendation.created_at).toLocaleString("en-IN")
+                                  : "-"}
+                              </p>
+                            </div>
+                            <div className="detail-block">
+                              <small className="detail-label">File</small>
+                              {getRecommendationFileSrc(app.applicant_id) ? (
+                                <a
+                                  href={getRecommendationFileSrc(app.applicant_id)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="d-inline-flex align-items-center text-decoration-none fw-bold"
+                                  style={{ fontSize: "0.85rem", color: "#2563eb" }}
+                                >
+                                  <FaPaperclip className="me-1" /> View / Download
+                                </a>
+                              ) : (
+                                <p className="detail-value text-dark">No file uploaded</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="detail-block">
+                            <small className="detail-label">Remark</small>
+                            <p className="detail-value text-dark" style={{ whiteSpace: "pre-wrap" }}>
+                              {recommendation.remark || "-"}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <>
+                      <div className="mb-3">
+                        <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
+                          Recommendation File <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Control
+                          type="file"
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          onChange={(e) => setRecommendationFile(e.target.files[0])}
+                          className="border"
+                          style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
+                        />
+                        <div className="mt-1 text-muted" style={{ fontSize: "0.75rem" }}>
+                          This file is uploaded for all {selectedRecommendationApps.length} selected applicant
+                          {selectedRecommendationApps.length === 1 ? "" : "s"}.
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
+                          Remark <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={3}
+                          value={recommendationRemark}
+                          onChange={(e) => setRecommendationRemark(e.target.value)}
+                          placeholder="Enter remarks for recommendation..."
+                          className="border"
+                          style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
+                        />
+                        <div className="mt-1 text-muted" style={{ fontSize: "0.75rem" }}>
+                          The same remark is saved against every selected applicant.
+                        </div>
+                      </div>
+                      {recommendationProgress && (
+                        <Alert variant="info" className="rounded-3 py-2 mb-3" style={{ fontSize: "0.8rem" }}>
+                          {recommendationProgress}
+                        </Alert>
+                      )}
+                      {uploadRecommendationError && (
+                        <Alert variant="danger" className="rounded-3 py-2 mb-3" style={{ fontSize: "0.8rem" }}>
+                          {uploadRecommendationError}
+                        </Alert>
+                      )}
+                      <div className="d-flex gap-2 flex-wrap">
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={handleSaveRecommendation}
+                          disabled={savingRecommendation || deletingRecommendation}
+                          className="d-flex align-items-center"
+                          style={{ borderRadius: "8px", fontWeight: 500 }}
+                        >
+                          {savingRecommendation ? <Spinner size="sm" /> : <FaCheck className="me-1" />}
+                          {savingRecommendation
+                            ? "Saving..."
+                            : alreadyRecommendedCount > 0
+                              ? "Update Recommendations"
+                              : "Save & Forward"}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </Modal.Body>
+            <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
+              <Button variant="secondary" onClick={closeRecommendationModal} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
                 Close
               </Button>
             </Modal.Footer>
@@ -1636,46 +2078,15 @@ const DPODashboard = () => {
               </Modal.Title>
             </Modal.Header>
              <Modal.Body className="p-4">
-               {commentApp && (
-                 <div className="mb-3">
-                   <p className="mb-1 text-muted" style={{ fontSize: "0.85rem" }}>
-                     Applicant: <span className="fw-bold text-dark">{commentApp.full_name}</span> ({commentApp.applicant_id})
-                   </p>
-                   <div className="mt-2">{getDpoStatusBadge(commentApp.dpo_status)}</div>
-                 </div>
-               )}
+{commentApp && (
+                  <div className="mb-3">
+                    <p className="mb-1 text-muted" style={{ fontSize: "0.85rem" }}>
+                      Applicant: <span className="fw-bold text-dark">{commentApp.full_name}</span> ({commentApp.applicant_id})
+                    </p>
+                  </div>
+                )}
 
-                <div className="p-4 rounded-3 mb-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                  <h6 className="text-uppercase text-muted mb-3" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                    DPO Comment
-                  </h6>
-                  <Form.Group className="mb-3">
-                    <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
-                      DPO Status
-                    </Form.Label>
-                    <Form.Select
-                      value={commentStatus}
-                      onChange={(e) => setCommentStatus(e.target.value)}
-                      className="filter-select"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="accepted">Approved / Forwarded</option>
-                      <option value="rejected">Rejected</option>
-                    </Form.Select>
-                  </Form.Group>
-                  {isRecommended(commentApp?.applicant_id) ? (
-                    <Alert variant="info" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
-                      <FaCheck className="me-1" /> This applicant is forwarded for the award. The comment is
-                      recorded against it and the status can be changed if needed.
-                    </Alert>
-                  ) : (
-                    <Alert variant="warning" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
-                      Saving this comment updates the DPO status to <strong>{commentStatus}</strong>.
-                    </Alert>
-                  )}
-                </div>
-
-                <Form.Group>
+<Form.Group>
                   <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
                     Comment / Remark
                   </Form.Label>
@@ -1718,7 +2129,6 @@ const DPODashboard = () => {
               onClose={() => setShowFormPreviewModal(false)}
               isApplicationCompleted={true}
               isDPO={true}
-              onSwitchToRegistration={handleSwitchToRegistration}
             />
           )}
         </div>
