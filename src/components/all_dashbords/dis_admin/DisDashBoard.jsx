@@ -21,6 +21,7 @@ import {
   FaFileExcel,
   FaHourglassHalf,
   FaCheck,
+  FaTimes,
   FaTasks,
   FaUserCircle,
   FaSearch,
@@ -35,6 +36,7 @@ import "./DPO_cell/DPODashboard.css";
 
 const BASE_URL =
   "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api";
+const DIRECTOR_RECOMMENDATION_URL = `${BASE_URL}/recommended-application-by-director/`;
 
 const MEDIA_BASE_URL =
   "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend";
@@ -204,6 +206,30 @@ const mapApiDataToPreviewData = (item) => {
   };
 };
 
+// One label per funnel stage so the filter reads the same as the IT Cell
+// dashboard. A registration without any form step counts as "Registered".
+const STEP_STATUS_ORDER = [
+  "Registered",
+  "Step 1",
+  "Step 2",
+  "Step 3",
+  "Step 4",
+  "Step 5",
+  "Final Submitted",
+];
+
+const normalizeStepStatus = (value) => {
+  const raw = String(value || "").trim();
+  const lower = raw.toLowerCase();
+  if (!raw || lower === "registered" || lower === "pending") return "Registered";
+  if (lower.startsWith("step-") || lower.startsWith("step ")) {
+    return `Step ${lower.replace(/^step[-\s]/, "")}`;
+  }
+  // The API may report the final stage in any casing.
+  const known = STEP_STATUS_ORDER.find((label) => label.toLowerCase() === lower);
+  return known || raw;
+};
+
 const mapApiToApp = (item) => {
   if (!item) return null;
   const s1 = item["step-1"] || {};
@@ -225,43 +251,37 @@ const mapApiToApp = (item) => {
   const dpoStatusObj = item.dpo_status || {};
   let dpoStatus = dpoStatusObj.status_dpo || "pending";
   if (dpoStatus === "accepted") dpoStatus = "approved";
-
-  const allStepsCompleted =
-    s1.status === "completed" &&
-    s2.status === "completed" &&
-    s3.status === "completed" &&
-    s4.status === "completed" &&
-    s5.status === "completed";
+  const dpoComment = dpoStatusObj.comment_dpo || s1.comment_dpo || "";
 
   const hasAnyStep = [s1, s2, s3, s4, s5].some(
     (step) => step && Object.keys(step).length > 0 && step.applicant_id
   );
 
+  // Steps are filled in order, so the last one finished without a gap is the
+  // furthest the applicant has actually got.
+  let lastCompletedStep = 0;
+  [s1, s2, s3, s4, s5].some((step) => {
+    if (step.status !== "completed") return true;
+    lastCompletedStep += 1;
+    return false;
+  });
+
   const computeStepStatus = () => {
-    if (allStepsCompleted) return "Final Submitted";
-    if (s1.status === "completed" && s2.status === "completed" && s3.status === "completed" && s4.status === "completed") {
-      return "step-5";
-    }
-    if (s1.status === "completed" && s2.status === "completed" && s3.status === "completed") {
-      return "step-4";
-    }
-    if (s1.status === "completed" && s2.status === "completed") {
-      return "step-3";
-    }
-    if (s1.status === "completed") {
-      return "step-2";
-    }
-    return hasAnyStep ? "step-1" : "pending";
+    // Nothing finished yet: the applicant either has not touched the form or is
+    // part-way through step 1.
+    if (lastCompletedStep === 0) return hasAnyStep ? "step-1" : "pending";
+    if (lastCompletedStep === 5) return "Final Submitted";
+    return `step-${lastCompletedStep}`;
   };
 
   const registrationStatus = String(nomination.status || "").trim().toLowerCase();
 
-  // Prefer the status reported by the API, otherwise derive it from the steps
-  // and the registration state.
-  let stepStatus = String(item.step_status || "").trim() || computeStepStatus();
-  if (stepStatus === "step-1" && !hasAnyStep) {
-    stepStatus = "pending";
-  }
+  // The API reports the next step the applicant is expected to fill, so once any
+  // form data exists the finished step is derived from the step records instead.
+  const reportedStepStatus = String(item.step_status || "").trim();
+  const stepStatus = normalizeStepStatus(
+    hasAnyStep ? computeStepStatus() : reportedStepStatus || computeStepStatus()
+  );
 
   return {
     applicant_id: item.applicant_id || nomination.applicant_id || "",
@@ -274,6 +294,7 @@ const mapApiToApp = (item) => {
     step_status: stepStatus,
     completed_steps: completedSteps,
     dpo_status: dpoStatus,
+    dpo_comment: dpoComment,
     nominator_category: nomination.nominator_category || "",
     relat_with_child: nomination.relat_with_child || "",
     id_proof_type: nomination.id_proof_type || "",
@@ -321,6 +342,29 @@ const DisDashBoard = () => {
   const [recommendedApplications, setRecommendedApplications] = useState([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
   const [recommendedError, setRecommendedError] = useState(null);
+  const [directorRecommendations, setDirectorRecommendations] = useState([]);
+  const [directorRecommendationsCount, setDirectorRecommendationsCount] = useState(0);
+  const [directorRecommendationsLoading, setDirectorRecommendationsLoading] = useState(false);
+  const [directorateSelectionIds, setDirectorateSelectionIds] = useState([]);
+  const [showDirectorateSelectionModal, setShowDirectorateSelectionModal] = useState(false);
+  const [showDirectorateConfirmModal, setShowDirectorateConfirmModal] = useState(false);
+  const [showDirectorateRecommendationModal, setShowDirectorateRecommendationModal] = useState(false);
+  const [showDirectorateDeleteModal, setShowDirectorateDeleteModal] = useState(false);
+  const [directorateDeleteIds, setDirectorateDeleteIds] = useState([]);
+  const [directorateSearch, setDirectorateSearch] = useState("");
+  const [directorateDeleteSearch, setDirectorateDeleteSearch] = useState("");
+  const [directorateTargets, setDirectorateTargets] = useState([]);
+  const [directorateFile, setDirectorateFile] = useState(null);
+  const [directorateRemark, setDirectorateRemark] = useState("");
+  const [directorateSaving, setDirectorateSaving] = useState(false);
+  const [directorateDeleting, setDirectorateDeleting] = useState(false);
+  const [directorateProgress, setDirectorateProgress] = useState("");
+  const [directorateError, setDirectorateError] = useState(null);
+  const [directorateActionMessage, setDirectorateActionMessage] = useState("");
+
+  // Registration list from the same source the IT Cell dashboard reads, used to
+  // build the step-status filter so it lists every stage including registered.
+  const [registrationList, setRegistrationList] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -410,9 +454,68 @@ const DisDashBoard = () => {
     }
   };
 
+  const fetchDirectorRecommendations = async () => {
+    try {
+      setDirectorRecommendationsLoading(true);
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await fetch(DIRECTOR_RECOMMENDATION_URL, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        setDirectorRecommendations(result.data);
+        setDirectorRecommendationsCount(Number(result.count ?? result.data.length));
+        return result.data;
+      }
+      setDirectorRecommendations([]);
+      setDirectorRecommendationsCount(0);
+      return [];
+    } catch (err) {
+      console.error("Failed to fetch Director recommendations:", err);
+      setDirectorateError(err.message || "Failed to fetch Director recommendations");
+      setDirectorRecommendations([]);
+      setDirectorRecommendationsCount(0);
+      return [];
+    } finally {
+      setDirectorRecommendationsLoading(false);
+    }
+  };
+
+  const fetchRegisteredApplications = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await fetch(`${BASE_URL}/bravery/it-cell/applications/`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        setRegistrationList(result.data);
+        return result.data;
+      }
+      setRegistrationList([]);
+      return [];
+    } catch (err) {
+      console.error("Failed to fetch registered applications:", err);
+      setRegistrationList([]);
+      return [];
+    }
+  };
+
   useEffect(() => {
     fetchApplicationsData();
     fetchRecommendedApplications();
+    fetchDirectorRecommendations();
+    fetchRegisteredApplications();
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -422,9 +525,9 @@ const DisDashBoard = () => {
     (app) => app.step_status === "Final Submitted"
   ).length;
 
-  const registeredApplications = applications.filter(
-    (app) => app.registration_status === "registered" || app.completed_steps === 0
-  ).length;
+  // Every application received, not only the registrations that have not
+  // started the form yet.
+  const totalRegistrationCount = applications.length;
 
   const inProgressApplications = applications.filter(
     (app) => app.completed_steps >= 1 && app.completed_steps <= 3
@@ -434,7 +537,9 @@ const DisDashBoard = () => {
     (app) => app.completed_steps >= 4 && app.step_status !== "Final Submitted"
   ).length;
 
-  const recommendedCount = recommendedApplications.length;
+  const recommendedCount = recommendedApplications.filter(
+    (item) => String(item.is_forwared_to_director || "").trim().toLowerCase() === "yes"
+  ).length;
 
   const recommendedById = new Map(
     recommendedApplications.map((item) => [String(item.applicant_id || "").trim(), item])
@@ -443,21 +548,237 @@ const DisDashBoard = () => {
   const getRecommendation = (applicantId) =>
     recommendedById.get(String(applicantId || "").trim()) || null;
 
+  const directorRecommendationById = new Map(
+    directorRecommendations.map((item) => [String(item.applicant_id || "").trim(), item])
+  );
+
+  const getDirectorRecommendation = (applicantId) =>
+    directorRecommendationById.get(String(applicantId || "").trim()) || null;
+
   const getRecommendationFileSrc = (applicantId) =>
     getFileSrc(getRecommendation(applicantId)?.applicant_file);
 
+  const isDirectorateForwarded = (applicantId) =>
+    Boolean(getDirectorRecommendation(applicantId));
+
+  const isForwardedToDirector = (applicantId) =>
+    String(getRecommendation(applicantId)?.is_forwared_to_director || "").trim().toLowerCase() === "yes";
+
+  const toggleDirectorateSelection = (applicantId) => {
+    const id = String(applicantId || "").trim();
+    if (!id) return;
+    setDirectorateSelectionIds((previous) =>
+      previous.includes(id)
+        ? previous.filter((selectedId) => selectedId !== id)
+        : [...previous, id]
+    );
+  };
+
+  const readRecommendationError = async (response) => {
+    const text = await response.text().catch(() => "");
+    if (!text) return "";
+    try {
+      const parsed = JSON.parse(text);
+      const details = parsed.errors
+        ? Object.entries(parsed.errors)
+            .map(([field, messages]) => `${field}: ${[].concat(messages).join(", ")}`)
+            .join(" | ")
+        : parsed.message || "";
+      return details ? ` - ${details}` : ` - ${text}`;
+    } catch {
+      return ` - ${text}`;
+    }
+  };
+
+  const requestDirectorRecommendation = async ({ method, payload, file }) => {
+    const accessToken = localStorage.getItem("accessToken");
+    const authHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+    const formData = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key !== "dir_file" && value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
+    });
+    if (file) formData.append("dir_file", file, file.name);
+
+    let response = await fetch(DIRECTOR_RECOMMENDATION_URL, {
+      method,
+      headers: authHeaders,
+      body: formData,
+    });
+    if (!response.ok && [400, 415, 422].includes(response.status)) {
+      response = await fetch(DIRECTOR_RECOMMENDATION_URL, {
+        method,
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ ...payload, dir_file: file?.name || null }),
+      });
+    }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}${await readRecommendationError(response)}`);
+    }
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || "Failed to save Director recommendation");
+    return result;
+  };
+
+  const toggleDirectorateDeleteSelection = (applicantId) => {
+    const id = String(applicantId || "").trim();
+    if (!id) return;
+    setDirectorateDeleteIds((previous) =>
+      previous.includes(id) ? previous.filter((selectedId) => selectedId !== id) : [...previous, id]
+    );
+  };
+
+  const handleOpenDirectorateSelection = () => {
+    setDirectorateSelectionIds([]);
+    setDirectorateSearch("");
+    setDirectorateError(null);
+    setShowDirectorateSelectionModal(true);
+  };
+
+  const handleConfirmDirectorateSelection = () => {
+    const targets = recommendedCandidates.filter((app) =>
+      directorateSelectionIds.includes(String(app.applicant_id || "").trim())
+    );
+    if (!targets.length) {
+      setDirectorateError("Please select at least one recommended applicant.");
+      return;
+    }
+    setDirectorateTargets(targets);
+    setShowDirectorateSelectionModal(false);
+    setShowDirectorateConfirmModal(true);
+  };
+
+  const handleProceedWithDirectorateRecommendation = () => {
+    setShowDirectorateConfirmModal(false);
+    setDirectorateFile(null);
+    setDirectorateRemark("");
+    setDirectorateError(null);
+    setShowDirectorateRecommendationModal(true);
+  };
+
+  const handleCloseDirectorateRecommendation = () => {
+    if (directorateSaving || directorateDeleting) return;
+    setShowDirectorateRecommendationModal(false);
+    setDirectorateTargets([]);
+    setDirectorateFile(null);
+    setDirectorateRemark("");
+    setDirectorateError(null);
+    setDirectorateProgress("");
+  };
+
+  const handleSaveDirectorateRecommendation = async () => {
+    if (!directorateTargets.length || directorateSaving) return;
+    if (!directorateFile || !directorateRemark.trim()) {
+      setDirectorateError("Please upload a recommendation file and enter a remark.");
+      return;
+    }
+
+    setDirectorateSaving(true);
+    setDirectorateError(null);
+    const forwardedIds = [];
+    const failures = [];
+    try {
+      for (let index = 0; index < directorateTargets.length; index += 1) {
+        const app = directorateTargets[index];
+        const applicantId = String(app.applicant_id || "").trim();
+        setDirectorateProgress(`Processing ${index + 1} of ${directorateTargets.length}...`);
+        try {
+          await requestDirectorRecommendation({
+            method: "POST",
+            payload: {
+              applicant_id: applicantId,
+              remark: directorateRemark.trim(),
+              dir_file: directorateFile.name,
+            },
+            file: directorateFile,
+          });
+          forwardedIds.push(applicantId);
+        } catch (requestError) {
+          failures.push(`${applicantId}: ${requestError.message}`);
+        }
+      }
+
+      await fetchDirectorRecommendations();
+      await fetchApplicationsData();
+      if (failures.length) {
+        setDirectorateError(`${forwardedIds.length} of ${directorateTargets.length} applicants forwarded. Failed: ${failures.join(" | ")}`);
+      } else {
+        setDirectorateActionMessage(`${forwardedIds.length} applicant${forwardedIds.length === 1 ? "" : "s"} forwarded to the Final List.`);
+        setDirectorateTargets([]);
+        setDirectorateSelectionIds([]);
+        setDirectorateFile(null);
+        setDirectorateRemark("");
+        setShowDirectorateRecommendationModal(false);
+      }
+    } catch (requestError) {
+      setDirectorateError(requestError.message || "Failed to save recommendation");
+    } finally {
+      setDirectorateSaving(false);
+      setDirectorateProgress("");
+    }
+  };
+
+  const handleDeleteDirectorateRecommendations = async () => {
+    const targets = applications.filter((app) =>
+      directorateDeleteIds.includes(String(app.applicant_id || "").trim())
+    );
+    if (!targets.length || directorateDeleting) return;
+    const confirmed = window.confirm(
+      `Delete the Director recommendation for ${targets.length} applicant${targets.length === 1 ? "" : "s"}?`
+    );
+    if (!confirmed) return;
+    setDirectorateDeleting(true);
+    setDirectorateError(null);
+    const removedIds = [];
+    const failures = [];
+    try {
+      for (let index = 0; index < targets.length; index += 1) {
+        const app = targets[index];
+        const applicantId = String(app.applicant_id || "").trim();
+        const recommendation = getDirectorRecommendation(applicantId);
+        setDirectorateProgress(`Deleting ${index + 1} of ${targets.length}...`);
+        if (!recommendation?.id) {
+          failures.push(`${applicantId}: Director recommendation record not found`);
+          continue;
+        }
+        try {
+          await requestDirectorRecommendation({
+            method: "DELETE",
+            payload: { id: recommendation.id, applicant_id: applicantId },
+          });
+          removedIds.push(applicantId);
+        } catch (requestError) {
+          failures.push(`${applicantId}: ${requestError.message}`);
+        }
+      }
+      await fetchDirectorRecommendations();
+      await fetchApplicationsData();
+      if (failures.length) {
+        setDirectorateError(`${removedIds.length} of ${targets.length} recommendations deleted. Failed: ${failures.join(" | ")}`);
+      } else {
+        setDirectorateActionMessage(`Recommendation deleted for ${removedIds.length} applicant${removedIds.length === 1 ? "" : "s"}.`);
+        setShowDirectorateDeleteModal(false);
+        setDirectorateDeleteIds([]);
+      }
+    } finally {
+      setDirectorateDeleting(false);
+      setDirectorateProgress("");
+    }
+  };
+
   const getStepBadge = (stepStatus) => {
-    if (stepStatus === "Final Submitted") {
+    const label = normalizeStepStatus(stepStatus);
+    if (label === "Final Submitted") {
       return <Badge bg="success" className="badge-soft">Final Submitted</Badge>;
     }
-    if (stepStatus && stepStatus.startsWith("step-")) {
-      const stepNum = stepStatus.replace("step-", "");
-      return <Badge bg="primary" className="badge-soft">Step {stepNum}</Badge>;
+    if (label === "Registered") {
+      return <Badge bg="secondary" className="badge-soft">Registered</Badge>;
     }
-    if (stepStatus === "pending") {
-      return <Badge bg="warning" text="dark" className="badge-soft">Pending</Badge>;
+    if (label.startsWith("Step ")) {
+      return <Badge bg="primary" className="badge-soft">{label}</Badge>;
     }
-    return <Badge bg="secondary" className="badge-soft">{stepStatus || "-"}</Badge>;
+    return <Badge bg="secondary" className="badge-soft">{label || "-"}</Badge>;
   };
 
   const getRecommendationBadge = (applicantId) => {
@@ -484,13 +805,16 @@ const DisDashBoard = () => {
 
     const matchesProject = !projectFilter || app.project === projectFilter;
     const matchesDistrict = !districtFilter || app.district === districtFilter;
-    const matchesStepStatus = !stepStatusFilter || app.step_status === stepStatusFilter;
+    const matchesStepStatus =
+      !stepStatusFilter || normalizeStepStatus(app.step_status) === stepStatusFilter;
 
     let matchesTab = true;
     if (activeTab === "completed") {
       matchesTab = app.step_status === "Final Submitted";
     } else if (activeTab === "recommended") {
-      matchesTab = Boolean(getRecommendation(app.applicant_id));
+      matchesTab = isForwardedToDirector(app.applicant_id);
+    } else if (activeTab === "final") {
+      matchesTab = isDirectorateForwarded(app.applicant_id);
     }
 
     return matchesSearch && matchesProject && matchesDistrict && matchesStepStatus && matchesTab;
@@ -502,9 +826,19 @@ const DisDashBoard = () => {
   const uniqueDistricts = Array.from(
     new Set(applications.map((app) => app.district).filter(Boolean))
   ).sort();
-  const uniqueStepStatuses = Array.from(
-    new Set(applications.map((app) => app.step_status).filter(Boolean))
-  ).sort();
+  // Options come from both sources: every stage present in the step data plus
+  // the registration list, so a stage is never missing because no current row
+  // happens to sit in it.
+  const uniqueStepStatuses = (() => {
+    const seen = new Set([
+      ...applications.map((app) => normalizeStepStatus(app.step_status)),
+      ...registrationList.map((item) => normalizeStepStatus(item.step_status)),
+    ]);
+    seen.delete("");
+    const ordered = STEP_STATUS_ORDER.filter((label) => seen.has(label));
+    const extra = Array.from(seen).filter((label) => !STEP_STATUS_ORDER.includes(label)).sort();
+    return [...ordered, ...extra];
+  })();
 
   const reportFilters = {
     Search: searchTerm.trim() || "All",
@@ -516,7 +850,9 @@ const DisDashBoard = () => {
         ? "All Forms"
         : activeTab === "completed"
           ? "Completed"
-          : "Recommended/Verified",
+          : activeTab === "recommended"
+            ? "Recommended by District Committee"
+              : "Final List",
   };
 
   const handleExportPdf = async () => {
@@ -592,6 +928,21 @@ const DisDashBoard = () => {
     setShowRecommendationModal(true);
   };
 
+  const recommendedCandidates = applications.filter(
+    (app) => isForwardedToDirector(app.applicant_id) && !getDirectorRecommendation(app.applicant_id)
+  );
+  const directorRecommendationCandidates = applications.filter((app) =>
+    getDirectorRecommendation(app.applicant_id)
+  );
+  const directorateSelectionCandidates = recommendedCandidates.filter((app) => {
+    const term = directorateSearch.trim().toLowerCase();
+    return !term || `${app.applicant_id} ${app.full_name}`.toLowerCase().includes(term);
+  });
+  const directorateDeleteCandidates = directorRecommendationCandidates.filter((app) => {
+    const term = directorateDeleteSearch.trim().toLowerCase();
+    return !term || `${app.applicant_id} ${app.full_name}`.toLowerCase().includes(term);
+  });
+
   const noFormDataAlertRef = useRef(null);
 
   useEffect(() => {
@@ -616,7 +967,7 @@ const DisDashBoard = () => {
           <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>
               <h2 className="mb-1 fw-bold text-dark" style={{ fontSize: "1.5rem" }}>
-                District Dashboard
+                Directorate Dashboard
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: "0.875rem" }}>
                 मुख्यमंत्री राज्य बाल वीरता पुरस्कार - District wise student applications
@@ -655,6 +1006,22 @@ const DisDashBoard = () => {
           {recommendedError && (
             <Alert variant="warning" className="rounded-3 border-0 shadow-sm">
               {recommendedError}
+            </Alert>
+          )}
+
+          {directorateError && (
+            <Alert variant="danger" className="rounded-3 border-0 shadow-sm" onClose={() => setDirectorateError(null)} dismissible>
+              {directorateError}
+            </Alert>
+          )}
+          {directorateActionMessage && (
+            <Alert
+              variant="success"
+              className="rounded-3 border-0 shadow-sm"
+              onClose={() => setDirectorateActionMessage("")}
+              dismissible
+            >
+              {directorateActionMessage}
             </Alert>
           )}
 
@@ -698,7 +1065,7 @@ const DisDashBoard = () => {
               {/* Compact Stat Cards */}
               <Row className="g-3 mb-4">
                 {[
-                  { label: "Total Registration", value: registeredApplications, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
+                  { label: "Total Registration", value: totalRegistrationCount, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
                   { label: "In Progress", value: inProgressApplications, icon: <FaSpinner />, bg: "info-soft", color: "info" },
                   { label: "Total Applications", value: totalApplications, icon: <FaTasks />, bg: "warning-soft", color: "warning" },
                   { label: "Final Submitted", value: completedApplications, icon: <FaCheckCircle />, bg: "success-soft", color: "success" },
@@ -781,9 +1148,32 @@ const DisDashBoard = () => {
                           borderBottom: activeTab === "recommended" ? "3px solid #7c3aed" : "3px solid transparent",
                           borderRadius: "8px 8px 0 0",
                         }}
-                        onClick={() => { setActiveTab("recommended"); setStepStatusFilter(""); }}
+                        onClick={() => {
+                          setActiveTab("recommended");
+                          setStepStatusFilter("");
+                          setDirectorateSelectionIds([]);
+                        }}
                       >
-                        Recommended / Verified
+                        Recommended by District Committee
+                      </button>
+                      <button
+                        type="button"
+                        className={`px-4 py-2 border-0 rounded-top ${activeTab === "final" ? "active-tab" : "inactive-tab"}`}
+                        style={{
+                          background: activeTab === "final" ? "#334155" : "#f1f5f9",
+                          color: activeTab === "final" ? "#fff" : "#64748b",
+                          fontSize: "0.85rem",
+                          fontWeight: 500,
+                          borderBottom: activeTab === "final" ? "3px solid #334155" : "3px solid transparent",
+                          borderRadius: "8px 8px 0 0",
+                        }}
+                        onClick={() => {
+                          setActiveTab("final");
+                          setStepStatusFilter("");
+                          setDirectorateSelectionIds([]);
+                        }}
+                      >
+                        Final List ({directorRecommendationsLoading ? "..." : directorRecommendationsCount})
                       </button>
                     </div>
                     <Row className="g-3 align-items-center">
@@ -814,7 +1204,7 @@ const DisDashBoard = () => {
                           {uniqueProjects.map((p) => <option key={p} value={p}>{p}</option>)}
                         </Form.Select>
                       </Col>
-                      {activeTab !== "completed" && activeTab !== "recommended" && (
+                      {activeTab !== "completed" && activeTab !== "recommended" && activeTab !== "final" && (
                         <Col xs={6} md={2} lg={2}>
                           <Form.Select value={stepStatusFilter} onChange={(e) => setStepStatusFilter(e.target.value)} className="filter-select">
                             <option value="">All Steps</option>
@@ -823,6 +1213,33 @@ const DisDashBoard = () => {
                         </Col>
                       )}
                     </Row>
+                    {activeTab === "recommended" && (
+                      <div className="d-flex flex-wrap align-items-center gap-2 mt-3">
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={handleOpenDirectorateSelection}
+                          disabled={recommendedCandidates.length === 0}
+                          className="d-flex align-items-center"
+                        >
+                          <FaCheck className="me-1" /> Recommend to Final List
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => {
+                            setDirectorateDeleteIds([]);
+                            setDirectorateDeleteSearch("");
+                            setDirectorateError(null);
+                            setShowDirectorateDeleteModal(true);
+                          }}
+                          disabled={directorRecommendationCandidates.length === 0}
+                          className="d-flex align-items-center"
+                        >
+                          <FaTimes className="me-1" /> Delete Recommendation
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Table */}
@@ -840,13 +1257,16 @@ const DisDashBoard = () => {
                           </th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Step Status</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommended by District Committee</th>
+                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            {activeTab === "final" ? "Director Remark" : "Comment by District Committee"}
+                          </th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "right" }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredApplications.length === 0 ? (
                           <tr>
-                            <td colSpan="9" className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
+                            <td colSpan={10} className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
                               No applications found matching your criteria.
                             </td>
                           </tr>
@@ -877,6 +1297,24 @@ const DisDashBoard = () => {
                               </td>
                               <td style={{ padding: "12px 16px" }}>{getStepBadge(app.step_status)}</td>
                               <td style={{ padding: "12px 16px" }}>{getRecommendationBadge(app.applicant_id)}</td>
+                              <td style={{ padding: "12px 16px" }}>
+                                {(activeTab === "final"
+                                  ? getDirectorRecommendation(app.applicant_id)?.dir_remark
+                                  : app.dpo_comment) ? (
+                                  <div
+                                    style={{ fontSize: "0.8rem", color: "#475569", maxWidth: "180px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}
+                                    title={activeTab === "final"
+                                      ? getDirectorRecommendation(app.applicant_id)?.dir_remark
+                                      : app.dpo_comment}
+                                  >
+                                    {activeTab === "final"
+                                      ? getDirectorRecommendation(app.applicant_id)?.dir_remark
+                                      : app.dpo_comment}
+                                  </div>
+                                ) : (
+                                  <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>-</span>
+                                )}
+                              </td>
                               <td style={{ padding: "12px 16px", textAlign: "right" }}>
                                 <div className="d-flex gap-2 justify-content-end">
                                   <Button
@@ -1166,8 +1604,11 @@ const DisDashBoard = () => {
                 </div>
 
                 {(() => {
-                  const recommendation = getRecommendation(recommendationApp.applicant_id);
-                  if (recommendedLoading) {
+                  const directorRecommendation = activeTab === "final";
+                  const recommendation = directorRecommendation
+                    ? getDirectorRecommendation(recommendationApp.applicant_id)
+                    : getRecommendation(recommendationApp.applicant_id);
+                  if (directorRecommendation ? directorRecommendationsLoading : recommendedLoading) {
                     return (
                       <div className="text-center py-2">
                         <Spinner animation="border" size="sm" variant="primary" />
@@ -1205,15 +1646,19 @@ const DisDashBoard = () => {
                       <Col xs={12} md={6}>
                         <div className="detail-block">
                           <small className="detail-label">District</small>
-                          <p className="detail-value text-dark">{recommendation.district || "-"}</p>
+                            <p className="detail-value text-dark">{recommendation.district || recommendationApp.district || "-"}</p>
                         </div>
                       </Col>
                       <Col xs={12} md={6}>
                         <div className="detail-block">
                           <small className="detail-label">Recommendation File</small>
-                          {getRecommendationFileSrc(recommendationApp.applicant_id) ? (
+                          {getFileSrc(directorRecommendation
+                            ? recommendation.dir_file
+                            : recommendation.applicant_file) ? (
                             <a
-                              href={getRecommendationFileSrc(recommendationApp.applicant_id)}
+                              href={getFileSrc(directorRecommendation
+                                ? recommendation.dir_file
+                                : recommendation.applicant_file)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="d-inline-flex align-items-center text-decoration-none fw-bold"
@@ -1230,7 +1675,7 @@ const DisDashBoard = () => {
                         <div className="detail-block">
                           <small className="detail-label">Remark</small>
                           <p className="detail-value text-dark" style={{ whiteSpace: "pre-wrap" }}>
-                            {recommendation.remark || "-"}
+                            {recommendation.dir_remark || recommendation.remark || "-"}
                           </p>
                         </div>
                       </Col>
@@ -1243,6 +1688,161 @@ const DisDashBoard = () => {
           <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
             <Button variant="secondary" onClick={() => setShowRecommendationModal(false)} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
               Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={showDirectorateSelectionModal} onHide={() => setShowDirectorateSelectionModal(false)} size="lg" centered contentClassName="border-0 shadow-lg">
+          <Modal.Header closeButton className="bg-white border-bottom p-4">
+            <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
+              Select District-Recommended Applicants
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4">
+            <Form.Control
+              type="text"
+              placeholder="Search by name or applicant ID..."
+              value={directorateSearch}
+              onChange={(event) => setDirectorateSearch(event.target.value)}
+              className="mb-3"
+            />
+            <div className="d-flex align-items-center gap-2 mb-3">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setDirectorateSelectionIds(directorateSelectionCandidates.map((app) => String(app.applicant_id || "").trim()))}
+              >
+                Select All ({directorateSelectionCandidates.length})
+              </Button>
+              <Button variant="outline-secondary" size="sm" onClick={() => setDirectorateSelectionIds([])}>
+                Clear All
+              </Button>
+              <span className="text-muted ms-auto" style={{ fontSize: "0.8rem" }}>
+                {directorateSelectionIds.length} selected
+              </span>
+            </div>
+            <div className="p-3" style={{ border: "1px solid #e2e8f0", maxHeight: "320px", overflowY: "auto" }}>
+              {directorateSelectionCandidates.length === 0 ? (
+                <p className="text-muted text-center py-4 mb-0">No District Committee recommendations found.</p>
+              ) : directorateSelectionCandidates.map((app) => {
+                const id = String(app.applicant_id || "").trim();
+                return (
+                  <label key={id} className="d-flex align-items-center gap-3 px-2 py-2" style={{ cursor: "pointer" }}>
+                    <Form.Check type="checkbox" checked={directorateSelectionIds.includes(id)} onChange={() => toggleDirectorateSelection(id)} />
+                    <div className="flex-grow-1">
+                      <div className="fw-semibold">{app.full_name || "-"}</div>
+                      <div className="text-muted" style={{ fontSize: "0.75rem" }}>{id}</div>
+                    </div>
+                    {getRecommendationBadge(id)}
+                  </label>
+                );
+              })}
+            </div>
+            {directorateError && <Alert variant="danger" className="mt-3 mb-0">{directorateError}</Alert>}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="light" onClick={() => setShowDirectorateSelectionModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleConfirmDirectorateSelection} disabled={!directorateSelectionIds.length}>Continue</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={showDirectorateConfirmModal} onHide={() => setShowDirectorateConfirmModal(false)} centered contentClassName="border-0 shadow-lg">
+          <Modal.Header closeButton>
+            <Modal.Title className="fw-bold" style={{ fontSize: "1.1rem" }}>Confirm Applicants for Final List</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Alert variant="info">The same recommendation file and remark will be attached to each selected applicant.</Alert>
+            <div className="p-3" style={{ border: "1px solid #e2e8f0", maxHeight: "280px", overflowY: "auto" }}>
+              {directorateTargets.map((app) => (
+                <div key={app.applicant_id} className="d-flex justify-content-between py-2 border-bottom">
+                  <span>{app.full_name || "-"} <small className="text-muted">({app.applicant_id})</small></span>
+                  {getRecommendationBadge(app.applicant_id)}
+                </div>
+              ))}
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="light" onClick={() => setShowDirectorateConfirmModal(false)}>Back</Button>
+            <Button variant="primary" onClick={handleProceedWithDirectorateRecommendation}>Confirm &amp; Continue</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={showDirectorateRecommendationModal} onHide={handleCloseDirectorateRecommendation} size="lg" centered contentClassName="border-0 shadow-lg">
+          <Modal.Header closeButton>
+            <Modal.Title className="fw-bold" style={{ fontSize: "1.1rem" }}>Recommend to Final List</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="p-3 mb-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0", maxHeight: "170px", overflowY: "auto" }}>
+              <strong className="d-block mb-2">Selected Applicants ({directorateTargets.length})</strong>
+              {directorateTargets.map((app) => (
+                <div key={app.applicant_id} className="py-1">
+                  {app.full_name || "-"} <small className="text-muted">({app.applicant_id})</small>
+                </div>
+              ))}
+            </div>
+            <Form.Group className="mb-3">
+              <Form.Label>Recommendation File <span className="text-danger">*</span></Form.Label>
+              <Form.Control type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={(event) => setDirectorateFile(event.target.files?.[0] || null)} />
+              <Form.Text muted>One file will be uploaded for all selected applicants.</Form.Text>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Remark <span className="text-danger">*</span></Form.Label>
+              <Form.Control as="textarea" rows={3} value={directorateRemark} onChange={(event) => setDirectorateRemark(event.target.value)} placeholder="Enter remarks for the final-list recommendation..." />
+            </Form.Group>
+            {directorateProgress && <Alert variant="info" className="mt-3 mb-0">{directorateProgress}</Alert>}
+            {directorateError && <Alert variant="danger" className="mt-3 mb-0">{directorateError}</Alert>}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseDirectorateRecommendation}>Cancel</Button>
+            <Button variant="success" onClick={handleSaveDirectorateRecommendation} disabled={directorateSaving || directorateDeleting}>
+              {directorateSaving ? <><Spinner size="sm" className="me-2" />Saving...</> : <><FaCheck className="me-1" />Save &amp; Forward</>}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={showDirectorateDeleteModal} onHide={() => !directorateDeleting && setShowDirectorateDeleteModal(false)} size="lg" centered contentClassName="border-0 shadow-lg">
+          <Modal.Header closeButton={!directorateDeleting}>
+            <Modal.Title className="fw-bold" style={{ fontSize: "1.1rem" }}>Delete Director Recommendation</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Control
+              type="text"
+              placeholder="Search by name or applicant ID..."
+              value={directorateDeleteSearch}
+              onChange={(event) => setDirectorateDeleteSearch(event.target.value)}
+              className="mb-3"
+            />
+            <div className="d-flex gap-2 align-items-center mb-3">
+              <Button variant="outline-secondary" size="sm" onClick={() => setDirectorateDeleteIds(directorateDeleteCandidates.map((app) => String(app.applicant_id || "").trim()))}>
+                Select All ({directorateDeleteCandidates.length})
+              </Button>
+              <Button variant="outline-secondary" size="sm" onClick={() => setDirectorateDeleteIds([])}>Clear All</Button>
+              <span className="text-muted ms-auto">{directorateDeleteIds.length} selected</span>
+            </div>
+            <div className="p-3" style={{ border: "1px solid #e2e8f0", maxHeight: "320px", overflowY: "auto" }}>
+              {directorateDeleteCandidates.length === 0 ? (
+                <p className="text-muted text-center py-4 mb-0">No Director recommendations found.</p>
+              ) : directorateDeleteCandidates.map((app) => {
+                const id = String(app.applicant_id || "").trim();
+                return (
+                  <label key={id} className="d-flex align-items-center gap-3 px-2 py-2" style={{ cursor: "pointer" }}>
+                    <Form.Check type="checkbox" checked={directorateDeleteIds.includes(id)} onChange={() => toggleDirectorateDeleteSelection(id)} />
+                    <div className="flex-grow-1">
+                      <div className="fw-semibold">{app.full_name || "-"}</div>
+                      <div className="text-muted" style={{ fontSize: "0.75rem" }}>{id}</div>
+                    </div>
+                    {getRecommendationBadge(id)}
+                  </label>
+                );
+              })}
+            </div>
+            {directorateProgress && <Alert variant="info" className="mt-3 mb-0">{directorateProgress}</Alert>}
+            {directorateError && <Alert variant="danger" className="mt-3 mb-0">{directorateError}</Alert>}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="light" onClick={() => setShowDirectorateDeleteModal(false)} disabled={directorateDeleting}>Cancel</Button>
+            <Button variant="danger" onClick={handleDeleteDirectorateRecommendations} disabled={directorateDeleting || !directorateDeleteIds.length}>
+              {directorateDeleting ? <><Spinner size="sm" className="me-2" />Deleting...</> : <><FaTimes className="me-1" />Delete Recommendation</>}
             </Button>
           </Modal.Footer>
         </Modal>

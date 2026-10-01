@@ -151,6 +151,30 @@ const mapApiDataToPreviewData = (item) => {
 
 /* STATIC DATA DEFINITIONS REMOVED - fetch data dynamically below */
 
+// One label per funnel stage so the filter reads the same as the District and
+// IT Cell dashboards. A registration without any form step counts as "Registered".
+const STEP_STATUS_ORDER = [
+  "Registered",
+  "Step 1",
+  "Step 2",
+  "Step 3",
+  "Step 4",
+  "Step 5",
+  "Final Submitted",
+];
+
+const normalizeStepStatus = (value) => {
+  const raw = String(value || "").trim();
+  const lower = raw.toLowerCase();
+  if (!raw || lower === "registered" || lower === "pending") return "Registered";
+  if (lower.startsWith("step-") || lower.startsWith("step ")) {
+    return `Step ${lower.replace(/^step[-\s]/, "")}`;
+  }
+  // The API may report the final stage in any casing.
+  const known = STEP_STATUS_ORDER.find((label) => label.toLowerCase() === lower);
+  return known || raw;
+};
+
 const mapApiToApp = (item) => {
   if (!item) return null;
   const s1 = item["step-1"] || {};
@@ -176,25 +200,30 @@ const mapApiToApp = (item) => {
     (step) => step.status === "completed"
   ).length;
 
-  const allStepsCompleted =
-    s1.status === "completed" &&
-    s2.status === "completed" &&
-    s3.status === "completed" &&
-    s4.status === "completed" &&
-    s5.status === "completed";
+  // Steps are filled in order, so the last one finished without a gap is the
+  // furthest the applicant has actually got.
+  let lastCompletedStep = 0;
+  [s1, s2, s3, s4, s5].some((step) => {
+    if (step.status !== "completed") return true;
+    lastCompletedStep += 1;
+    return false;
+  });
 
-  let stepStatus = "step-1";
-  if (allStepsCompleted) {
+  const hasAnyStep = [s1, s2, s3, s4, s5].some(
+    (step) => step && Object.keys(step).length > 0 && step.applicant_id
+  );
+
+  let stepStatus;
+  if (lastCompletedStep === 0) {
+    // No step finished: either still a plain registration, or part-way through
+    // step 1.
+    stepStatus = hasAnyStep ? "step-1" : "pending";
+  } else if (lastCompletedStep === 5) {
     stepStatus = "Final Submitted";
-  } else if (s1.status === "completed" && s2.status === "completed" && s3.status === "completed" && s4.status === "completed") {
-    stepStatus = "step-5";
-  } else if (s1.status === "completed" && s2.status === "completed" && s3.status === "completed") {
-    stepStatus = "step-4";
-  } else if (s1.status === "completed" && s2.status === "completed") {
-    stepStatus = "step-3";
-  } else if (s1.status === "completed") {
-    stepStatus = "step-2";
+  } else {
+    stepStatus = `step-${lastCompletedStep}`;
   }
+  stepStatus = normalizeStepStatus(stepStatus);
 
   return {
     applicant_id: item.applicant_id || nomination.applicant_id || "",
@@ -324,12 +353,17 @@ const DPODashboard = () => {
   const [recommendedApplications, setRecommendedApplications] = useState([]);
   const [recommendedLoading, setRecommendedLoading] = useState(false);
   const [recommendedError, setRecommendedError] = useState(null);
+
+  // Registration list from the same source the IT Cell dashboard reads, used to
+  // build the step-status filter so it lists every stage including registered.
+  const [registrationList, setRegistrationList] = useState([]);
   const [recommendationFile, setRecommendationFile] = useState(null);
   const [recommendationRemark, setRecommendationRemark] = useState("");
   const [savingRecommendation, setSavingRecommendation] = useState(false);
   const [uploadRecommendationError, setUploadRecommendationError] = useState(null);
   const [deletingRecommendation, setDeletingRecommendation] = useState(false);
   const [recommendationProgress, setRecommendationProgress] = useState("");
+  const [submittingAllRecommendations, setSubmittingAllRecommendations] = useState(false);
 
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const [showConfirmSelectionModal, setShowConfirmSelectionModal] = useState(false);
@@ -439,6 +473,35 @@ const DPODashboard = () => {
     }
   };
 
+  const fetchRegisteredApplications = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await fetch(
+        "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/it-cell/applications/",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        setRegistrationList(result.data);
+        return result.data;
+      }
+      setRegistrationList([]);
+      return [];
+    } catch (err) {
+      console.error("Failed to fetch registered applications:", err);
+      setRegistrationList([]);
+      return [];
+    }
+  };
+
   const DPO_STATUS_URL =
     "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/dpo/application/status/";
 
@@ -543,6 +606,61 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
     return result;
   };
 
+  const isForwardedToDirector = (applicantId) =>
+    String(getRecommendation(applicantId)?.is_forwared_to_director || "").trim().toLowerCase() === "yes";
+
+  const handleFinalSubmitAllRecommendations = async () => {
+    const targets = recommendedCandidates;
+    if (!targets.length || submittingAllRecommendations) return;
+
+    setSubmittingAllRecommendations(true);
+    setActionMessage(null);
+    const submittedIds = [];
+    const failures = [];
+    try {
+      for (let index = 0; index < targets.length; index += 1) {
+        const applicantId = String(targets[index].applicant_id || "").trim();
+        const recommendation = getRecommendation(applicantId);
+        if (!applicantId || !recommendation?.id) continue;
+
+        setRecommendationProgress(`Submitting ${index + 1} of ${targets.length}...`);
+        try {
+          const accessToken = localStorage.getItem("accessToken");
+          const response = await fetch(RECOMMENDATION_URL, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
+            body: JSON.stringify({
+              id: recommendation.id,
+              is_forwared_to_director: "yes",
+            }),
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}${await readErrorBody(response)}`);
+          }
+          const result = await response.json();
+          if (!result.success) throw new Error(result.message || "Failed to submit recommendation");
+          submittedIds.push(applicantId);
+        } catch (err) {
+          failures.push(`${applicantId}: ${err.message}`);
+        }
+      }
+
+      await fetchRecommendedApplications();
+      setActionMessage({
+        type: failures.length ? "warning" : "success",
+        text: failures.length
+          ? `${submittedIds.length} of ${targets.length} applications submitted. Failed: ${failures.join(" | ")}`
+          : `${submittedIds.length} recommended application${submittedIds.length === 1 ? "" : "s"} submitted to the Directorate.`,
+      });
+    } finally {
+      setSubmittingAllRecommendations(false);
+      setRecommendationProgress("");
+    }
+  };
+
   // Runs one request per applicant in order, but the DPO sees a single action.
 const runForEachTarget = async ({ targets, verb, emptyMessage }) => {
   const failed = [];
@@ -564,7 +682,9 @@ const runForEachTarget = async ({ targets, verb, emptyMessage }) => {
 };
 
 const handleSaveRecommendation = async () => {
-  const targets = recommendationTargets;
+  const targets = recommendationTargets.filter(
+    (app) => !isForwardedToDirector(app.applicant_id)
+  );
   if (!targets.length || savingRecommendation) return;
 
   if (!recommendationFile) {
@@ -632,7 +752,9 @@ const handleSaveRecommendation = async () => {
 // Removes the stored recommendation for every target. Returns null when nothing
 // was attempted so callers can leave their modal open.
 const deleteRecommendations = async (targets) => {
-  const withRecords = targets.filter((app) => getRecommendation(app.applicant_id)?.id);
+  const withRecords = targets.filter(
+    (app) => getRecommendation(app.applicant_id)?.id && !isForwardedToDirector(app.applicant_id)
+  );
   if (!withRecords.length || deletingRecommendation) return null;
 
   const isConfirmed = window.confirm(
@@ -723,6 +845,7 @@ const handleDeleteSelectedRecommendations = async () => {
   useEffect(() => {
     fetchApplicationsData();
     fetchRecommendedApplications();
+    fetchRegisteredApplications();
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -732,9 +855,9 @@ const handleDeleteSelectedRecommendations = async () => {
     (app) => app.step_status === "Final Submitted"
   ).length;
 
-  const registeredApplications = applications.filter(
-    (app) => app.registration_status === "registered" || app.completed_steps === 0
-  ).length;
+  // Every application received, not only the registrations that have not
+  // started the form yet.
+  const totalRegistrationCount = applications.length;
 
   const inProgressApplications = applications.filter(
     (app) => app.completed_steps >= 1 && app.completed_steps <= 3
@@ -746,17 +869,17 @@ const handleDeleteSelectedRecommendations = async () => {
   ).length;
 
   const getStepBadge = (stepStatus) => {
-    if (stepStatus === "Final Submitted") {
+    const label = normalizeStepStatus(stepStatus);
+    if (label === "Final Submitted") {
       return <Badge bg="success" className="badge-soft">Final Submitted</Badge>;
     }
-    if (stepStatus && stepStatus.startsWith("step-")) {
-      const stepNum = stepStatus.replace("step-", "");
-      return <Badge bg="primary" className="badge-soft">Step {stepNum}</Badge>;
+    if (label === "Registered") {
+      return <Badge bg="secondary" className="badge-soft">Registered</Badge>;
     }
-    if (stepStatus === "pending") {
-      return <Badge bg="warning" text="dark" className="badge-soft">Pending</Badge>;
+    if (label.startsWith("Step ")) {
+      return <Badge bg="primary" className="badge-soft">{label}</Badge>;
     }
-    return <Badge bg="secondary" className="badge-soft">{stepStatus || "-"}</Badge>;
+    return <Badge bg="secondary" className="badge-soft">{label || "-"}</Badge>;
   };
 
   const getDpoStatusBadge = (dpoStatus) => {
@@ -790,6 +913,9 @@ const handleDeleteSelectedRecommendations = async () => {
     if (!isRecommended(applicantId)) {
       return <Badge bg="secondary" className="badge-soft">Not Recommended</Badge>;
     }
+    if (isForwardedToDirector(applicantId)) {
+      return <Badge bg="primary" className="badge-soft">Final Submitted</Badge>;
+    }
     return (
       <Badge bg="success" className="badge-soft">
         <FaCheck className="me-1" /> Recommended
@@ -808,7 +934,8 @@ const handleDeleteSelectedRecommendations = async () => {
       (app.village || "").toLowerCase().includes(term);
 
     const matchesProject = !projectFilter || app.project === projectFilter;
-    const matchesStepStatus = !stepStatusFilter || app.step_status === stepStatusFilter;
+    const matchesStepStatus =
+      !stepStatusFilter || normalizeStepStatus(app.step_status) === stepStatusFilter;
 
     let matchesTab = true;
     if (activeTab === "completed") {
@@ -824,9 +951,20 @@ const handleDeleteSelectedRecommendations = async () => {
     new Set(filteredApplications.map((app) => app.project).filter(Boolean))
   ).sort();
 
-  const uniqueStepStatuses = Array.from(
-    new Set(filteredApplications.map((app) => app.step_status).filter(Boolean))
-  ).sort();
+  // Options come from both sources: every stage present in the step data plus
+  // the registration list, so a stage is never missing because no current row
+  // happens to sit in it. Built from all applications rather than the filtered
+  // ones, otherwise selecting a stage would collapse the dropdown to just it.
+  const uniqueStepStatuses = (() => {
+    const seen = new Set([
+      ...applications.map((app) => normalizeStepStatus(app.step_status)),
+      ...registrationList.map((item) => normalizeStepStatus(item.step_status)),
+    ]);
+    seen.delete("");
+    const ordered = STEP_STATUS_ORDER.filter((label) => seen.has(label));
+    const extra = Array.from(seen).filter((label) => !STEP_STATUS_ORDER.includes(label)).sort();
+    return [...ordered, ...extra];
+  })();
 
   const reportFilters = {
     Search: searchTerm.trim() || "All",
@@ -960,6 +1098,7 @@ const handleDeleteSelectedRecommendations = async () => {
   };
 
   const selectionCandidates = applications.filter((app) => {
+    if (isForwardedToDirector(app.applicant_id)) return false;
     const term = selectionSearch.trim().toLowerCase();
     if (!term) return true;
     return (
@@ -974,8 +1113,8 @@ const handleDeleteSelectedRecommendations = async () => {
   ).length;
 
   // Only applicants that already carry a recommendation can be deleted here.
-  const recommendedCandidates = applications.filter((app) =>
-    isRecommended(app.applicant_id)
+  const recommendedCandidates = applications.filter(
+    (app) => isRecommended(app.applicant_id) && !isForwardedToDirector(app.applicant_id)
   );
 
   const recommendedCandidatesFiltered = recommendedCandidates.filter((app) => {
@@ -1131,7 +1270,7 @@ const handleDeleteSelectedRecommendations = async () => {
                 {/* Compact Stat Cards */}
                 <Row className="g-3 mb-4">
             {[
-              { label: "Total Registration", value: registeredApplications, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
+              { label: "Total Registration", value: totalRegistrationCount, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
               { label: "In Progress", value: inProgressApplications, icon: <FaSpinner />, bg: "info-soft", color: "info" },
               { label: "Total Applications", value: totalApplications, icon: <FaTasks />, bg: "warning-soft", color: "warning" },
               { label: "Final Submitted", value: completedApplications, icon: <FaCheckCircle />, bg: "success-soft", color: "success" },
@@ -1252,7 +1391,7 @@ const handleDeleteSelectedRecommendations = async () => {
                 </Row>
               </div>
 
-              {/* Recommendation Toolbar */}
+              {activeTab === "verified" && (
               <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
                 <Button
                   variant="primary"
@@ -1274,25 +1413,20 @@ const handleDeleteSelectedRecommendations = async () => {
                 >
                   <FaTimes size={13} className="me-1" /> Delete Recommendation
                 </Button>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-                    {selectionIds.length > 0
-                      ? `${selectionIds.length} applicant${selectionIds.length === 1 ? "" : "s"} selected`
-                      : "Select applicants to recommend them for the award"}
-                  </span>
-                  {selectionIds.length > 0 && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() => setSelectionIds([])}
-                      className="p-0 text-decoration-none"
-                      style={{ fontSize: "0.78rem", fontWeight: 600 }}
-                    >
-                      Clear Selection
-                    </Button>
-                  )}
-                </div>
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={handleFinalSubmitAllRecommendations}
+                  disabled={loading || submittingAllRecommendations || recommendedCandidates.length === 0}
+                  className="d-flex align-items-center"
+                  style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
+                >
+                  {submittingAllRecommendations ? <Spinner size="sm" className="me-1" /> : <FaCheck className="me-1" />}
+                  {submittingAllRecommendations ? "Submitting..." : `Final Submit${recommendedCandidates.length ? ` (${recommendedCandidates.length})` : ""}`}
+                </Button>
+                {recommendationProgress && <span className="text-muted" style={{ fontSize: "0.8rem" }}>{recommendationProgress}</span>}
               </div>
+              )}
 
               {/* Table */}
               <div className="table-responsive">
@@ -1374,17 +1508,19 @@ const handleDeleteSelectedRecommendations = async () => {
                               >
                                 <FaFileAlt className="me-1" /> View Form
                               </Button>
-                              {isRecommended(app.applicant_id) && (
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => handleOpenRecommendationDetails(app)}
-                                  className="d-flex align-items-center flex-shrink-0"
-                                  style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500, whiteSpace: "nowrap" }}
-                                  title="View Recommendation"
-                                >
-                                  <FaPaperclip className="me-1" /> Recommendation
-                                </Button>
+                              {activeTab === "verified" && isRecommended(app.applicant_id) && (
+                                <>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => handleOpenRecommendationDetails(app)}
+                                    className="d-flex align-items-center flex-shrink-0"
+                                    style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500, whiteSpace: "nowrap" }}
+                                    title="View Recommendation"
+                                  >
+                                    <FaPaperclip className="me-1" /> Recommendation
+                                  </Button>
+                                </>
                               )}
                             </div>
                           </td>
