@@ -32,7 +32,10 @@ import {
 import DPOTopNav from "./DPOTopNav";
 import DPOLeftNav from "./DPOLeftNav";
 import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
-import { exportDashboardExcel, exportDashboardPdf } from "../../../../utils/itCellReportExport";
+import {
+  exportDashboardExcel,
+  exportDashboardPdf,
+} from "../../../../utils/itCellReportExport";
 import "./DPODashboard.css";
 
 // Static mapping function (kept for modal structure)
@@ -52,7 +55,8 @@ const mapApiDataToPreviewData = (item) => {
     passport: "पासपोर्ट",
     voter_id: "मतदाता पहचान पत्र",
   };
-  const idProofType = idProofTypes[nomination.id_proof_type] || nomination.id_proof_type || "";
+  const idProofType =
+    idProofTypes[nomination.id_proof_type] || nomination.id_proof_type || "";
 
   return {
     applicant_id: item.applicant_id || s1.applicant_id || "",
@@ -63,7 +67,9 @@ const mapApiDataToPreviewData = (item) => {
       phone: nomination.phone || "",
       email: nomination.email || "",
       id_proof_type: idProofType,
-      id_proof_number_label: idProofType ? `7. ${idProofType} संख्या` : "7. पहचान पत्र संख्या",
+      id_proof_number_label: idProofType
+        ? `7. ${idProofType} संख्या`
+        : "7. पहचान पत्र संख्या",
       id_proof_no: nomination.id_proof_no || "",
       village: nomination.village || "",
       post_office: nomination.post_office || "",
@@ -80,7 +86,8 @@ const mapApiDataToPreviewData = (item) => {
     resident: s1.permanent_resident_uttarakhand || "",
     residence_certificate_number: s1.residence_certificate_number || "",
     childMobile: s1.child_guardian_mobile || "",
-    bankAccountHolderType: s2.bank_nominee_relation || s1.bank_nominee_relation || "",
+    bankAccountHolderType:
+      s2.bank_nominee_relation || s1.bank_nominee_relation || "",
     bankAccountHolderName: s2.bank_holder_name || s1.bank_holder_name || "",
     bankName: s2.bank_name || s1.bank_name || "",
     ifscCode: s2.ifsc_code || s1.ifsc_code || "",
@@ -90,12 +97,12 @@ const mapApiDataToPreviewData = (item) => {
     currentClass: s1.current_class || "",
     "currentग्राम/मोहल्ला": s1.current_village || "",
     "currentतहसील ": s1.current_post_office || "",
-    "currentजनपद": s1.current_district || "",
+    currentजनपद: s1.current_district || "",
     "currentविकासखण्ड/नगर निकाय": s1.current_block_local_body || "",
     "currentपिन कोड": s1.current_pincode || "",
     "permanentग्राम/मोहल्ला": s1.permanent_village || "",
     "permanentतहसील ": s1.permanent_post_office || "",
-    "permanentजनपद": s1.permanent_district || "",
+    permanentजनपद: s1.permanent_district || "",
     "permanentविकासखण्ड/नगर निकाय": s1.permanent_block_local_body || "",
     "permanentपिन कोड": s1.permanent_pincode || "",
     district: s1.permanent_district || "",
@@ -125,20 +132,27 @@ const mapApiDataToPreviewData = (item) => {
     step3Status: s3.status || "",
     document0: s4.nominator_id_proof || s5.nominator_id_proof || "",
     document1: s4.child_aadhaar_identity || s5.child_aadhaar_identity || "",
-    document2: s4.permanent_residence_certificate || s5.permanent_residence_certificate || "",
-    document3: s4.child_birth_age_certificate || s5.child_birth_age_certificate || "",
-    document4: s4.bravery_incident_description || s5.bravery_incident_description || "",
+    document2:
+      s4.permanent_residence_certificate ||
+      s5.permanent_residence_certificate ||
+      "",
+    document3:
+      s4.child_birth_age_certificate || s5.child_birth_age_certificate || "",
+    document4:
+      s4.bravery_incident_description || s5.bravery_incident_description || "",
     document5: s4.child_passport_photo || s5.child_passport_photo || "",
     document6: s4.fir_police_report || s5.fir_police_report || "",
     document7: s4.media_report || s5.media_report || "",
     document8: s4.eyewitness_statements || s5.eyewitness_statements || "",
     document9: s4.incident_photo_video_url || s5.incident_photo_video_url || "",
     document10: s4.school_certificate || s5.school_certificate || "",
-    document11: s4.otherSupporting_documents || s5.otherSupporting_documents || "",
+    document11:
+      s4.otherSupporting_documents || s5.otherSupporting_documents || "",
     document12: s4.bank_detail || s5.bank_detail || "",
     step4Status: s4.status || "",
     declarationDocument: s5.declarationDocument || s4.declarationDocument || "",
-    parentDeclarationDocument: s5.parentDeclarationDocument || s4.parentDeclarationDocument || "",
+    parentDeclarationDocument:
+      s5.parentDeclarationDocument || s4.parentDeclarationDocument || "",
     step5Status: s5.status || "",
     rawStep1: s1,
     rawStep2: s2,
@@ -166,12 +180,15 @@ const STEP_STATUS_ORDER = [
 const normalizeStepStatus = (value) => {
   const raw = String(value || "").trim();
   const lower = raw.toLowerCase();
-  if (!raw || lower === "registered" || lower === "pending") return "Registered";
+  if (!raw || lower === "registered" || lower === "pending")
+    return "Registered";
   if (lower.startsWith("step-") || lower.startsWith("step ")) {
     return `Step ${lower.replace(/^step[-\s]/, "")}`;
   }
   // The API may report the final stage in any casing.
-  const known = STEP_STATUS_ORDER.find((label) => label.toLowerCase() === lower);
+  const known = STEP_STATUS_ORDER.find(
+    (label) => label.toLowerCase() === lower,
+  );
   return known || raw;
 };
 
@@ -181,7 +198,10 @@ const mapApiToApp = (item) => {
   const nomination = item.nomination || {};
 
   const age = s1.date_of_birth
-    ? Math.floor((Date.now() - new Date(s1.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+    ? Math.floor(
+        (Date.now() - new Date(s1.date_of_birth).getTime()) /
+          (365.25 * 24 * 60 * 60 * 1000),
+      )
     : null;
 
   const DpoStatusObj = item.dpo_status || {};
@@ -197,7 +217,7 @@ const mapApiToApp = (item) => {
 
   // Number of steps the applicant has finished, used for the funnel counts.
   const completedSteps = [s1, s2, s3, s4, s5].filter(
-    (step) => step.status === "completed"
+    (step) => step.status === "completed",
   ).length;
 
   // Steps are filled in order, so the last one finished without a gap is the
@@ -210,7 +230,7 @@ const mapApiToApp = (item) => {
   });
 
   const hasAnyStep = [s1, s2, s3, s4, s5].some(
-    (step) => step && Object.keys(step).length > 0 && step.applicant_id
+    (step) => step && Object.keys(step).length > 0 && step.applicant_id,
   );
 
   let stepStatus;
@@ -235,7 +255,9 @@ const mapApiToApp = (item) => {
     incident_title: "",
     step_status: stepStatus,
     completed_steps: completedSteps,
-    registration_status: String(nomination.status || "").trim().toLowerCase(),
+    registration_status: String(nomination.status || "")
+      .trim()
+      .toLowerCase(),
     dpo_status: dpoStatus,
     dpo_status_raw: rawDpoStatus,
     dpo_comment: dpoComment,
@@ -360,14 +382,18 @@ const DPODashboard = () => {
   const [recommendationFile, setRecommendationFile] = useState(null);
   const [recommendationRemark, setRecommendationRemark] = useState("");
   const [savingRecommendation, setSavingRecommendation] = useState(false);
-  const [uploadRecommendationError, setUploadRecommendationError] = useState(null);
+  const [uploadRecommendationError, setUploadRecommendationError] =
+    useState(null);
   const [deletingRecommendation, setDeletingRecommendation] = useState(false);
   const [recommendationProgress, setRecommendationProgress] = useState("");
-  const [submittingAllRecommendations, setSubmittingAllRecommendations] = useState(false);
+  const [submittingAllRecommendations, setSubmittingAllRecommendations] =
+    useState(false);
 
   const [showSelectionModal, setShowSelectionModal] = useState(false);
-  const [showConfirmSelectionModal, setShowConfirmSelectionModal] = useState(false);
-  const [showDeleteRecommendationModal, setShowDeleteRecommendationModal] = useState(false);
+  const [showConfirmSelectionModal, setShowConfirmSelectionModal] =
+    useState(false);
+  const [showDeleteRecommendationModal, setShowDeleteRecommendationModal] =
+    useState(false);
   const [deleteSelectionIds, setDeleteSelectionIds] = useState([]);
   const [deleteSelectionSearch, setDeleteSelectionSearch] = useState("");
   const [selectionIds, setSelectionIds] = useState([]);
@@ -398,7 +424,7 @@ const DPODashboard = () => {
             "Content-Type": "application/json",
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
-        }
+        },
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -432,7 +458,9 @@ const DPODashboard = () => {
       const data = await fetchApplicationsData();
       return data;
     } catch (err) {
-      setFormStatusListError(err.message || "Failed to fetch form status details");
+      setFormStatusListError(
+        err.message || "Failed to fetch form status details",
+      );
       return [];
     } finally {
       setFormStatusListLoading(false);
@@ -451,7 +479,7 @@ const DPODashboard = () => {
             "Content-Type": "application/json",
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
-        }
+        },
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -466,7 +494,9 @@ const DPODashboard = () => {
       }
     } catch (err) {
       console.error("Failed to fetch recommended applications:", err);
-      setRecommendedError(err.message || "Failed to fetch recommended applications");
+      setRecommendedError(
+        err.message || "Failed to fetch recommended applications",
+      );
       return [];
     } finally {
       setRecommendedLoading(false);
@@ -483,7 +513,7 @@ const DPODashboard = () => {
             "Content-Type": "application/json",
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
-        }
+        },
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -506,9 +536,9 @@ const DPODashboard = () => {
     "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/dpo/application/status/";
 
   // Saves only the remark. The status is echoed back unchanged because the
-// endpoint resolves the application from this payload and rejects the request
-// with 404 "Application not found" when it is missing.
-const saveDpoComment = async (applicantId, currentStatus, comment) => {
+  // endpoint resolves the application from this payload and rejects the request
+  // with 404 "Application not found" when it is missing.
+  const saveDpoComment = async (applicantId, currentStatus, comment) => {
     const accessToken = localStorage.getItem("accessToken");
     const response = await fetch(DPO_STATUS_URL, {
       method: "PUT",
@@ -526,7 +556,7 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
     if (!response.ok) {
       const errorBody = await response.text().catch(() => "");
       throw new Error(
-        `HTTP error! status: ${response.status}${errorBody ? ` - ${errorBody}` : ""}`
+        `HTTP error! status: ${response.status}${errorBody ? ` - ${errorBody}` : ""}`,
       );
     }
 
@@ -547,7 +577,10 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
       const parsed = JSON.parse(text);
       const details = parsed.errors
         ? Object.entries(parsed.errors)
-            .map(([field, messages]) => `${field}: ${[].concat(messages).join(", ")}`)
+            .map(
+              ([field, messages]) =>
+                `${field}: ${[].concat(messages).join(", ")}`,
+            )
             .join(" | ")
         : parsed.message || "";
       return details ? ` - ${details}` : ` - ${text}`;
@@ -558,7 +591,9 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
 
   const requestRecommendation = async ({ method, payload, file }) => {
     const accessToken = localStorage.getItem("accessToken");
-    const authHeaders = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+    const authHeaders = accessToken
+      ? { Authorization: `Bearer ${accessToken}` }
+      : {};
 
     // The endpoint expects a file upload, so send multipart first to avoid a
     // rejected JSON request. applicant_file is appended separately because a
@@ -595,7 +630,7 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
 
     if (!response.ok) {
       throw new Error(
-        `HTTP error! status: ${response.status}${await readErrorBody(response)}`
+        `HTTP error! status: ${response.status}${await readErrorBody(response)}`,
       );
     }
 
@@ -607,7 +642,9 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
   };
 
   const isForwardedToDirector = (applicantId) =>
-    String(getRecommendation(applicantId)?.is_forwared_to_director || "").trim().toLowerCase() === "yes";
+    String(getRecommendation(applicantId)?.is_forwared_to_director || "")
+      .trim()
+      .toLowerCase() === "yes";
 
   const handleFinalSubmitAllRecommendations = async () => {
     const targets = recommendedCandidates;
@@ -623,14 +660,18 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
         const recommendation = getRecommendation(applicantId);
         if (!applicantId || !recommendation) continue;
 
-        setRecommendationProgress(`Submitting ${index + 1} of ${targets.length}...`);
+        setRecommendationProgress(
+          `Submitting ${index + 1} of ${targets.length}...`,
+        );
         try {
           const accessToken = localStorage.getItem("accessToken");
           const response = await fetch(RECOMMENDATION_URL, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+              ...(accessToken
+                ? { Authorization: `Bearer ${accessToken}` }
+                : {}),
             },
             body: JSON.stringify({
               applicant_id: applicantId,
@@ -639,10 +680,15 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
             }),
           });
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}${await readErrorBody(response)}`);
+            throw new Error(
+              `HTTP error! status: ${response.status}${await readErrorBody(response)}`,
+            );
           }
           const result = await response.json();
-          if (!result.success) throw new Error(result.message || "Failed to submit recommendation");
+          if (!result.success)
+            throw new Error(
+              result.message || "Failed to submit recommendation",
+            );
           submittedIds.push(applicantId);
         } catch (err) {
           failures.push(`${applicantId}: ${err.message}`);
@@ -663,185 +709,193 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
   };
 
   // Runs one request per applicant in order, but the DPO sees a single action.
-const runForEachTarget = async ({ targets, verb, emptyMessage }) => {
-  const failed = [];
-  let done = 0;
+  const runForEachTarget = async ({ targets, verb, emptyMessage }) => {
+    const failed = [];
+    let done = 0;
 
-  for (const app of targets) {
-    const applicantId = String(app.applicant_id || "").trim();
-    if (!applicantId) continue;
-    done += 1;
-    setRecommendationProgress(`Processing ${done} of ${targets.length}...`);
+    for (const app of targets) {
+      const applicantId = String(app.applicant_id || "").trim();
+      if (!applicantId) continue;
+      done += 1;
+      setRecommendationProgress(`Processing ${done} of ${targets.length}...`);
+      try {
+        await verb(app, applicantId);
+      } catch (err) {
+        failed.push(`${applicantId}: ${err.message}`);
+      }
+    }
+
+    return { done, failed, emptyMessage };
+  };
+
+  const handleSaveRecommendation = async () => {
+    const targets = recommendationTargets.filter(
+      (app) => !isForwardedToDirector(app.applicant_id),
+    );
+    if (!targets.length || savingRecommendation) return;
+
+    if (!recommendationFile) {
+      setUploadRecommendationError("Please upload a recommendation file.");
+      return;
+    }
+    if (!recommendationRemark.trim()) {
+      setUploadRecommendationError("Please enter a remark.");
+      return;
+    }
+
+    setSavingRecommendation(true);
+    setUploadRecommendationError(null);
+    setRecommendationProgress("");
     try {
-      await verb(app, applicantId);
+      const remark = recommendationRemark.trim();
+      // A remark-only update sends no file, so the stored file is kept.
+      const { done, failed } = await runForEachTarget({
+        targets,
+        verb: async (app, applicantId) => {
+          const existing = getRecommendation(applicantId);
+          const payload = {
+            applicant_id: applicantId,
+            remark,
+            applicant_file: recommendationFile.name,
+          };
+          if (existing?.id) {
+            payload.id = existing.id;
+          }
+
+          await requestRecommendation({
+            method: existing ? "PUT" : "POST",
+            payload,
+            file: recommendationFile,
+          });
+        },
+      });
+
+      await fetchRecommendedApplications();
+      await fetchApplicationsData();
+
+      if (failed.length) {
+        setUploadRecommendationError(
+          `${done - failed.length} of ${done} applicants were saved. Failed: ${failed.join(" | ")}`,
+        );
+      } else {
+        setActionMessage({
+          type: "success",
+          text: `Recommendation saved for ${done} applicant${done === 1 ? "" : "s"} and forwarded successfully.`,
+        });
+        setShowRecommendationModal(false);
+        setRecommendationTargets([]);
+        setSelectionIds([]);
+        setRecommendationFile(null);
+        setRecommendationRemark("");
+      }
     } catch (err) {
-      failed.push(`${applicantId}: ${err.message}`);
-    }
-  }
-
-  return { done, failed, emptyMessage };
-};
-
-const handleSaveRecommendation = async () => {
-  const targets = recommendationTargets.filter(
-    (app) => !isForwardedToDirector(app.applicant_id)
-  );
-  if (!targets.length || savingRecommendation) return;
-
-  if (!recommendationFile) {
-    setUploadRecommendationError("Please upload a recommendation file.");
-    return;
-  }
-  if (!recommendationRemark.trim()) {
-    setUploadRecommendationError("Please enter a remark.");
-    return;
-  }
-
-  setSavingRecommendation(true);
-  setUploadRecommendationError(null);
-  setRecommendationProgress("");
-  try {
-    const remark = recommendationRemark.trim();
-    // A remark-only update sends no file, so the stored file is kept.
-    const { done, failed } = await runForEachTarget({
-      targets,
-      verb: async (app, applicantId) => {
-        const existing = getRecommendation(applicantId);
-        const payload = {
-          applicant_id: applicantId,
-          remark,
-          applicant_file: recommendationFile.name,
-        };
-        if (existing?.id) {
-          payload.id = existing.id;
-        }
-
-        await requestRecommendation({
-          method: existing ? "PUT" : "POST",
-          payload,
-          file: recommendationFile,
-        });
-      },
-    });
-
-    await fetchRecommendedApplications();
-    await fetchApplicationsData();
-
-    if (failed.length) {
       setUploadRecommendationError(
-        `${done - failed.length} of ${done} applicants were saved. Failed: ${failed.join(" | ")}`
+        err.message || "Failed to save recommendation",
       );
-    } else {
-      setActionMessage({
-        type: "success",
-        text: `Recommendation saved for ${done} applicant${done === 1 ? "" : "s"} and forwarded successfully.`,
-      });
-      setShowRecommendationModal(false);
-      setRecommendationTargets([]);
-      setSelectionIds([]);
-      setRecommendationFile(null);
-      setRecommendationRemark("");
+    } finally {
+      setSavingRecommendation(false);
+      setRecommendationProgress("");
     }
-  } catch (err) {
-    setUploadRecommendationError(err.message || "Failed to save recommendation");
-  } finally {
-    setSavingRecommendation(false);
+  };
+
+  // Removes the stored recommendation for every target. Returns null when nothing
+  // was attempted so callers can leave their modal open.
+  const deleteRecommendations = async (targets) => {
+    const withRecords = targets.filter(
+      (app) =>
+        getRecommendation(app.applicant_id)?.id &&
+        !isForwardedToDirector(app.applicant_id),
+    );
+    if (!withRecords.length || deletingRecommendation) return null;
+
+    const isConfirmed = window.confirm(
+      `Are you sure you want to remove the recommendation for ${withRecords.length} applicant${
+        withRecords.length === 1 ? "" : "s"
+      }?\n\nThese applications will no longer be forwarded.`,
+    );
+    if (!isConfirmed) return null;
+
+    setDeletingRecommendation(true);
+    setUploadRecommendationError(null);
     setRecommendationProgress("");
-  }
-};
+    try {
+      const { done, failed } = await runForEachTarget({
+        targets: withRecords,
+        verb: async (app, applicantId) => {
+          const existing = getRecommendation(applicantId);
+          await requestRecommendation({
+            method: "DELETE",
+            payload: { id: existing.id, applicant_id: applicantId },
+          });
+        },
+      });
 
-// Removes the stored recommendation for every target. Returns null when nothing
-// was attempted so callers can leave their modal open.
-const deleteRecommendations = async (targets) => {
-  const withRecords = targets.filter(
-    (app) => getRecommendation(app.applicant_id)?.id && !isForwardedToDirector(app.applicant_id)
-  );
-  if (!withRecords.length || deletingRecommendation) return null;
+      await fetchRecommendedApplications();
+      await fetchApplicationsData();
 
-  const isConfirmed = window.confirm(
-    `Are you sure you want to remove the recommendation for ${withRecords.length} applicant${
-      withRecords.length === 1 ? "" : "s"
-    }?\n\nThese applications will no longer be forwarded.`
-  );
-  if (!isConfirmed) return null;
-
-  setDeletingRecommendation(true);
-  setUploadRecommendationError(null);
-  setRecommendationProgress("");
-  try {
-    const { done, failed } = await runForEachTarget({
-      targets: withRecords,
-      verb: async (app, applicantId) => {
-        const existing = getRecommendation(applicantId);
-        await requestRecommendation({
-          method: "DELETE",
-          payload: { id: existing.id, applicant_id: applicantId },
+      if (failed.length) {
+        setUploadRecommendationError(
+          `${done - failed.length} of ${done} applicants were removed. Failed: ${failed.join(" | ")}`,
+        );
+      } else {
+        setActionMessage({
+          type: "success",
+          text: `Recommendation removed for ${done} applicant${done === 1 ? "" : "s"}.`,
         });
-      },
-    });
-
-    await fetchRecommendedApplications();
-    await fetchApplicationsData();
-
-    if (failed.length) {
+      }
+      return { done, failed };
+    } catch (err) {
       setUploadRecommendationError(
-        `${done - failed.length} of ${done} applicants were removed. Failed: ${failed.join(" | ")}`
+        err.message || "Failed to delete recommendation",
       );
-    } else {
-      setActionMessage({
-        type: "success",
-        text: `Recommendation removed for ${done} applicant${done === 1 ? "" : "s"}.`,
-      });
+      return null;
+    } finally {
+      setDeletingRecommendation(false);
+      setRecommendationProgress("");
     }
-    return { done, failed };
-  } catch (err) {
-    setUploadRecommendationError(err.message || "Failed to delete recommendation");
-    return null;
-  } finally {
-    setDeletingRecommendation(false);
+  };
+
+  const handleOpenDeleteRecommendationModal = () => {
+    setDeleteSelectionSearch("");
+    setUploadRecommendationError(null);
+    setShowDeleteRecommendationModal(true);
+  };
+
+  const closeDeleteRecommendationModal = () => {
+    if (deletingRecommendation) return;
+    setShowDeleteRecommendationModal(false);
+    setDeleteSelectionIds([]);
+    setDeleteSelectionSearch("");
+    setUploadRecommendationError(null);
     setRecommendationProgress("");
-  }
-};
+  };
 
-const handleOpenDeleteRecommendationModal = () => {
-  setDeleteSelectionSearch("");
-  setUploadRecommendationError(null);
-  setShowDeleteRecommendationModal(true);
-};
+  const toggleDeleteSelectionId = (applicantId) => {
+    const id = String(applicantId || "").trim();
+    if (!id) return;
+    setDeleteSelectionIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
 
-const closeDeleteRecommendationModal = () => {
-  if (deletingRecommendation) return;
-  setShowDeleteRecommendationModal(false);
-  setDeleteSelectionIds([]);
-  setDeleteSelectionSearch("");
-  setUploadRecommendationError(null);
-  setRecommendationProgress("");
-};
+  const handleDeleteSelectedRecommendations = async () => {
+    const targets = applications.filter((app) =>
+      deleteSelectionIds.includes(String(app.applicant_id || "").trim()),
+    );
+    if (!targets.length) {
+      setUploadRecommendationError(
+        "Please select at least one recommended applicant.",
+      );
+      return;
+    }
 
-const toggleDeleteSelectionId = (applicantId) => {
-  const id = String(applicantId || "").trim();
-  if (!id) return;
-  setDeleteSelectionIds((prev) =>
-    prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-  );
-};
+    const result = await deleteRecommendations(targets);
+    if (!result || result.failed.length) return;
 
-const handleDeleteSelectedRecommendations = async () => {
-  const targets = applications.filter((app) =>
-    deleteSelectionIds.includes(String(app.applicant_id || "").trim())
-  );
-  if (!targets.length) {
-    setUploadRecommendationError("Please select at least one recommended applicant.");
-    return;
-  }
-
-  const result = await deleteRecommendations(targets);
-  if (!result || result.failed.length) return;
-
-  setShowDeleteRecommendationModal(false);
-  setDeleteSelectionIds([]);
-  setDeleteSelectionSearch("");
-};
+    setShowDeleteRecommendationModal(false);
+    setDeleteSelectionIds([]);
+    setDeleteSelectionSearch("");
+  };
 
   useEffect(() => {
     fetchApplicationsData();
@@ -853,7 +907,7 @@ const handleDeleteSelectedRecommendations = async () => {
 
   // Funnel: registered -> step 1-3 done -> step 4 done -> fully submitted.
   const completedApplications = applications.filter(
-    (app) => app.step_status === "Final Submitted"
+    (app) => app.step_status === "Final Submitted",
   ).length;
 
   // Every application received, not only the registrations that have not
@@ -861,26 +915,41 @@ const handleDeleteSelectedRecommendations = async () => {
   const totalRegistrationCount = applications.length;
 
   const inProgressApplications = applications.filter(
-    (app) => app.completed_steps >= 1 && app.completed_steps <= 3
+    (app) => app.completed_steps >= 1 && app.completed_steps <= 3,
   ).length;
 
   const totalApplications = applications.filter(
-    (app) =>
-      app.completed_steps >= 4 && app.step_status !== "Final Submitted"
+    (app) => app.completed_steps >= 4 && app.step_status !== "Final Submitted",
   ).length;
 
   const getStepBadge = (stepStatus) => {
     const label = normalizeStepStatus(stepStatus);
     if (label === "Final Submitted") {
-      return <Badge bg="success" className="badge-soft">Final Submitted</Badge>;
+      return (
+        <Badge bg="success" className="badge-soft">
+          Final Submitted
+        </Badge>
+      );
     }
     if (label === "Registered") {
-      return <Badge bg="secondary" className="badge-soft">Registered</Badge>;
+      return (
+        <Badge bg="secondary" className="badge-soft">
+          Registered
+        </Badge>
+      );
     }
     if (label.startsWith("Step ")) {
-      return <Badge bg="primary" className="badge-soft">{label}</Badge>;
+      return (
+        <Badge bg="primary" className="badge-soft">
+          {label}
+        </Badge>
+      );
     }
-    return <Badge bg="secondary" className="badge-soft">{label || "-"}</Badge>;
+    return (
+      <Badge bg="secondary" className="badge-soft">
+        {label || "-"}
+      </Badge>
+    );
   };
 
   const getDpoStatusBadge = (dpoStatus) => {
@@ -888,18 +957,37 @@ const handleDeleteSelectedRecommendations = async () => {
       case "approved":
       case "verified":
       case "accepted":
-        return <Badge bg="success" className="badge-soft"><FaCheck className="me-1" /> Approved</Badge>;
+        return (
+          <Badge bg="success" className="badge-soft">
+            <FaCheck className="me-1" /> Approved
+          </Badge>
+        );
       case "rejected":
-        return <Badge bg="danger" className="badge-soft"><FaTimes className="me-1" /> Rejected</Badge>;
+        return (
+          <Badge bg="danger" className="badge-soft">
+            <FaTimes className="me-1" /> Rejected
+          </Badge>
+        );
       case "pending":
-        return <Badge bg="warning" text="dark" className="badge-soft"><FaHourglassHalf className="me-1" /> Pending</Badge>;
+        return (
+          <Badge bg="warning" text="dark" className="badge-soft">
+            <FaHourglassHalf className="me-1" /> Pending
+          </Badge>
+        );
       default:
-        return <Badge bg="secondary" className="badge-soft">Not Reviewed</Badge>;
+        return (
+          <Badge bg="secondary" className="badge-soft">
+            Not Reviewed
+          </Badge>
+        );
     }
   };
 
   const recommendedById = new Map(
-    recommendedApplications.map((item) => [String(item.applicant_id || "").trim(), item])
+    recommendedApplications.map((item) => [
+      String(item.applicant_id || "").trim(),
+      item,
+    ]),
   );
 
   const getRecommendation = (applicantId) =>
@@ -908,14 +996,23 @@ const handleDeleteSelectedRecommendations = async () => {
   const getRecommendationFileSrc = (applicantId) =>
     getFileSrc(getRecommendation(applicantId)?.applicant_file);
 
-  const isRecommended = (applicantId) => Boolean(getRecommendation(applicantId));
+  const isRecommended = (applicantId) =>
+    Boolean(getRecommendation(applicantId));
 
   const getRecommendationBadge = (applicantId) => {
     if (!isRecommended(applicantId)) {
-      return <Badge bg="secondary" className="badge-soft">Not Recommended</Badge>;
+      return (
+        <Badge bg="secondary" className="badge-soft">
+          Not Recommended
+        </Badge>
+      );
     }
     if (isForwardedToDirector(applicantId)) {
-      return <Badge bg="primary" className="badge-soft">Final Submitted</Badge>;
+      return (
+        <Badge bg="primary" className="badge-soft">
+          Final Submitted
+        </Badge>
+      );
     }
     return (
       <Badge bg="success" className="badge-soft">
@@ -936,7 +1033,8 @@ const handleDeleteSelectedRecommendations = async () => {
 
     const matchesProject = !projectFilter || app.project === projectFilter;
     const matchesStepStatus =
-      !stepStatusFilter || normalizeStepStatus(app.step_status) === stepStatusFilter;
+      !stepStatusFilter ||
+      normalizeStepStatus(app.step_status) === stepStatusFilter;
 
     let matchesTab = true;
     if (activeTab === "completed") {
@@ -949,7 +1047,7 @@ const handleDeleteSelectedRecommendations = async () => {
   });
 
   const uniqueProjects = Array.from(
-    new Set(filteredApplications.map((app) => app.project).filter(Boolean))
+    new Set(filteredApplications.map((app) => app.project).filter(Boolean)),
   ).sort();
 
   // Options come from both sources: every stage present in the step data plus
@@ -963,7 +1061,9 @@ const handleDeleteSelectedRecommendations = async () => {
     ]);
     seen.delete("");
     const ordered = STEP_STATUS_ORDER.filter((label) => seen.has(label));
-    const extra = Array.from(seen).filter((label) => !STEP_STATUS_ORDER.includes(label)).sort();
+    const extra = Array.from(seen)
+      .filter((label) => !STEP_STATUS_ORDER.includes(label))
+      .sort();
     return [...ordered, ...extra];
   })();
 
@@ -971,7 +1071,12 @@ const handleDeleteSelectedRecommendations = async () => {
     Search: searchTerm.trim() || "All",
     Project: projectFilter || "All",
     "Step Status": stepStatusFilter || "All",
-    "Tab": activeTab === "all" ? "All Forms" : activeTab === "completed" ? "Completed" : "Recommended/Verified",
+    Tab:
+      activeTab === "all"
+        ? "All Forms"
+        : activeTab === "completed"
+          ? "Completed"
+          : "Recommended/Verified",
   };
 
   const handleExportPdf = async () => {
@@ -1021,7 +1126,9 @@ const handleDeleteSelectedRecommendations = async () => {
     }
 
     const foundRecord = currentList.find(
-      (item) => String(item.applicant_id || "").trim() === String(app.applicant_id || "").trim()
+      (item) =>
+        String(item.applicant_id || "").trim() ===
+        String(app.applicant_id || "").trim(),
     );
 
     if (!foundRecord || !foundRecord["step-1"]) {
@@ -1056,12 +1163,16 @@ const handleDeleteSelectedRecommendations = async () => {
     const id = String(applicantId || "").trim();
     if (!id) return;
     setSelectionIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
   const handleOpenSelectionModal = () => {
-    if (loading || submittingAllRecommendations || hasFinalisedRecommendations) {
+    if (
+      loading ||
+      submittingAllRecommendations ||
+      hasFinalisedRecommendations
+    ) {
       return;
     }
     setSelectionSearch("");
@@ -1071,7 +1182,7 @@ const handleDeleteSelectedRecommendations = async () => {
 
   const handleConfirmSelection = () => {
     const targets = applications.filter((app) =>
-      selectionIds.includes(String(app.applicant_id || "").trim())
+      selectionIds.includes(String(app.applicant_id || "").trim()),
     );
     if (!targets.length) {
       setUploadRecommendationError("Please select at least one applicant.");
@@ -1105,7 +1216,7 @@ const handleDeleteSelectedRecommendations = async () => {
   // applicant of this district is forwarded to the Directorate, no other
   // candidate can be recommended.
   const hasFinalisedRecommendations = applications.some((app) =>
-    isForwardedToDirector(app.applicant_id)
+    isForwardedToDirector(app.applicant_id),
   );
 
   const selectionCandidates = applications.filter((app) => {
@@ -1120,12 +1231,14 @@ const handleDeleteSelectedRecommendations = async () => {
 
   const selectedRecommendationApps = recommendationTargets;
   const alreadyRecommendedCount = selectedRecommendationApps.filter((app) =>
-    isRecommended(app.applicant_id)
+    isRecommended(app.applicant_id),
   ).length;
 
   // Only applicants that already carry a recommendation can be deleted here.
   const recommendedCandidates = applications.filter(
-    (app) => isRecommended(app.applicant_id) && !isForwardedToDirector(app.applicant_id)
+    (app) =>
+      isRecommended(app.applicant_id) &&
+      !isForwardedToDirector(app.applicant_id),
   );
 
   const recommendedCandidatesFiltered = recommendedCandidates.filter((app) => {
@@ -1145,7 +1258,11 @@ const handleDeleteSelectedRecommendations = async () => {
     setSavingComment(true);
     setCommentError(null);
     try {
-      await saveDpoComment(applicantId, commentApp?.dpo_status_raw, commentText.trim());
+      await saveDpoComment(
+        applicantId,
+        commentApp?.dpo_status_raw,
+        commentText.trim(),
+      );
 
       setActionMessage({
         type: "success",
@@ -1154,9 +1271,7 @@ const handleDeleteSelectedRecommendations = async () => {
       handleCloseCommentModal();
       await fetchApplicationsData();
     } catch (err) {
-      setCommentError(
-        `Comment could not be saved. ${err.message}`
-      );
+      setCommentError(`Comment could not be saved. ${err.message}`);
     } finally {
       setSavingComment(false);
     }
@@ -1180,7 +1295,10 @@ const handleDeleteSelectedRecommendations = async () => {
 
   useEffect(() => {
     if (noFormDataAlert && noFormDataAlertRef.current) {
-      noFormDataAlertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      noFormDataAlertRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   }, [noFormDataAlert]);
 
@@ -1195,1091 +1313,1931 @@ const handleDeleteSelectedRecommendations = async () => {
       <div className="main-content-dash">
         <DPOTopNav toggleSidebar={toggleSidebar} />
 
-        <div fluid className="p-4 p-md-5" style={{ background: "#f8fafc", minHeight: "calc(100vh - 60px)" }}>
-          
+        <div
+          fluid
+          className="p-4 p-md-5"
+          style={{ background: "#f8fafc", minHeight: "calc(100vh - 60px)" }}
+        >
           {/* Page Header */}
           <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>
-              <h2 className="mb-1 fw-bold text-dark" style={{ fontSize: "1.5rem" }}>
+              <h2
+                className="mb-1 fw-bold text-dark"
+                style={{ fontSize: "1.5rem" }}
+              >
                 DPO Verification Dashboard
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: "0.875rem" }}>
-                मुख्यमंत्री राज्य बाल वीरता पुरस्कार - Verify student applications
+                मुख्यमंत्री राज्य बाल वीरता पुरस्कार - Verify student
+                applications
               </p>
             </div>
             <div className="d-flex gap-2 mt-3 mt-md-0">
-              <Button 
-                variant="light" 
-                size="sm" 
+              <Button
+                variant="light"
+                size="sm"
                 className="d-flex align-items-center border shadow-sm"
                 onClick={handleExportExcel}
                 disabled={exporting || filteredApplications.length === 0}
               >
-                {exporting === "excel" ? <Spinner size="sm" /> : <FaFileExcel className="me-2 text-success" />}
+                {exporting === "excel" ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <FaFileExcel className="me-2 text-success" />
+                )}
                 Excel
               </Button>
-              <Button 
-                variant="light" 
-                size="sm" 
+              <Button
+                variant="light"
+                size="sm"
                 className="d-flex align-items-center border shadow-sm"
                 onClick={handleExportPdf}
                 disabled={exporting || filteredApplications.length === 0}
               >
-                {exporting === "pdf" ? <Spinner size="sm" /> : <FaFilePdf className="me-2 text-danger" />}
+                {exporting === "pdf" ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <FaFilePdf className="me-2 text-danger" />
+                )}
                 PDF
               </Button>
             </div>
           </div>
 
           {actionMessage && (
-            <Alert variant={actionMessage.type} className="rounded-3 border-0 shadow-sm" onClose={() => setActionMessage(null)} dismissible>
+            <Alert
+              variant={actionMessage.type}
+              className="rounded-3 border-0 shadow-sm"
+              onClose={() => setActionMessage(null)}
+              dismissible
+            >
               {actionMessage.text}
             </Alert>
           )}
 
-           {exportError && (
-             <Alert variant="danger" className="rounded-3 border-0 shadow-sm" onClose={() => setExportError(null)} dismissible>
-               {exportError}
-             </Alert>
-           )}
+          {exportError && (
+            <Alert
+              variant="danger"
+              className="rounded-3 border-0 shadow-sm"
+              onClose={() => setExportError(null)}
+              dismissible
+            >
+              {exportError}
+            </Alert>
+          )}
 
-           {formStatusListLoading && (
-             <div className="text-center py-2">
-               <Spinner animation="border" size="sm" variant="primary" />
-               <span className="ms-2" style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                 फॉर्म डेटा लोड हो रहा है...
-               </span>
-             </div>
-           )}
+          {formStatusListLoading && (
+            <div className="text-center py-2">
+              <Spinner animation="border" size="sm" variant="primary" />
+              <span
+                className="ms-2"
+                style={{ fontSize: "0.85rem", color: "#64748b" }}
+              >
+                फॉर्म डेटा लोड हो रहा है...
+              </span>
+            </div>
+          )}
 
-           {noFormDataAlert && (
-             <Alert
-               ref={noFormDataAlertRef}
-               variant="warning"
-               dismissible
-               onClose={() => setNoFormDataAlert(false)}
-               className="rounded-3 border-0 shadow-sm"
-               style={{ fontSize: "0.875rem" }}
-             >
-               <strong>सूचना:</strong> इस आवेदक द्वारा अभी तक आवेदन प्रपत्र (Step 1) नहीं भरा गया है।
-             </Alert>
-           )}
+          {noFormDataAlert && (
+            <Alert
+              ref={noFormDataAlertRef}
+              variant="warning"
+              dismissible
+              onClose={() => setNoFormDataAlert(false)}
+              className="rounded-3 border-0 shadow-sm"
+              style={{ fontSize: "0.875rem" }}
+            >
+              <strong>सूचना:</strong> इस आवेदक द्वारा अभी तक आवेदन प्रपत्र (Step
+              1) नहीं भरा गया है।
+            </Alert>
+          )}
 
-           {loading && (
-             <div className="text-center mt-4">
-               <Spinner animation="border" variant="primary" />
-               <p className="mt-2">Loading applications...</p>
-             </div>
-           )}
-           {error && (
-             <Alert variant="danger" className="rounded-3 border-0 shadow-sm">
-               {error}
-             </Alert>
-           )}
-            {!loading && !error && (
-              <>
-                {/* Compact Stat Cards */}
-                <Row className="g-3 mb-4">
-            {[
-              { label: "Total Registration", value: totalRegistrationCount, icon: <FaUserGraduate />, bg: "primary-soft", color: "primary" },
-              { label: "In Progress", value: inProgressApplications, icon: <FaSpinner />, bg: "info-soft", color: "info" },
-              { label: "Total Applications", value: totalApplications, icon: <FaTasks />, bg: "warning-soft", color: "warning" },
-              { label: "Final Submitted", value: completedApplications, icon: <FaCheckCircle />, bg: "success-soft", color: "success" },
-            ].map((stat, idx) => (
-              <Col xs={6} lg={3} key={idx}>
-                <Card className="border-0 shadow-sm h-100" style={{ borderRadius: "12px" }}>
-                  <Card.Body className="d-flex align-items-center p-3">
-                    <div 
-                      className="d-flex align-items-center justify-content-center me-3"
+          {loading && (
+            <div className="text-center mt-4">
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-2">Loading applications...</p>
+            </div>
+          )}
+          {error && (
+            <Alert variant="danger" className="rounded-3 border-0 shadow-sm">
+              {error}
+            </Alert>
+          )}
+          {!loading && !error && (
+            <>
+              {/* Compact Stat Cards */}
+              <Row className="g-3 mb-4">
+                {[
+                  {
+                    label: "Total Registration",
+                    value: totalRegistrationCount,
+                    icon: <FaUserGraduate />,
+                    bg: "primary-soft",
+                    color: "primary",
+                  },
+                  {
+                    label: "In Progress",
+                    value: inProgressApplications,
+                    icon: <FaSpinner />,
+                    bg: "info-soft",
+                    color: "info",
+                  },
+                  {
+                    label: "Total Applications",
+                    value: totalApplications,
+                    icon: <FaTasks />,
+                    bg: "warning-soft",
+                    color: "warning",
+                  },
+                  {
+                    label: "Final Submitted",
+                    value: completedApplications,
+                    icon: <FaCheckCircle />,
+                    bg: "success-soft",
+                    color: "success",
+                  },
+                ].map((stat, idx) => (
+                  <Col xs={6} lg={3} key={idx}>
+                    <Card
+                      className="border-0 shadow-sm h-100"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      <Card.Body className="d-flex align-items-center p-3">
+                        <div
+                          className="d-flex align-items-center justify-content-center me-3"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "10px",
+                            background: `var(--${stat.bg}, #e2e8f0)`,
+                            color: `var(--bs-${stat.color}, #333)`,
+                            fontSize: "1.1rem",
+                          }}
+                        >
+                          {stat.icon}
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "#64748b",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            {stat.label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "1.25rem",
+                              fontWeight: 700,
+                              color: "#0f172a",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {stat.value}
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+
+              {/* Filters & Table Container */}
+              <Card
+                className="border-0 shadow-sm"
+                style={{ borderRadius: "12px" }}
+              >
+                <Card.Body className="p-4">
+                  {/* Filter Bar */}
+                  <div className="mb-4">
+                    <div
+                      className="d-flex flex-wrap gap-2 mb-3"
+                      style={{ borderBottom: "1px solid #e2e8f0" }}
+                    >
+                      <button
+                        type="button"
+                        className={`px-4 py-2 border-0 rounded-top ${activeTab === "all" ? "active-tab" : "inactive-tab"}`}
+                        style={{
+                          background:
+                            activeTab === "all" ? "#2563eb" : "#f1f5f9",
+                          color: activeTab === "all" ? "#fff" : "#64748b",
+                          fontSize: "0.85rem",
+                          fontWeight: 500,
+                          borderBottom:
+                            activeTab === "all"
+                              ? "3px solid #2563eb"
+                              : "3px solid transparent",
+                          borderRadius: "8px 8px 0 0",
+                        }}
+                        onClick={() => {
+                          setActiveTab("all");
+                          setStepStatusFilter("");
+                        }}
+                      >
+                        All Forms
+                      </button>
+                      <button
+                        type="button"
+                        className={`px-4 py-2 border-0 rounded-top ${activeTab === "completed" ? "active-tab" : "inactive-tab"}`}
+                        style={{
+                          background:
+                            activeTab === "completed" ? "#16a34a" : "#f1f5f9",
+                          color: activeTab === "completed" ? "#fff" : "#64748b",
+                          fontSize: "0.85rem",
+                          fontWeight: 500,
+                          borderBottom:
+                            activeTab === "completed"
+                              ? "3px solid #16a34a"
+                              : "3px solid transparent",
+                          borderRadius: "8px 8px 0 0",
+                        }}
+                        onClick={() => {
+                          setActiveTab("completed");
+                          setStepStatusFilter("");
+                        }}
+                      >
+                        Completed Forms
+                      </button>
+                      <button
+                        type="button"
+                        className={`px-4 py-2 border-0 rounded-top ${activeTab === "verified" ? "active-tab" : "inactive-tab"}`}
+                        style={{
+                          background:
+                            activeTab === "verified" ? "#7c3aed" : "#f1f5f9",
+                          color: activeTab === "verified" ? "#fff" : "#64748b",
+                          fontSize: "0.85rem",
+                          fontWeight: 500,
+                          borderBottom:
+                            activeTab === "verified"
+                              ? "3px solid #7c3aed"
+                              : "3px solid transparent",
+                          borderRadius: "8px 8px 0 0",
+                        }}
+                        onClick={() => {
+                          setActiveTab("verified");
+                          setStepStatusFilter("");
+                        }}
+                      >
+                        Recommended by District Committee
+                      </button>
+                    </div>
+                    <Row className="g-3 align-items-center">
+                      <Col
+                        xs={12}
+                        md={activeTab === "completed" ? 6 : 4}
+                        lg={activeTab === "completed" ? 4 : 4}
+                      >
+                        <div className="input-group">
+                          <span
+                            className="input-group-text bg-white border-end-0"
+                            style={{
+                              borderRadius: "8px 0 0 8px",
+                              borderColor: "#cbd5e1",
+                            }}
+                          >
+                            <FaSearch className="text-muted" size={14} />
+                          </span>
+                          <Form.Control
+                            type="text"
+                            placeholder="Search by name, ID, title..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="border-start-0"
+                            style={{
+                              borderRadius: "0 8px 8px 0",
+                              borderColor: "#cbd5e1",
+                              padding: "10px 12px",
+                              fontSize: "0.875rem",
+                            }}
+                          />
+                        </div>
+                      </Col>
+                      <Col xs={6} md={2} lg={2}>
+                        <Form.Select
+                          value={projectFilter}
+                          onChange={(e) => setProjectFilter(e.target.value)}
+                          className="filter-select"
+                        >
+                          <option value="">All Projects</option>
+                          {uniqueProjects.map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Col>
+                      {activeTab !== "completed" &&
+                        activeTab !== "verified" && (
+                          <Col xs={6} md={2} lg={2}>
+                            <Form.Select
+                              value={stepStatusFilter}
+                              onChange={(e) =>
+                                setStepStatusFilter(e.target.value)
+                              }
+                              className="filter-select"
+                            >
+                              <option value="">All Steps</option>
+                              {uniqueStepStatuses.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          </Col>
+                        )}
+                    </Row>
+                  </div>
+
+                  {activeTab === "verified" && (
+                    <div
+                      className="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 rounded-3"
                       style={{
-                        width: "40px", 
-                        height: "40px", 
-                        borderRadius: "10px",
-                        background: `var(--${stat.bg}, #e2e8f0)`,
-                        color: `var(--bs-${stat.color}, #333)`,
-                        fontSize: "1.1rem"
+                        background: "#f8fafc",
+                        border: "1px solid #e2e8f0",
                       }}
                     >
-                      {stat.icon}
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleOpenSelectionModal}
+                        disabled={
+                          loading ||
+                          submittingAllRecommendations ||
+                          hasFinalisedRecommendations
+                        }
+                        className="d-flex align-items-center"
+                        style={{
+                          borderRadius: "8px",
+                          fontSize: "0.8rem",
+                          fontWeight: 500,
+                        }}
+                      >
+                        <FaPaperclip size={13} className="me-1" />{" "}
+                        Recommendation
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={handleOpenDeleteRecommendationModal}
+                        disabled={loading || recommendedCandidates.length === 0}
+                        className="d-flex align-items-center"
+                        style={{
+                          borderRadius: "8px",
+                          fontSize: "0.8rem",
+                          fontWeight: 500,
+                        }}
+                      >
+                        <FaTimes size={13} className="me-1" /> Delete
+                        Recommendation
+                      </Button>
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={handleFinalSubmitAllRecommendations}
+                        disabled={
+                          loading ||
+                          submittingAllRecommendations ||
+                          recommendedCandidates.length === 0
+                        }
+                        className="d-flex align-items-center"
+                        style={{
+                          borderRadius: "8px",
+                          fontSize: "0.8rem",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {submittingAllRecommendations ? (
+                          <Spinner size="sm" className="me-1" />
+                        ) : (
+                          <FaCheck className="me-1" />
+                        )}
+                        {submittingAllRecommendations
+                          ? "Submitting..."
+                          : `Final Submit${recommendedCandidates.length ? ` (${recommendedCandidates.length})` : ""}`}
+                      </Button>
+                      {recommendationProgress && (
+                        <span
+                          className="text-muted"
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          {recommendationProgress}
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                        {stat.label}
-                      </div>
-                      <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0f172a", lineHeight: 1.2 }}>
-                        {stat.value}
-                      </div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-
-          {/* Filters & Table Container */}
-          <Card className="border-0 shadow-sm" style={{ borderRadius: "12px" }}>
-            <Card.Body className="p-4">
-              
-              {/* Filter Bar */}
-              <div className="mb-4">
-                <div className="d-flex flex-wrap gap-2 mb-3" style={{ borderBottom: "1px solid #e2e8f0" }}>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 border-0 rounded-top ${activeTab === "all" ? "active-tab" : "inactive-tab"}`}
-                    style={{
-                      background: activeTab === "all" ? "#2563eb" : "#f1f5f9",
-                      color: activeTab === "all" ? "#fff" : "#64748b",
-                      fontSize: "0.85rem",
-                      fontWeight: 500,
-                      borderBottom: activeTab === "all" ? "3px solid #2563eb" : "3px solid transparent",
-                      borderRadius: "8px 8px 0 0",
-                    }}
-                    onClick={() => { setActiveTab("all"); setStepStatusFilter(""); }}
-                  >
-                    All Forms
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 border-0 rounded-top ${activeTab === "completed" ? "active-tab" : "inactive-tab"}`}
-                    style={{
-                      background: activeTab === "completed" ? "#16a34a" : "#f1f5f9",
-                      color: activeTab === "completed" ? "#fff" : "#64748b",
-                      fontSize: "0.85rem",
-                      fontWeight: 500,
-                      borderBottom: activeTab === "completed" ? "3px solid #16a34a" : "3px solid transparent",
-                      borderRadius: "8px 8px 0 0",
-                    }}
-                    onClick={() => { setActiveTab("completed"); setStepStatusFilter(""); }}
-                  >
-                    Completed Forms
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 border-0 rounded-top ${activeTab === "verified" ? "active-tab" : "inactive-tab"}`}
-                    style={{
-                      background: activeTab === "verified" ? "#7c3aed" : "#f1f5f9",
-                      color: activeTab === "verified" ? "#fff" : "#64748b",
-                      fontSize: "0.85rem",
-                      fontWeight: 500,
-                      borderBottom: activeTab === "verified" ? "3px solid #7c3aed" : "3px solid transparent",
-                      borderRadius: "8px 8px 0 0",
-                    }}
-                    onClick={() => { setActiveTab("verified"); setStepStatusFilter(""); }}
-                  >
-                    Verified / Recommended
-                  </button>
-                </div>
-                <Row className="g-3 align-items-center">
-                  <Col xs={12} md={activeTab === "completed" ? 6 : 4} lg={activeTab === "completed" ? 4 : 4}>
-                    <div className="input-group">
-                      <span className="input-group-text bg-white border-end-0" style={{ borderRadius: "8px 0 0 8px", borderColor: "#cbd5e1" }}>
-                        <FaSearch className="text-muted" size={14} />
-                      </span>
-                      <Form.Control
-                        type="text"
-                        placeholder="Search by name, ID, title..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="border-start-0"
-                        style={{ borderRadius: "0 8px 8px 0", borderColor: "#cbd5e1", padding: "10px 12px", fontSize: "0.875rem" }}
-                      />
-                    </div>
-                  </Col>
-                  <Col xs={6} md={2} lg={2}>
-                    <Form.Select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className="filter-select">
-                      <option value="">All Projects</option>
-                      {uniqueProjects.map(p => <option key={p} value={p}>{p}</option>)}
-                    </Form.Select>
-                  </Col>
-                  {activeTab !== "completed" && activeTab !== "verified" && (
-                  <Col xs={6} md={2} lg={2}>
-                    <Form.Select value={stepStatusFilter} onChange={(e) => setStepStatusFilter(e.target.value)} className="filter-select">
-                      <option value="">All Steps</option>
-                      {uniqueStepStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-                    </Form.Select>
-                  </Col>
                   )}
-                </Row>
-              </div>
 
-              {activeTab === "verified" && (
-              <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleOpenSelectionModal}
-                  disabled={loading || submittingAllRecommendations || hasFinalisedRecommendations}
-                  className="d-flex align-items-center"
-                  style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
-                >
-                  <FaPaperclip size={13} className="me-1" /> Recommendation
-                </Button>
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={handleOpenDeleteRecommendationModal}
-                  disabled={loading || recommendedCandidates.length === 0}
-                  className="d-flex align-items-center"
-                  style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
-                >
-                  <FaTimes size={13} className="me-1" /> Delete Recommendation
-                </Button>
-                <Button
-                  variant="success"
-                  size="sm"
-                  onClick={handleFinalSubmitAllRecommendations}
-                  disabled={loading || submittingAllRecommendations || recommendedCandidates.length === 0}
-                  className="d-flex align-items-center"
-                  style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
-                >
-                  {submittingAllRecommendations ? <Spinner size="sm" className="me-1" /> : <FaCheck className="me-1" />}
-                  {submittingAllRecommendations ? "Submitting..." : `Final Submit${recommendedCandidates.length ? ` (${recommendedCandidates.length})` : ""}`}
-                </Button>
-                {recommendationProgress && <span className="text-muted" style={{ fontSize: "0.8rem" }}>{recommendationProgress}</span>}
-              </div>
-              )}
-
-              {/* Table */}
-              <div className="table-responsive">
-                <Table hover className="align-items-center" style={{ borderBottom: "1px solid #e2e8f0" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", width: "50px" }}>#</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Photo</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Name</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Age</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Class</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Type of Bravery</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommended by District Committee</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Comment by District Committee</th>
-                      <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "right", minWidth: "300px" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredApplications.length === 0 ? (
-                      <tr>
-                            <td colSpan="9" className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
-                          No applications found matching your criteria.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredApplications.map((app, index) => (
-                        <tr key={app.applicant_id} style={{ borderBottom: "1px solid #e2e8f0" }}>
-                          <td style={{ padding: "12px 16px", color: "#94a3b8", fontWeight: 500 }}>{index + 1}</td>
-                          <td style={{ padding: "12px 16px" }}>
-                            {app.photo ? (
-                              <Image src={app.photo} roundedCircle style={{ width: "36px", height: "36px", objectFit: "cover", border: "2px solid #e2e8f0" }} alt="profile" />
-                            ) : (
-                              <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <FaUserCircle style={{ color: "#cbd5e1", fontSize: "1.2rem" }} />
-                              </div>
-                            )}
-                          </td>
-                          <td style={{ padding: "12px 16px" }}>
-                            <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>{app.full_name}</div>
-                            <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{app.applicant_id}</div>
-                          </td>
-                          <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.age || "-"}</td>
-                          <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.class_name || "-"}</td>
-                          <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem", maxWidth: "250px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                            {app.incident_title || "-"}
-                          </td>
-                          <td style={{ padding: "12px 16px" }}>{getRecommendationBadge(app.applicant_id)}</td>
-                          <td style={{ padding: "12px 16px" }}>
-                            {app.dpo_comment ? (
-                              <div
-                                style={{ fontSize: "0.8rem", color: "#475569", maxWidth: "180px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}
-                                title={app.dpo_comment}
-                              >
-                                {app.dpo_comment}
-                              </div>
-                            ) : (
-                              <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>-</span>
-                            )}
-                          </td>
-                          <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                            <div className="d-flex flex-nowrap gap-2 justify-content-end">
-<Button
-                                variant="light"
-                                size="sm"
-                                onClick={() => handleOpenCommentModal(app)}
-                                className="d-flex align-items-center justify-content-center border flex-shrink-0"
-                                style={{ width: "32px", height: "32px", padding: 0, borderRadius: "8px", borderColor: "#e2e8f0", color: "#64748b" }}
-                                title="Add / Edit Comment"
-                              >
-                                <FaCommentDots size={14} />
-                              </Button>
-                              <Button
-                                variant="success"
-                                size="sm"
-                                onClick={() => handleOpenFormDetails(app)}
-                                className="d-flex align-items-center flex-shrink-0"
-                                style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500, whiteSpace: "nowrap" }}
-                                title="View Form"
-                              >
-                                <FaFileAlt className="me-1" /> View Form
-                              </Button>
-                              {activeTab === "verified" && isRecommended(app.applicant_id) && (
-                                <>
-                                  <Button
-                                    variant="primary"
-                                    size="sm"
-                                    onClick={() => handleOpenRecommendationDetails(app)}
-                                    className="d-flex align-items-center flex-shrink-0"
-                                    style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500, whiteSpace: "nowrap" }}
-                                    title="View Recommendation"
-                                  >
-                                    <FaPaperclip className="me-1" /> Recommendation
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </td>
+                  {/* Table */}
+                  <div className="table-responsive">
+                    <Table
+                      hover
+                      className="align-items-center"
+                      style={{ borderBottom: "1px solid #e2e8f0" }}
+                    >
+                      <thead>
+                        <tr
+                          style={{
+                            background: "#f8fafc",
+                            borderBottom: "2px solid #e2e8f0",
+                          }}
+                        >
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                              width: "50px",
+                            }}
+                          >
+                            #
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Photo
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Name
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Age
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Class
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Type of Bravery
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Recommended by District Committee
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Comment by District Committee
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                              textAlign: "right",
+                              minWidth: "300px",
+                            }}
+                          >
+                            Actions
+                          </th>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </Table>
-              </div>
-            </Card.Body>
-          </Card>
+                      </thead>
+                      <tbody>
+                        {filteredApplications.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan="9"
+                              className="text-center py-5 text-muted"
+                              style={{ fontSize: "0.9rem" }}
+                            >
+                              No applications found matching your criteria.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredApplications.map((app, index) => (
+                            <tr
+                              key={app.applicant_id}
+                              style={{ borderBottom: "1px solid #e2e8f0" }}
+                            >
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#94a3b8",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {index + 1}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                {app.photo ? (
+                                  <Image
+                                    src={app.photo}
+                                    roundedCircle
+                                    style={{
+                                      width: "36px",
+                                      height: "36px",
+                                      objectFit: "cover",
+                                      border: "2px solid #e2e8f0",
+                                    }}
+                                    alt="profile"
+                                  />
+                                ) : (
+                                  <div
+                                    style={{
+                                      width: "36px",
+                                      height: "36px",
+                                      borderRadius: "50%",
+                                      background: "#f1f5f9",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <FaUserCircle
+                                      style={{
+                                        color: "#cbd5e1",
+                                        fontSize: "1.2rem",
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    color: "#0f172a",
+                                    fontSize: "0.875rem",
+                                  }}
+                                >
+                                  {app.full_name}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "0.75rem",
+                                    color: "#94a3b8",
+                                  }}
+                                >
+                                  {app.applicant_id}
+                                </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#475569",
+                                  fontSize: "0.875rem",
+                                }}
+                              >
+                                {app.age || "-"}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#475569",
+                                  fontSize: "0.875rem",
+                                }}
+                              >
+                                {app.class_name || "-"}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#475569",
+                                  fontSize: "0.875rem",
+                                  maxWidth: "250px",
+                                  textOverflow: "ellipsis",
+                                  overflow: "hidden",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {app.incident_title || "-"}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                {getRecommendationBadge(app.applicant_id)}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                {app.dpo_comment ? (
+                                  <div
+                                    style={{
+                                      fontSize: "0.8rem",
+                                      color: "#475569",
+                                      maxWidth: "180px",
+                                      textOverflow: "ellipsis",
+                                      overflow: "hidden",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    title={app.dpo_comment}
+                                  >
+                                    {app.dpo_comment}
+                                  </div>
+                                ) : (
+                                  <span
+                                    style={{
+                                      fontSize: "0.8rem",
+                                      color: "#94a3b8",
+                                    }}
+                                  >
+                                    -
+                                  </span>
+                                )}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  textAlign: "right",
+                                }}
+                              >
+                                <div className="d-flex flex-nowrap gap-2 justify-content-end">
+                                  <Button
+                                    variant="light"
+                                    size="sm"
+                                    onClick={() => handleOpenCommentModal(app)}
+                                    className="d-flex align-items-center justify-content-center border flex-shrink-0"
+                                    style={{
+                                      width: "32px",
+                                      height: "32px",
+                                      padding: 0,
+                                      borderRadius: "8px",
+                                      borderColor: "#e2e8f0",
+                                      color: "#64748b",
+                                    }}
+                                    title="Add / Edit Comment"
+                                  >
+                                    <FaCommentDots size={14} />
+                                  </Button>
+                                  <Button
+                                    variant="success"
+                                    size="sm"
+                                    onClick={() => handleOpenFormDetails(app)}
+                                    className="d-flex align-items-center flex-shrink-0"
+                                    style={{
+                                      borderRadius: "8px",
+                                      padding: "0px 12px",
+                                      height: "32px",
+                                      fontSize: "0.8rem",
+                                      fontWeight: 500,
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    title="View Form"
+                                  >
+                                    <FaFileAlt className="me-1" /> View Form
+                                  </Button>
+                                  {activeTab === "verified" &&
+                                    isRecommended(app.applicant_id) && (
+                                      <>
+                                        <Button
+                                          variant="primary"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleOpenRecommendationDetails(app)
+                                          }
+                                          className="d-flex align-items-center flex-shrink-0"
+                                          style={{
+                                            borderRadius: "8px",
+                                            padding: "0px 12px",
+                                            height: "32px",
+                                            fontSize: "0.8rem",
+                                            fontWeight: 500,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                          title="View Recommendation"
+                                        >
+                                          <FaPaperclip className="me-1" />{" "}
+                                          Recommendation
+                                        </Button>
+                                      </>
+                                    )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+                </Card.Body>
+              </Card>
             </>
           )}
-          </div>
+        </div>
 
-          {/* Registration Details Modal */}
-          <Modal show={showModal} onHide={handleCloseRegistrationModal} size="lg" centered contentClassName="border-0 shadow-lg">
-            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
-              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                Registration Details
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="p-4" style={{ background: "#fff" }}>
-              {selectedApplication && (
-                <div>
-                  <h6 className="text-uppercase text-muted mb-3" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                    Applicant Information
-                  </h6>
-                  <Row className="g-3 mb-4">
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Applicant ID</small>
-                        <p className="detail-value text-primary fw-bold">{selectedApplication.applicant_id}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Full Name</small>
-                        <p className="detail-value text-dark fw-bold">{selectedApplication.full_name}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Nominator Category</small>
-                        <p className="detail-value text-dark">{selectedApplication.nominator_category || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Relation With Child</small>
-                        <p className="detail-value text-dark">{selectedApplication.relat_with_child || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Phone</small>
-                        <p className="detail-value text-dark">{selectedApplication.phone || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Email</small>
-                        <p className="detail-value text-dark">{selectedApplication.email || "-"}</p>
-                      </div>
-                    </Col>
-                  </Row>
-
-                  <h6 className="text-uppercase text-muted mb-3" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                    ID Proof Details
-                  </h6>
-                  <Row className="g-3 mb-4">
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">ID Proof Type</small>
-                        <p className="detail-value text-dark">
-                          {selectedApplication.id_proof_type || "-"}
-                          {selectedApplication.id_proof_type_other ? ` (${selectedApplication.id_proof_type_other})` : ""}
-                        </p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">ID Proof Number</small>
-                        <p className="detail-value text-dark">{selectedApplication.id_proof_no || "-"}</p>
-                      </div>
-                    </Col>
-                  </Row>
-
-                  <h6 className="text-uppercase text-muted mb-3" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                    Address Details
-                  </h6>
-                  <Row className="g-3 mb-4">
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Village</small>
-                        <p className="detail-value text-dark">{selectedApplication.village || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Post Office</small>
-                        <p className="detail-value text-dark">{selectedApplication.post_office || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Project</small>
-                        <p className="detail-value text-dark">{selectedApplication.project || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">District</small>
-                        <p className="detail-value text-dark">{selectedApplication.district || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Pincode</small>
-                        <p className="detail-value text-dark">{selectedApplication.pincode || "-"}</p>
-                      </div>
-                    </Col>
-                  </Row>
-
-                  <h6 className="text-uppercase text-muted mb-3" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                    Application Status
-                  </h6>
-                  <Row className="g-3 mb-4">
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Status</small>
-                        <p className="detail-value text-dark">{selectedApplication.status || "-"}</p>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Step Status</small>
-                        <div className="mt-1">{getStepBadge(selectedApplication.step_status)}</div>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">DPO Status</small>
-                        <div className="mt-1">{getDpoStatusBadge(selectedApplication.dpo_status)}</div>
-                      </div>
-                    </Col>
-                    <Col xs={12} md={6}>
-                      <div className="detail-block">
-                        <small className="detail-label">Created At</small>
-                        <p className="detail-value text-dark">
-                          {selectedApplication.created_at
-                            ? new Date(selectedApplication.created_at).toLocaleString("en-IN")
-                            : "-"}
-                        </p>
-                      </div>
-                    </Col>
-                    <Col xs={12}>
-                      <div className="detail-block">
-                        <small className="detail-label">DPO Comment</small>
-                        <p className="detail-value text-dark" style={{ whiteSpace: "pre-wrap" }}>
-                          {selectedApplication.dpo_comment || "No comment added yet."}
-                        </p>
-                      </div>
-                    </Col>
-                  </Row>
-
-                   {(selectedApplication.dpo_status === "approved" || isRecommended(selectedApplication.applicant_id)) && (
-                     <div className="p-4 rounded-3 mt-3" style={{ background: "#f0fdf4", border: "1px solid #86efac" }}>
-                       <div className="d-flex justify-content-between align-items-center mb-3">
-                         <h6 className="text-uppercase text-muted mb-0" style={{ fontSize: "0.75rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                           Recommendation
-                         </h6>
-                         <Button
-                           variant="link"
-                            onClick={() => handleOpenRecommendationDetails(selectedApplication)}
-                           className="p-0 text-decoration-none fw-bold"
-                           style={{ fontSize: "0.8rem" }}
-                         >
-                           {isRecommended(selectedApplication.applicant_id) ? "Edit" : "Add Recommendation"}
-                         </Button>
-                       </div>
-                       {(() => {
-                         const recommendation = getRecommendation(selectedApplication.applicant_id);
-                         if (!recommendation) {
-                           return (
-                             <Alert variant="info" className="rounded-3 border-0 mb-0" style={{ fontSize: "0.85rem" }}>
-                               <FaHourglassHalf className="me-1" /> This application is approved but not recommended yet.
-                             </Alert>
-                           );
-                         }
-                         return (
-                           <Row className="g-3">
-                             <Col xs={12} md={6}>
-                               <div className="detail-block">
-                                 <small className="detail-label">Recommended On</small>
-                                 <p className="detail-value text-dark">
-                                   {recommendation.created_at
-                                     ? new Date(recommendation.created_at).toLocaleString("en-IN")
-                                     : "-"}
-                                 </p>
-                               </div>
-                             </Col>
-                             <Col xs={12} md={6}>
-                               <div className="detail-block">
-                                <small className="detail-label">Recommendation File</small>
-                                {getRecommendationFileSrc(selectedApplication.applicant_id) ? (
-                                  <a
-                                    href={getRecommendationFileSrc(selectedApplication.applicant_id)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="d-inline-flex align-items-center text-decoration-none fw-bold"
-                                    style={{ fontSize: "0.85rem", color: "#2563eb" }}
-                                  >
-                                    <FaPaperclip className="me-1" /> View / Download File
-                                  </a>
-                                ) : (
-                                  <p className="detail-value text-dark">-</p>
-                                )}
-                               </div>
-                             </Col>
-                             <Col xs={12}>
-                               <div className="detail-block">
-                                 <small className="detail-label">Remark</small>
-                                 <p className="detail-value text-dark" style={{ whiteSpace: "pre-wrap" }}>
-                                   {recommendation.remark || "-"}
-                                 </p>
-                               </div>
-                             </Col>
-                           </Row>
-                         );
-                       })()}
-                     </div>
-                   )}
-                </div>
-              )}
-            </Modal.Body>
-            <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-              <Button 
-                variant="link" 
-                onClick={() => handleSwitchToForm(selectedApplication)}
-                className="me-auto p-0 text-decoration-none fw-bold"
-                style={{ fontSize: "0.85rem" }}
-              >
-                <FaFileAlt className="me-1" /> आवेदन प्रपत्र देखें →
-              </Button>
-              <Button variant="secondary" onClick={handleCloseRegistrationModal} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
-                Close
-              </Button>
-            </Modal.Footer>
-          </Modal>
-
-          {/* Applicant Selection Modal */}
-          <Modal show={showSelectionModal} onHide={() => setShowSelectionModal(false)} size="lg" centered contentClassName="border-0 shadow-lg">
-            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
-              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                Select Applicants for Recommendation
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="p-4" style={{ background: "#fff" }}>
-              <Form.Control
-                type="text"
-                placeholder="Search by name or applicant ID..."
-                value={selectionSearch}
-                onChange={(e) => setSelectionSearch(e.target.value)}
-                className="mb-3"
-                style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
-              />
-
-              <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() =>
-                    setSelectionIds(
-                      selectionCandidates.map((app) => String(app.applicant_id || "").trim())
-                    )
-                  }
-                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
+        {/* Registration Details Modal */}
+        <Modal
+          show={showModal}
+          onHide={handleCloseRegistrationModal}
+          size="lg"
+          centered
+          contentClassName="border-0 shadow-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-white border-bottom p-4"
+            style={{ borderRadius: "12px 12px 0 0" }}
+          >
+            <Modal.Title
+              className="fw-bold text-dark"
+              style={{ fontSize: "1.1rem" }}
+            >
+              Registration Details
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4" style={{ background: "#fff" }}>
+            {selectedApplication && (
+              <div>
+                <h6
+                  className="text-uppercase text-muted mb-3"
+                  style={{
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.5px",
+                    fontWeight: 700,
+                  }}
                 >
-                  Select All ({selectionCandidates.length})
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => setSelectionIds([])}
-                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
-                >
-                  Clear All
-                </Button>
-                <span className="text-muted ms-auto" style={{ fontSize: "0.8rem" }}>
-                  {selectionIds.length} selected
-                </span>
-              </div>
+                  Applicant Information
+                </h6>
+                <Row className="g-3 mb-4">
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Applicant ID</small>
+                      <p className="detail-value text-primary fw-bold">
+                        {selectedApplication.applicant_id}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Full Name</small>
+                      <p className="detail-value text-dark fw-bold">
+                        {selectedApplication.full_name}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Nominator Category</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.nominator_category || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">
+                        Relation With Child
+                      </small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.relat_with_child || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Phone</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.phone || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Email</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.email || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                </Row>
 
-              <div
-                className="p-3 rounded-3"
-                style={{ border: "1px solid #e2e8f0", maxHeight: "320px", overflowY: "auto" }}
-              >
-                {selectionCandidates.length === 0 ? (
-                  <p className="text-muted text-center py-4 mb-0" style={{ fontSize: "0.85rem" }}>
-                    No applicants found.
-                  </p>
-                ) : (
-                  selectionCandidates.map((app) => {
-                    const id = String(app.applicant_id || "").trim();
-                    return (
-                      <label
-                        key={id}
-                        className="d-flex align-items-center gap-3 px-2 py-2 rounded-2"
-                        style={{ cursor: "pointer" }}
+                <h6
+                  className="text-uppercase text-muted mb-3"
+                  style={{
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.5px",
+                    fontWeight: 700,
+                  }}
+                >
+                  ID Proof Details
+                </h6>
+                <Row className="g-3 mb-4">
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">ID Proof Type</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.id_proof_type || "-"}
+                        {selectedApplication.id_proof_type_other
+                          ? ` (${selectedApplication.id_proof_type_other})`
+                          : ""}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">ID Proof Number</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.id_proof_no || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                </Row>
+
+                <h6
+                  className="text-uppercase text-muted mb-3"
+                  style={{
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.5px",
+                    fontWeight: 700,
+                  }}
+                >
+                  Address Details
+                </h6>
+                <Row className="g-3 mb-4">
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Village</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.village || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Post Office</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.post_office || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Project</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.project || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">District</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.district || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Pincode</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.pincode || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                </Row>
+
+                <h6
+                  className="text-uppercase text-muted mb-3"
+                  style={{
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.5px",
+                    fontWeight: 700,
+                  }}
+                >
+                  Application Status
+                </h6>
+                <Row className="g-3 mb-4">
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Status</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.status || "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Step Status</small>
+                      <div className="mt-1">
+                        {getStepBadge(selectedApplication.step_status)}
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">DPO Status</small>
+                      <div className="mt-1">
+                        {getDpoStatusBadge(selectedApplication.dpo_status)}
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">Created At</small>
+                      <p className="detail-value text-dark">
+                        {selectedApplication.created_at
+                          ? new Date(
+                              selectedApplication.created_at,
+                            ).toLocaleString("en-IN")
+                          : "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12}>
+                    <div className="detail-block">
+                      <small className="detail-label">DPO Comment</small>
+                      <p
+                        className="detail-value text-dark"
+                        style={{ whiteSpace: "pre-wrap" }}
                       >
-                        <Form.Check
-                          type="checkbox"
-                          checked={selectionIds.includes(id)}
-                          onChange={() => toggleSelectionId(id)}
-                        />
-                        <div className="flex-grow-1">
-                          <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>
-                            {app.full_name || "-"}
-                          </div>
-                          <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{id}</div>
-                        </div>
-                        <div>{getRecommendationBadge(id)}</div>
-                      </label>
-                    );
-                  })
-                )}
-              </div>
+                        {selectedApplication.dpo_comment ||
+                          "No comment added yet."}
+                      </p>
+                    </div>
+                  </Col>
+                </Row>
 
-              {uploadRecommendationError && (
-                <Alert variant="danger" className="rounded-3 py-2 mt-3 mb-0" style={{ fontSize: "0.8rem" }}>
-                  {uploadRecommendationError}
-                </Alert>
-              )}
-            </Modal.Body>
-            <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-              <Button variant="light" onClick={() => setShowSelectionModal(false)} className="px-4 border" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleConfirmSelection}
-                disabled={selectionIds.length === 0}
-                className="px-4"
-                style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500 }}
-              >
-                Continue
-              </Button>
-            </Modal.Footer>
-          </Modal>
-
-          {/* Confirm Selection Modal */}
-          <Modal show={showConfirmSelectionModal} onHide={() => setShowConfirmSelectionModal(false)} centered contentClassName="border-0 shadow-lg">
-            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
-              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                Confirm Selected Applicants
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="p-4" style={{ background: "#fff" }}>
-              <Alert variant="info" className="rounded-3 border-0" style={{ fontSize: "0.85rem" }}>
-                The same file and remark will be posted for every applicant listed below. Please confirm the
-                selection before continuing.
-              </Alert>
-              <div
-                className="p-3 rounded-3"
-                style={{ border: "1px solid #e2e8f0", maxHeight: "300px", overflowY: "auto" }}
-              >
-                {recommendationTargets.map((app) => (
+                {(selectedApplication.dpo_status === "approved" ||
+                  isRecommended(selectedApplication.applicant_id)) && (
                   <div
-                    key={app.applicant_id}
-                    className="d-flex align-items-center justify-content-between px-2 py-2"
-                    style={{ borderBottom: "1px solid #f1f5f9" }}
+                    className="p-4 rounded-3 mt-3"
+                    style={{
+                      background: "#f0fdf4",
+                      border: "1px solid #86efac",
+                    }}
                   >
-                    <div>
-                      <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>
-                        {app.full_name || "-"}
-                      </div>
-                      <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{app.applicant_id}</div>
-                    </div>
-                    <div>{getRecommendationBadge(app.applicant_id)}</div>
-                  </div>
-                ))}
-              </div>
-            </Modal.Body>
-            <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-              <Button
-                variant="light"
-                onClick={() => setShowConfirmSelectionModal(false)}
-                className="px-4 border"
-                style={{ borderRadius: "8px", fontSize: "0.85rem" }}
-              >
-                Back
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleProceedToRecommendation}
-                className="px-4"
-                style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500 }}
-              >
-                Confirm &amp; Continue
-              </Button>
-            </Modal.Footer>
-          </Modal>
-
-          {/* Delete Recommendation Modal: lists only the recommended applicants */}
-          <Modal show={showDeleteRecommendationModal} onHide={closeDeleteRecommendationModal} size="lg" centered contentClassName="border-0 shadow-lg">
-            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
-              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                Delete Recommendation
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="p-4" style={{ background: "#fff" }}>
-              <Form.Control
-                type="text"
-                placeholder="Search by name or applicant ID..."
-                value={deleteSelectionSearch}
-                onChange={(e) => setDeleteSelectionSearch(e.target.value)}
-                className="mb-3"
-                style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
-              />
-
-              <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() =>
-                    setDeleteSelectionIds(
-                      recommendedCandidatesFiltered.map((app) => String(app.applicant_id || "").trim())
-                    )
-                  }
-                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
-                >
-                  Select All ({recommendedCandidatesFiltered.length})
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => setDeleteSelectionIds([])}
-                  style={{ borderRadius: "8px", fontSize: "0.78rem" }}
-                >
-                  Clear All
-                </Button>
-                <span className="text-muted ms-auto" style={{ fontSize: "0.8rem" }}>
-                  {deleteSelectionIds.length} selected
-                </span>
-              </div>
-
-              <div
-                className="p-3 rounded-3"
-                style={{ border: "1px solid #e2e8f0", maxHeight: "320px", overflowY: "auto" }}
-              >
-                {recommendedCandidatesFiltered.length === 0 ? (
-                  <p className="text-muted text-center py-4 mb-0" style={{ fontSize: "0.85rem" }}>
-                    No recommended applicants found.
-                  </p>
-                ) : (
-                  recommendedCandidatesFiltered.map((app) => {
-                    const id = String(app.applicant_id || "").trim();
-                    return (
-                      <label
-                        key={id}
-                        className="d-flex align-items-center gap-3 px-2 py-2 rounded-2"
-                        style={{ cursor: "pointer" }}
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h6
+                        className="text-uppercase text-muted mb-0"
+                        style={{
+                          fontSize: "0.75rem",
+                          letterSpacing: "0.5px",
+                          fontWeight: 700,
+                        }}
                       >
-                        <Form.Check
-                          type="checkbox"
-                          checked={deleteSelectionIds.includes(id)}
-                          onChange={() => toggleDeleteSelectionId(id)}
-                        />
-                        <div className="flex-grow-1">
-                          <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>
-                            {app.full_name || "-"}
-                          </div>
-                          <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{id}</div>
-                        </div>
-                        <div>{getRecommendationBadge(id)}</div>
-                      </label>
-                    );
-                  })
-                )}
-              </div>
-
-              {recommendationProgress && (
-                <Alert variant="info" className="rounded-3 py-2 mt-3 mb-0" style={{ fontSize: "0.8rem" }}>
-                  {recommendationProgress}
-                </Alert>
-              )}
-              {uploadRecommendationError && (
-                <Alert variant="danger" className="rounded-3 py-2 mt-3 mb-0" style={{ fontSize: "0.8rem" }}>
-                  {uploadRecommendationError}
-                </Alert>
-              )}
-            </Modal.Body>
-            <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-              <Button variant="light" onClick={closeDeleteRecommendationModal} className="px-4 border" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleDeleteSelectedRecommendations}
-                disabled={deletingRecommendation || deleteSelectionIds.length === 0}
-                className="px-4 d-flex align-items-center"
-                style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500 }}
-              >
-                {deletingRecommendation ? <Spinner size="sm" className="me-1" /> : <FaTimes className="me-1" />}
-                {deletingRecommendation
-                  ? "Deleting..."
-                  : `Delete Recommendation${deleteSelectionIds.length > 0 ? ` (${deleteSelectionIds.length})` : ""}`}
-              </Button>
-            </Modal.Footer>
-          </Modal>
-
-          {/* Recommendation Modal: one file + remark for every selected applicant */}
-          <Modal show={showRecommendationModal} onHide={closeRecommendationModal} size="lg" centered contentClassName="border-0 shadow-lg">
-            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
-              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                {recommendationViewOnly
-                  ? "Recommendation Details"
-                  : alreadyRecommendedCount > 0
-                    ? "Update Recommendation"
-                    : "Add Recommendation"}
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="p-4" style={{ background: "#fff" }}>
-              {selectedRecommendationApps.length === 0 ? (
-                <p className="text-muted mb-0" style={{ fontSize: "0.85rem" }}>
-                  No applicants selected.
-                </p>
-              ) : (
-                <div>
-                  <div className="p-3 mb-4 rounded-3" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                    <h6 className="text-uppercase text-muted mb-2" style={{ fontSize: "0.7rem", letterSpacing: "0.5px", fontWeight: 700 }}>
-                      Selected Applicants ({selectedRecommendationApps.length})
-                    </h6>
-                    <div style={{ maxHeight: "160px", overflowY: "auto" }}>
-                      {selectedRecommendationApps.map((app) => (
-                        <div
-                          key={app.applicant_id}
-                          className="d-flex align-items-center justify-content-between px-2 py-1"
-                        >
-                          <span style={{ fontSize: "0.85rem", color: "#0f172a" }}>
-                            <span className="fw-bold">{app.full_name || "-"}</span>{" "}
-                            <span className="text-muted">
-                              Applicant ID: {app.applicant_id}
-                            </span>
-                          </span>
-                          {isRecommended(app.applicant_id) && (
-                            <Badge bg="success" className="badge-soft">Recommended</Badge>
-                          )}
-                        </div>
-                      ))}
+                        Recommendation
+                      </h6>
+                      <Button
+                        variant="link"
+                        onClick={() =>
+                          handleOpenRecommendationDetails(selectedApplication)
+                        }
+                        className="p-0 text-decoration-none fw-bold"
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        {isRecommended(selectedApplication.applicant_id)
+                          ? "Edit"
+                          : "Add Recommendation"}
+                      </Button>
                     </div>
-                  </div>
-
-                  {recommendationViewOnly ? (
-                    selectedRecommendationApps.map((app) => {
-                      const recommendation = getRecommendation(app.applicant_id);
+                    {(() => {
+                      const recommendation = getRecommendation(
+                        selectedApplication.applicant_id,
+                      );
                       if (!recommendation) {
                         return (
-                          <Alert key={app.applicant_id} variant="secondary" className="rounded-3 border-0" style={{ fontSize: "0.85rem" }}>
-                            {app.full_name} (Applicant ID: {app.applicant_id}) has not been recommended yet.
+                          <Alert
+                            variant="info"
+                            className="rounded-3 border-0 mb-0"
+                            style={{ fontSize: "0.85rem" }}
+                          >
+                            <FaHourglassHalf className="me-1" /> This
+                            application is approved but not recommended yet.
                           </Alert>
                         );
                       }
                       return (
-                        <div
-                          key={app.applicant_id}
-                          className="p-3 mb-3 rounded-3"
-                          style={{ border: "1px solid #e2e8f0" }}
-                        >
-                          <div className="d-flex flex-wrap gap-3 mb-2">
+                        <Row className="g-3">
+                          <Col xs={12} md={6}>
                             <div className="detail-block">
-                              <small className="detail-label">Applicant</small>
-                              <p className="detail-value text-dark">
-                                {app.full_name} (Applicant ID: {app.applicant_id})
-                              </p>
-                            </div>
-                            <div className="detail-block">
-                              <small className="detail-label">Recommended On</small>
+                              <small className="detail-label">
+                                Recommended On
+                              </small>
                               <p className="detail-value text-dark">
                                 {recommendation.created_at
-                                  ? new Date(recommendation.created_at).toLocaleString("en-IN")
+                                  ? new Date(
+                                      recommendation.created_at,
+                                    ).toLocaleString("en-IN")
                                   : "-"}
                               </p>
                             </div>
+                          </Col>
+                          <Col xs={12} md={6}>
                             <div className="detail-block">
-                              <small className="detail-label">File</small>
-                              {getRecommendationFileSrc(app.applicant_id) ? (
+                              <small className="detail-label">
+                                Recommendation File
+                              </small>
+                              {getRecommendationFileSrc(
+                                selectedApplication.applicant_id,
+                              ) ? (
                                 <a
-                                  href={getRecommendationFileSrc(app.applicant_id)}
+                                  href={getRecommendationFileSrc(
+                                    selectedApplication.applicant_id,
+                                  )}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="d-inline-flex align-items-center text-decoration-none fw-bold"
-                                  style={{ fontSize: "0.85rem", color: "#2563eb" }}
+                                  style={{
+                                    fontSize: "0.85rem",
+                                    color: "#2563eb",
+                                  }}
                                 >
-                                  <FaPaperclip className="me-1" /> View / Download
+                                  <FaPaperclip className="me-1" /> View /
+                                  Download File
                                 </a>
                               ) : (
-                                <p className="detail-value text-dark">No file uploaded</p>
+                                <p className="detail-value text-dark">-</p>
                               )}
                             </div>
-                          </div>
-                          <div className="detail-block">
-                            <small className="detail-label">Remark</small>
-                            <p className="detail-value text-dark" style={{ whiteSpace: "pre-wrap" }}>
-                              {recommendation.remark || "-"}
-                            </p>
-                          </div>
-                        </div>
+                          </Col>
+                          <Col xs={12}>
+                            <div className="detail-block">
+                              <small className="detail-label">Remark</small>
+                              <p
+                                className="detail-value text-dark"
+                                style={{ whiteSpace: "pre-wrap" }}
+                              >
+                                {recommendation.remark || "-"}
+                              </p>
+                            </div>
+                          </Col>
+                        </Row>
                       );
-                    })
-                  ) : (
-                    <>
-                      <div className="mb-3">
-                        <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
-                          Recommendation File <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Control
-                          type="file"
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                          onChange={(e) => setRecommendationFile(e.target.files[0])}
-                          className="border"
-                          style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
-                        />
-                        <div className="mt-1 text-muted" style={{ fontSize: "0.75rem" }}>
-                          This file is uploaded for all {selectedRecommendationApps.length} selected applicant
-                          {selectedRecommendationApps.length === 1 ? "" : "s"}.
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
-                          Remark <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={3}
-                          value={recommendationRemark}
-                          onChange={(e) => setRecommendationRemark(e.target.value)}
-                          placeholder="Enter remarks for recommendation..."
-                          className="border"
-                          style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.85rem" }}
-                        />
-                        <div className="mt-1 text-muted" style={{ fontSize: "0.75rem" }}>
-                          The same remark is saved against every selected applicant.
-                        </div>
-                      </div>
-                      {recommendationProgress && (
-                        <Alert variant="info" className="rounded-3 py-2 mb-3" style={{ fontSize: "0.8rem" }}>
-                          {recommendationProgress}
-                        </Alert>
-                      )}
-                      {uploadRecommendationError && (
-                        <Alert variant="danger" className="rounded-3 py-2 mb-3" style={{ fontSize: "0.8rem" }}>
-                          {uploadRecommendationError}
-                        </Alert>
-                      )}
-                      <div className="d-flex gap-2 flex-wrap">
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={handleSaveRecommendation}
-                          disabled={savingRecommendation || deletingRecommendation}
-                          className="d-flex align-items-center"
-                          style={{ borderRadius: "8px", fontWeight: 500 }}
-                        >
-                          {savingRecommendation ? <Spinner size="sm" /> : <FaCheck className="me-1" />}
-                          {savingRecommendation
-                            ? "Saving..."
-                            : alreadyRecommendedCount > 0
-                              ? "Update Recommendations"
-                              : "Save & Forward"}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </Modal.Body>
-            <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-              <Button variant="secondary" onClick={closeRecommendationModal} className="px-4" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
-                Close
-              </Button>
-            </Modal.Footer>
-          </Modal>
-
-          {/* Add Comment Modal */}
-          <Modal show={showCommentModal} onHide={handleCloseCommentModal} centered contentClassName="border-0 shadow-lg">
-            <Modal.Header closeButton className="bg-white border-bottom p-4" style={{ borderRadius: "12px 12px 0 0" }}>
-              <Modal.Title className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>
-                Add Comment
-              </Modal.Title>
-            </Modal.Header>
-             <Modal.Body className="p-4">
-{commentApp && (
-                  <div className="mb-3">
-                    <p className="mb-1 text-muted" style={{ fontSize: "0.85rem" }}>
-                      Applicant: <span className="fw-bold text-dark">{commentApp.full_name}</span> ({commentApp.applicant_id})
-                    </p>
+                    })()}
                   </div>
                 )}
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer
+            className="p-4 border-top"
+            style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}
+          >
+            <Button
+              variant="link"
+              onClick={() => handleSwitchToForm(selectedApplication)}
+              className="me-auto p-0 text-decoration-none fw-bold"
+              style={{ fontSize: "0.85rem" }}
+            >
+              <FaFileAlt className="me-1" /> आवेदन प्रपत्र देखें →
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleCloseRegistrationModal}
+              className="px-4"
+              style={{ borderRadius: "8px", fontSize: "0.85rem" }}
+            >
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
-<Form.Group>
-                  <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
-                    Comment / Remark
-                  </Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={4}
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Enter your remark/comment here..."
-                    style={{ borderRadius: "8px", borderColor: "#cbd5e1", fontSize: "0.875rem" }}
-                  />
-                  {commentError && (
-                    <Alert variant="danger" className="rounded-3 py-2 mt-3 mb-0" style={{ fontSize: "0.8rem" }}>
-                      {commentError}
-                    </Alert>
-                  )}
-                </Form.Group>
-              </Modal.Body>
-             <Modal.Footer className="p-4 border-top" style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}>
-               <Button variant="light" onClick={handleCloseCommentModal} className="px-4 border" style={{ borderRadius: "8px", fontSize: "0.85rem" }}>
-                 Cancel
-               </Button>
-               <Button
-                 variant="primary"
-                 onClick={handleSaveComment}
-                 disabled={savingComment || !commentText.trim()}
-                 className="px-4 d-flex align-items-center"
-                 style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 500 }}
-               >
-                 {savingComment ? <Spinner size="sm" className="me-1" /> : <FaCheck className="me-1" />}
-                 {savingComment ? "Saving..." : "Save Comment"}
-               </Button>
-             </Modal.Footer>
-          </Modal>
-
-          {/* Form Preview Modal */}
-          {showFormPreviewModal && selectedFormPreviewData && (
-            <PreviewModal
-              data={selectedFormPreviewData}
-              onClose={() => setShowFormPreviewModal(false)}
-              isApplicationCompleted={true}
-              isDPO={true}
+        {/* Applicant Selection Modal */}
+        <Modal
+          show={showSelectionModal}
+          onHide={() => setShowSelectionModal(false)}
+          size="lg"
+          centered
+          contentClassName="border-0 shadow-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-white border-bottom p-4"
+            style={{ borderRadius: "12px 12px 0 0" }}
+          >
+            <Modal.Title
+              className="fw-bold text-dark"
+              style={{ fontSize: "1.1rem" }}
+            >
+              Select Applicants for Recommendation
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4" style={{ background: "#fff" }}>
+            <Form.Control
+              type="text"
+              placeholder="Search by name or applicant ID..."
+              value={selectionSearch}
+              onChange={(e) => setSelectionSearch(e.target.value)}
+              className="mb-3"
+              style={{
+                borderRadius: "8px",
+                borderColor: "#cbd5e1",
+                fontSize: "0.85rem",
+              }}
             />
-          )}
-        </div>
+
+            <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() =>
+                  setSelectionIds(
+                    selectionCandidates.map((app) =>
+                      String(app.applicant_id || "").trim(),
+                    ),
+                  )
+                }
+                style={{ borderRadius: "8px", fontSize: "0.78rem" }}
+              >
+                Select All ({selectionCandidates.length})
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setSelectionIds([])}
+                style={{ borderRadius: "8px", fontSize: "0.78rem" }}
+              >
+                Clear All
+              </Button>
+              <span
+                className="text-muted ms-auto"
+                style={{ fontSize: "0.8rem" }}
+              >
+                {selectionIds.length} selected
+              </span>
+            </div>
+
+            <div
+              className="p-3 rounded-3"
+              style={{
+                border: "1px solid #e2e8f0",
+                maxHeight: "320px",
+                overflowY: "auto",
+              }}
+            >
+              {selectionCandidates.length === 0 ? (
+                <p
+                  className="text-muted text-center py-4 mb-0"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  No applicants found.
+                </p>
+              ) : (
+                selectionCandidates.map((app) => {
+                  const id = String(app.applicant_id || "").trim();
+                  return (
+                    <label
+                      key={id}
+                      className="d-flex align-items-center gap-3 px-2 py-2 rounded-2"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Form.Check
+                        type="checkbox"
+                        checked={selectionIds.includes(id)}
+                        onChange={() => toggleSelectionId(id)}
+                      />
+                      <div className="flex-grow-1">
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: "#0f172a",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {app.full_name || "-"}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                          {id}
+                        </div>
+                      </div>
+                      <div>{getRecommendationBadge(id)}</div>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+
+            {uploadRecommendationError && (
+              <Alert
+                variant="danger"
+                className="rounded-3 py-2 mt-3 mb-0"
+                style={{ fontSize: "0.8rem" }}
+              >
+                {uploadRecommendationError}
+              </Alert>
+            )}
+          </Modal.Body>
+          <Modal.Footer
+            className="p-4 border-top"
+            style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}
+          >
+            <Button
+              variant="light"
+              onClick={() => setShowSelectionModal(false)}
+              className="px-4 border"
+              style={{ borderRadius: "8px", fontSize: "0.85rem" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmSelection}
+              disabled={selectionIds.length === 0}
+              className="px-4"
+              style={{
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+              }}
+            >
+              Continue
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Confirm Selection Modal */}
+        <Modal
+          show={showConfirmSelectionModal}
+          onHide={() => setShowConfirmSelectionModal(false)}
+          centered
+          contentClassName="border-0 shadow-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-white border-bottom p-4"
+            style={{ borderRadius: "12px 12px 0 0" }}
+          >
+            <Modal.Title
+              className="fw-bold text-dark"
+              style={{ fontSize: "1.1rem" }}
+            >
+              Confirm Selected Applicants
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4" style={{ background: "#fff" }}>
+            <Alert
+              variant="info"
+              className="rounded-3 border-0"
+              style={{ fontSize: "0.85rem" }}
+            >
+              The same file and remark will be posted for every applicant listed
+              below. Please confirm the selection before continuing.
+            </Alert>
+            <div
+              className="p-3 rounded-3"
+              style={{
+                border: "1px solid #e2e8f0",
+                maxHeight: "300px",
+                overflowY: "auto",
+              }}
+            >
+              {recommendationTargets.map((app) => (
+                <div
+                  key={app.applicant_id}
+                  className="d-flex align-items-center justify-content-between px-2 py-2"
+                  style={{ borderBottom: "1px solid #f1f5f9" }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        color: "#0f172a",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {app.full_name || "-"}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                      {app.applicant_id}
+                    </div>
+                  </div>
+                  <div>{getRecommendationBadge(app.applicant_id)}</div>
+                </div>
+              ))}
+            </div>
+          </Modal.Body>
+          <Modal.Footer
+            className="p-4 border-top"
+            style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}
+          >
+            <Button
+              variant="light"
+              onClick={() => setShowConfirmSelectionModal(false)}
+              className="px-4 border"
+              style={{ borderRadius: "8px", fontSize: "0.85rem" }}
+            >
+              Back
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleProceedToRecommendation}
+              className="px-4"
+              style={{
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+              }}
+            >
+              Confirm &amp; Continue
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Delete Recommendation Modal: lists only the recommended applicants */}
+        <Modal
+          show={showDeleteRecommendationModal}
+          onHide={closeDeleteRecommendationModal}
+          size="lg"
+          centered
+          contentClassName="border-0 shadow-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-white border-bottom p-4"
+            style={{ borderRadius: "12px 12px 0 0" }}
+          >
+            <Modal.Title
+              className="fw-bold text-dark"
+              style={{ fontSize: "1.1rem" }}
+            >
+              Delete Recommendation
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4" style={{ background: "#fff" }}>
+            <Form.Control
+              type="text"
+              placeholder="Search by name or applicant ID..."
+              value={deleteSelectionSearch}
+              onChange={(e) => setDeleteSelectionSearch(e.target.value)}
+              className="mb-3"
+              style={{
+                borderRadius: "8px",
+                borderColor: "#cbd5e1",
+                fontSize: "0.85rem",
+              }}
+            />
+
+            <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() =>
+                  setDeleteSelectionIds(
+                    recommendedCandidatesFiltered.map((app) =>
+                      String(app.applicant_id || "").trim(),
+                    ),
+                  )
+                }
+                style={{ borderRadius: "8px", fontSize: "0.78rem" }}
+              >
+                Select All ({recommendedCandidatesFiltered.length})
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setDeleteSelectionIds([])}
+                style={{ borderRadius: "8px", fontSize: "0.78rem" }}
+              >
+                Clear All
+              </Button>
+              <span
+                className="text-muted ms-auto"
+                style={{ fontSize: "0.8rem" }}
+              >
+                {deleteSelectionIds.length} selected
+              </span>
+            </div>
+
+            <div
+              className="p-3 rounded-3"
+              style={{
+                border: "1px solid #e2e8f0",
+                maxHeight: "320px",
+                overflowY: "auto",
+              }}
+            >
+              {recommendedCandidatesFiltered.length === 0 ? (
+                <p
+                  className="text-muted text-center py-4 mb-0"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  No recommended applicants found.
+                </p>
+              ) : (
+                recommendedCandidatesFiltered.map((app) => {
+                  const id = String(app.applicant_id || "").trim();
+                  return (
+                    <label
+                      key={id}
+                      className="d-flex align-items-center gap-3 px-2 py-2 rounded-2"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Form.Check
+                        type="checkbox"
+                        checked={deleteSelectionIds.includes(id)}
+                        onChange={() => toggleDeleteSelectionId(id)}
+                      />
+                      <div className="flex-grow-1">
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: "#0f172a",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {app.full_name || "-"}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                          {id}
+                        </div>
+                      </div>
+                      <div>{getRecommendationBadge(id)}</div>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+
+            {recommendationProgress && (
+              <Alert
+                variant="info"
+                className="rounded-3 py-2 mt-3 mb-0"
+                style={{ fontSize: "0.8rem" }}
+              >
+                {recommendationProgress}
+              </Alert>
+            )}
+            {uploadRecommendationError && (
+              <Alert
+                variant="danger"
+                className="rounded-3 py-2 mt-3 mb-0"
+                style={{ fontSize: "0.8rem" }}
+              >
+                {uploadRecommendationError}
+              </Alert>
+            )}
+          </Modal.Body>
+          <Modal.Footer
+            className="p-4 border-top"
+            style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}
+          >
+            <Button
+              variant="light"
+              onClick={closeDeleteRecommendationModal}
+              className="px-4 border"
+              style={{ borderRadius: "8px", fontSize: "0.85rem" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteSelectedRecommendations}
+              disabled={
+                deletingRecommendation || deleteSelectionIds.length === 0
+              }
+              className="px-4 d-flex align-items-center"
+              style={{
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+              }}
+            >
+              {deletingRecommendation ? (
+                <Spinner size="sm" className="me-1" />
+              ) : (
+                <FaTimes className="me-1" />
+              )}
+              {deletingRecommendation
+                ? "Deleting..."
+                : `Delete Recommendation${deleteSelectionIds.length > 0 ? ` (${deleteSelectionIds.length})` : ""}`}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Recommendation Modal: one file + remark for every selected applicant */}
+        <Modal
+          show={showRecommendationModal}
+          onHide={closeRecommendationModal}
+          size="lg"
+          centered
+          contentClassName="border-0 shadow-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-white border-bottom p-4"
+            style={{ borderRadius: "12px 12px 0 0" }}
+          >
+            <Modal.Title
+              className="fw-bold text-dark"
+              style={{ fontSize: "1.1rem" }}
+            >
+              {recommendationViewOnly
+                ? "Recommendation Details"
+                : alreadyRecommendedCount > 0
+                  ? "Update Recommendation"
+                  : "Add Recommendation"}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4" style={{ background: "#fff" }}>
+            {selectedRecommendationApps.length === 0 ? (
+              <p className="text-muted mb-0" style={{ fontSize: "0.85rem" }}>
+                No applicants selected.
+              </p>
+            ) : (
+              <div>
+                <div
+                  className="p-3 mb-4 rounded-3"
+                  style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
+                >
+                  <h6
+                    className="text-uppercase text-muted mb-2"
+                    style={{
+                      fontSize: "0.7rem",
+                      letterSpacing: "0.5px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Selected Applicants ({selectedRecommendationApps.length})
+                  </h6>
+                  <div style={{ maxHeight: "160px", overflowY: "auto" }}>
+                    {selectedRecommendationApps.map((app) => (
+                      <div
+                        key={app.applicant_id}
+                        className="d-flex align-items-center justify-content-between px-2 py-1"
+                      >
+                        <span style={{ fontSize: "0.85rem", color: "#0f172a" }}>
+                          <span className="fw-bold">
+                            {app.full_name || "-"}
+                          </span>{" "}
+                          <span className="text-muted">
+                            Applicant ID: {app.applicant_id}
+                          </span>
+                        </span>
+                        {isRecommended(app.applicant_id) && (
+                          <Badge bg="success" className="badge-soft">
+                            Recommended
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {recommendationViewOnly ? (
+                  selectedRecommendationApps.map((app) => {
+                    const recommendation = getRecommendation(app.applicant_id);
+                    if (!recommendation) {
+                      return (
+                        <Alert
+                          key={app.applicant_id}
+                          variant="secondary"
+                          className="rounded-3 border-0"
+                          style={{ fontSize: "0.85rem" }}
+                        >
+                          {app.full_name} (Applicant ID: {app.applicant_id}) has
+                          not been recommended yet.
+                        </Alert>
+                      );
+                    }
+                    return (
+                      <div
+                        key={app.applicant_id}
+                        className="p-3 mb-3 rounded-3"
+                        style={{ border: "1px solid #e2e8f0" }}
+                      >
+                        <div className="d-flex flex-wrap gap-3 mb-2">
+                          <div className="detail-block">
+                            <small className="detail-label">Applicant</small>
+                            <p className="detail-value text-dark">
+                              {app.full_name} (Applicant ID: {app.applicant_id})
+                            </p>
+                          </div>
+                          <div className="detail-block">
+                            <small className="detail-label">
+                              Recommended On
+                            </small>
+                            <p className="detail-value text-dark">
+                              {recommendation.created_at
+                                ? new Date(
+                                    recommendation.created_at,
+                                  ).toLocaleString("en-IN")
+                                : "-"}
+                            </p>
+                          </div>
+                          <div className="detail-block">
+                            <small className="detail-label">File</small>
+                            {getRecommendationFileSrc(app.applicant_id) ? (
+                              <a
+                                href={getRecommendationFileSrc(
+                                  app.applicant_id,
+                                )}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="d-inline-flex align-items-center text-decoration-none fw-bold"
+                                style={{
+                                  fontSize: "0.85rem",
+                                  color: "#2563eb",
+                                }}
+                              >
+                                <FaPaperclip className="me-1" /> View / Download
+                              </a>
+                            ) : (
+                              <p className="detail-value text-dark">
+                                No file uploaded
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="detail-block">
+                          <small className="detail-label">Remark</small>
+                          <p
+                            className="detail-value text-dark"
+                            style={{ whiteSpace: "pre-wrap" }}
+                          >
+                            {recommendation.remark || "-"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <>
+                    <div className="mb-3">
+                      <Form.Label
+                        style={{
+                          fontSize: "0.85rem",
+                          fontWeight: 600,
+                          color: "#374151",
+                        }}
+                      >
+                        Recommendation File{" "}
+                        <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        onChange={(e) =>
+                          setRecommendationFile(e.target.files[0])
+                        }
+                        className="border"
+                        style={{
+                          borderRadius: "8px",
+                          borderColor: "#cbd5e1",
+                          fontSize: "0.85rem",
+                        }}
+                      />
+                      <div
+                        className="mt-1 text-muted"
+                        style={{ fontSize: "0.75rem" }}
+                      >
+                        This file is uploaded for all{" "}
+                        {selectedRecommendationApps.length} selected applicant
+                        {selectedRecommendationApps.length === 1 ? "" : "s"}.
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <Form.Label
+                        style={{
+                          fontSize: "0.85rem",
+                          fontWeight: 600,
+                          color: "#374151",
+                        }}
+                      >
+                        Remark <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        value={recommendationRemark}
+                        onChange={(e) =>
+                          setRecommendationRemark(e.target.value)
+                        }
+                        placeholder="Enter remarks for recommendation..."
+                        className="border"
+                        style={{
+                          borderRadius: "8px",
+                          borderColor: "#cbd5e1",
+                          fontSize: "0.85rem",
+                        }}
+                      />
+                      <div
+                        className="mt-1 text-muted"
+                        style={{ fontSize: "0.75rem" }}
+                      >
+                        The same remark is saved against every selected
+                        applicant.
+                      </div>
+                    </div>
+                    {recommendationProgress && (
+                      <Alert
+                        variant="info"
+                        className="rounded-3 py-2 mb-3"
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        {recommendationProgress}
+                      </Alert>
+                    )}
+                    {uploadRecommendationError && (
+                      <Alert
+                        variant="danger"
+                        className="rounded-3 py-2 mb-3"
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        {uploadRecommendationError}
+                      </Alert>
+                    )}
+                    <div className="d-flex gap-2 flex-wrap">
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={handleSaveRecommendation}
+                        disabled={
+                          savingRecommendation || deletingRecommendation
+                        }
+                        className="d-flex align-items-center"
+                        style={{ borderRadius: "8px", fontWeight: 500 }}
+                      >
+                        {savingRecommendation ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          <FaCheck className="me-1" />
+                        )}
+                        {savingRecommendation
+                          ? "Saving..."
+                          : alreadyRecommendedCount > 0
+                            ? "Update Recommendations"
+                            : "Save & Forward"}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer
+            className="p-4 border-top"
+            style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}
+          >
+            <Button
+              variant="secondary"
+              onClick={closeRecommendationModal}
+              className="px-4"
+              style={{ borderRadius: "8px", fontSize: "0.85rem" }}
+            >
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Add Comment Modal */}
+        <Modal
+          show={showCommentModal}
+          onHide={handleCloseCommentModal}
+          centered
+          contentClassName="border-0 shadow-lg"
+        >
+          <Modal.Header
+            closeButton
+            className="bg-white border-bottom p-4"
+            style={{ borderRadius: "12px 12px 0 0" }}
+          >
+            <Modal.Title
+              className="fw-bold text-dark"
+              style={{ fontSize: "1.1rem" }}
+            >
+              Add Comment
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4">
+            {commentApp && (
+              <div className="mb-3">
+                <p className="mb-1 text-muted" style={{ fontSize: "0.85rem" }}>
+                  Applicant:{" "}
+                  <span className="fw-bold text-dark">
+                    {commentApp.full_name}
+                  </span>{" "}
+                  ({commentApp.applicant_id})
+                </p>
+              </div>
+            )}
+
+            <Form.Group>
+              <Form.Label
+                style={{
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  color: "#374151",
+                }}
+              >
+                Comment / Remark
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Enter your remark/comment here..."
+                style={{
+                  borderRadius: "8px",
+                  borderColor: "#cbd5e1",
+                  fontSize: "0.875rem",
+                }}
+              />
+              {commentError && (
+                <Alert
+                  variant="danger"
+                  className="rounded-3 py-2 mt-3 mb-0"
+                  style={{ fontSize: "0.8rem" }}
+                >
+                  {commentError}
+                </Alert>
+              )}
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer
+            className="p-4 border-top"
+            style={{ background: "#f8fafc", borderRadius: "0 0 12px 12px" }}
+          >
+            <Button
+              variant="light"
+              onClick={handleCloseCommentModal}
+              className="px-4 border"
+              style={{ borderRadius: "8px", fontSize: "0.85rem" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSaveComment}
+              disabled={savingComment || !commentText.trim()}
+              className="px-4 d-flex align-items-center"
+              style={{
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+              }}
+            >
+              {savingComment ? (
+                <Spinner size="sm" className="me-1" />
+              ) : (
+                <FaCheck className="me-1" />
+              )}
+              {savingComment ? "Saving..." : "Save Comment"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Form Preview Modal */}
+        {showFormPreviewModal && selectedFormPreviewData && (
+          <PreviewModal
+            data={selectedFormPreviewData}
+            onClose={() => setShowFormPreviewModal(false)}
+            isApplicationCompleted={true}
+            isDPO={true}
+          />
+        )}
       </div>
+    </div>
   );
 };
 
