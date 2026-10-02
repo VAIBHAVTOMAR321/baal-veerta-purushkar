@@ -1322,7 +1322,7 @@ const DisDashBoard = () => {
                                     size="sm"
                                     onClick={() => handleOpenFormDetails(app)}
                                     className="d-flex align-items-center"
-                                    style={{ borderRadius: "8px", padding: "0px 12px", height: "32px", fontSize: "0.8rem", fontWeight: 500 }}
+                                    style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
                                     title="View Form"
                                   >
                                     <FaFileAlt className="me-1" /> View Form

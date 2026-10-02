@@ -621,7 +621,7 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
       for (let index = 0; index < targets.length; index += 1) {
         const applicantId = String(targets[index].applicant_id || "").trim();
         const recommendation = getRecommendation(applicantId);
-        if (!applicantId || !recommendation?.id) continue;
+        if (!applicantId || !recommendation) continue;
 
         setRecommendationProgress(`Submitting ${index + 1} of ${targets.length}...`);
         try {
@@ -633,7 +633,8 @@ const saveDpoComment = async (applicantId, currentStatus, comment) => {
               ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
             },
             body: JSON.stringify({
-              id: recommendation.id,
+              applicant_id: applicantId,
+              ...(recommendation.id ? { id: recommendation.id } : {}),
               is_forwared_to_director: "yes",
             }),
           });
@@ -1060,6 +1061,9 @@ const handleDeleteSelectedRecommendations = async () => {
   };
 
   const handleOpenSelectionModal = () => {
+    if (loading || submittingAllRecommendations || hasFinalisedRecommendations) {
+      return;
+    }
     setSelectionSearch("");
     setUploadRecommendationError(null);
     setShowSelectionModal(true);
@@ -1096,6 +1100,13 @@ const handleDeleteSelectedRecommendations = async () => {
     setUploadRecommendationError(null);
     setRecommendationProgress("");
   };
+
+  // A final submit closes the recommendation window for the whole tab. Once any
+  // applicant of this district is forwarded to the Directorate, no other
+  // candidate can be recommended.
+  const hasFinalisedRecommendations = applications.some((app) =>
+    isForwardedToDirector(app.applicant_id)
+  );
 
   const selectionCandidates = applications.filter((app) => {
     if (isForwardedToDirector(app.applicant_id)) return false;
@@ -1397,7 +1408,7 @@ const handleDeleteSelectedRecommendations = async () => {
                   variant="primary"
                   size="sm"
                   onClick={handleOpenSelectionModal}
-                  disabled={loading || applications.length === 0}
+                  disabled={loading || submittingAllRecommendations || hasFinalisedRecommendations}
                   className="d-flex align-items-center"
                   style={{ borderRadius: "8px", fontSize: "0.8rem", fontWeight: 500 }}
                 >
