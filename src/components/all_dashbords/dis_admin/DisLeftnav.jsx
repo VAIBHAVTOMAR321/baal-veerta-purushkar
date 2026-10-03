@@ -103,6 +103,19 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
 
   //  Auto-close sidebar when switching to mobile or tablet
 
+  const renderProfileCard = (isMobileView = false) => (
+    <div
+      className={`dis-profile-card ${isMobileView ? "dis-profile-card-mobile" : ""}`}
+    >
+      <div className="dis-profile-avatar">
+        <FaUserCircle />
+      </div>
+      <div className="dis-profile-info">
+        <div className="dis-profile-name">Directorate</div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -118,9 +131,16 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
             </div>
           ) : (
             <div className="logo-container logo-collapsed">
+              <img
+                src="/favicon.jpeg"
+                alt="Bal Virta Award"
+                className="sidebar-collapsed-logo"
+              />
             </div>
           )}
         </div>
+
+        {sidebarOpen && renderProfileCard()}
 
         <Nav className="sidebar-nav flex-column">
           
@@ -208,6 +228,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
   </Offcanvas.Header>
 
   <Offcanvas.Body className="user-offcanvas-body">
+    {renderProfileCard(true)}
     <Nav className="flex-column">
       {menuItems.map((item, index) => (
         <div key={index}>

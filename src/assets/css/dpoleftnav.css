@@ -325,6 +325,17 @@
     background-color: #fff !important;
 }
 
+/* Collapsed Sidebar Logo (shown when the left nav is toggled closed) */
+.sidebar-collapsed-logo {
+    width: 40px;
+    height: 38px;
+    object-fit: contain;
+    border-radius: 10%;
+    background: #fff;
+    padding: 2px;
+    display: block;
+}
+
 .logo-collapsed {
     display: flex;
     align-items: center;

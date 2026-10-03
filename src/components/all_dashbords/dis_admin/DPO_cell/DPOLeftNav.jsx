@@ -168,6 +168,11 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
             </div>
           ) : (
             <div className="logo-container logo-collapsed">
+              <img
+                src="/favicon.jpeg"
+                alt="Bal Virta Award"
+                className="sidebar-collapsed-logo"
+              />
             </div>
           )}
         </div>

@@ -401,6 +401,10 @@ const DPODashboard = () => {
   const [recommendationTargets, setRecommendationTargets] = useState([]);
   const [recommendationViewOnly, setRecommendationViewOnly] = useState(false);
 
+  // Table shows 50 rows at a time; the page resets whenever the filter set changes.
+  const PAGE_SIZE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
@@ -1045,6 +1049,39 @@ const DPODashboard = () => {
 
     return matchesSearch && matchesProject && matchesStepStatus && matchesTab;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
+
+  // A filter change can leave the user past the last page, so clamp instead of
+  // showing an empty table.
+  const safePage = Math.min(currentPage, totalPages);
+
+  const paginatedApplications = filteredApplications.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, projectFilter, stepStatusFilter, activeTab]);
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.min(Math.max(1, page), totalPages));
+  };
+
+  const pageNumbers = (() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+    const pages = [1];
+    const start = Math.max(2, safePage - 1);
+    const end = Math.min(totalPages - 1, safePage + 1);
+    if (start > 2) pages.push("start-ellipsis");
+    for (let page = start; page <= end; page += 1) pages.push(page);
+    if (end < totalPages - 1) pages.push("end-ellipsis");
+    pages.push(totalPages);
+    return pages;
+  })();
 
   const uniqueProjects = Array.from(
     new Set(filteredApplications.map((app) => app.project).filter(Boolean)),
@@ -1868,7 +1905,7 @@ const DPODashboard = () => {
                             </td>
                           </tr>
                         ) : (
-                          filteredApplications.map((app, index) => (
+                          paginatedApplications.map((app, index) => (
                             <tr
                               key={app.applicant_id}
                               style={{ borderBottom: "1px solid #e2e8f0" }}
@@ -2069,6 +2106,58 @@ const DPODashboard = () => {
                       </tbody>
                     </Table>
                   </div>
+
+                  {filteredApplications.length > 0 && (
+                    <div className="dashboard-pagination">
+                      <span className="dashboard-pagination-info">
+                        Showing {(safePage - 1) * PAGE_SIZE + 1} to{" "}
+                        {Math.min(safePage * PAGE_SIZE, filteredApplications.length)} of{" "}
+                        {filteredApplications.length} applications
+                      </span>
+                      <div className="dashboard-pagination-controls">
+                        <Button
+                          variant="light"
+                          size="sm"
+                          className="dashboard-page-btn"
+                          disabled={safePage === 1}
+                          onClick={() => goToPage(safePage - 1)}
+                        >
+                          Previous
+                        </Button>
+                        {pageNumbers.map((page, pageIndex) =>
+                          typeof page === "number" ? (
+                            <Button
+                              key={page}
+                              variant="light"
+                              size="sm"
+                              className={`dashboard-page-btn ${
+                                page === safePage ? "active" : ""
+                              }`}
+                              onClick={() => goToPage(page)}
+                            >
+                              {page}
+                            </Button>
+                          ) : (
+                            <span
+                              key={`${page}-${pageIndex}`}
+                              className="dashboard-page-ellipsis"
+                            >
+                              ...
+                            </span>
+                          ),
+                        )}
+                        <Button
+                          variant="light"
+                          size="sm"
+                          className="dashboard-page-btn"
+                          disabled={safePage === totalPages}
+                          onClick={() => goToPage(safePage + 1)}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             </>

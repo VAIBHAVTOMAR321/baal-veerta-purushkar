@@ -18,7 +18,7 @@ import { useAuth } from "../../login/AuthContext";
 
 
 
-function DisTopNav({ toggleSidebar }) {
+function DisTopNav({ toggleSidebar, sidebarOpen }) {
   const { logout } = useAuth();
 
   // User Profile State
@@ -62,6 +62,9 @@ function DisTopNav({ toggleSidebar }) {
           </Col>
 
           <Col>
+            {!sidebarOpen && (
+              <span className="dis-topnav-title">Directorate Panel</span>
+            )}
             {error && (
               <Alert variant="warning" className="mb-0 py-1">
                 <small>{error}</small>
