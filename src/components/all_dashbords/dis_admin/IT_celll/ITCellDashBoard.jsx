@@ -75,6 +75,7 @@ const mapApiDataToPreviewData = (item) => {
 
   return {
     applicant_id: item.applicant_id || s1.applicant_id || "",
+    registration: item.registration || item.nomination || item,
     // Step 1: Personal Details (from step-1 only, no nomination)
     childName: s1.child_full_name || "",
     fatherName: s1.father_name || "",

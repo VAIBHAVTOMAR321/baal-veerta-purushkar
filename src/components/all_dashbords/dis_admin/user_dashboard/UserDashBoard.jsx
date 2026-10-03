@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../login/AuthContext";
 
 import UserTopNav from "./UserTopNav";
 import UserLeftNav from "./UserLeftNav";
@@ -52,6 +53,8 @@ const getTableErrors = (formData) => {
 const UserDashBoard = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const { authFetch } = useAuth();
+  const [nominator, setNominator] = useState(state?.nominator || null);
   const [step, setStep] = useState(0);
   const [data, setData] = useState({
     ...(state?.nominator || {}),
@@ -76,6 +79,37 @@ const UserDashBoard = () => {
   const [stepDSubmitTrigger, setStepDSubmitTrigger] = useState(0);
   const stepECheckedRef = useRef(false);
   const [stepESubmitTrigger, setStepESubmitTrigger] = useState(0);
+  const authFetchRef = useRef(authFetch);
+  authFetchRef.current = authFetch;
+
+  useEffect(() => {
+    let isActive = true;
+    const fetchNominator = async () => {
+      try {
+        const response = await authFetchRef.current(
+          "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part1/",
+        );
+        if (!response.ok) {
+          throw new Error(`Failed to load registration details (HTTP ${response.status}).`);
+        }
+
+        const result = await response.json();
+        const record = Array.isArray(result.data) ? result.data[0] : result.data;
+        if (isActive && record && typeof record === "object") {
+          setNominator(record);
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error("Failed to load registration details for preview:", error);
+        }
+      }
+    };
+
+    fetchNominator();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -483,7 +517,7 @@ const UserDashBoard = () => {
 
       {showPreview && (
         <PreviewModal
-          data={data}
+          data={{ ...data, registration: nominator || data.registration }}
           onClose={closePreview}
           topAccepted={topAccepted}
           onTopAcceptedChange={setTopAccepted}

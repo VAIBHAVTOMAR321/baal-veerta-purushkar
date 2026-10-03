@@ -169,6 +169,59 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
   const isAgeIneligible = isAgeNotEligible(data?.birthDate, data?.actDate);
   const applicationNumber = data?.applicant_id || data?.applicationNumber || "System Generated";
   const district = data?.["permanentजनपद"] || data?.district || "-";
+  const registrationRecord = data?.registration || {};
+  const nominatorRecord = data?.nominator || {};
+  const registrationAddress =
+    registrationRecord.address || nominatorRecord.address || data?.address || {};
+  const registrationSources = [
+    registrationRecord,
+    nominatorRecord,
+    data,
+    registrationAddress,
+  ];
+  const getRegistrationValue = (...keys) => {
+    for (const source of registrationSources) {
+      for (const key of keys) {
+        const value = source?.[key];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          return value;
+        }
+      }
+    }
+    return "";
+  };
+  const rawIdProofType = getRegistrationValue(
+    "id_proof_type",
+    "idType",
+    "id_type",
+  );
+  const idProofTypeLabels = {
+    aadhaar: "आधार कार्ड",
+    pan: "पैन कार्ड",
+    driving_license: "ड्राइविंग लाइसेंस",
+    pehchan_patraw: "पहचान पत्र (फोटो के साथ)",
+    passport: "पासपोर्ट",
+    voter_id: "मतदाता पहचान पत्र",
+  };
+  const registration = {
+    nominator_category: getRegistrationValue("nominator_category", "category"),
+    full_name: getRegistrationValue("full_name", "name"),
+    relat_with_child: getRegistrationValue("relat_with_child", "relation"),
+    phone: getRegistrationValue("phone", "mobile", "mobile_number", "phone_number"),
+    email: getRegistrationValue("email"),
+    id_proof_type:
+      idProofTypeLabels[String(rawIdProofType).toLowerCase()] || rawIdProofType,
+    id_proof_number_label: getRegistrationValue("id_proof_number_label"),
+    id_proof_no: getRegistrationValue("id_proof_no", "idNumber", "id_number"),
+    village: getRegistrationValue("village", "ग्राम/मोहल्ला"),
+    post_office: getRegistrationValue("post_office", "तहसील "),
+    project: getRegistrationValue("project", "विकासखण्ड/नगर निकाय"),
+    district: getRegistrationValue("district", "जनपद"),
+    pincode: getRegistrationValue("pincode", "pin_code", "पिन कोड"),
+  };
+  if (!registration.id_proof_number_label && registration.id_proof_type) {
+    registration.id_proof_number_label = `7. ${registration.id_proof_type} संख्या`;
+  }
 
   const submissionDate = data?.submissionDate && data.submissionDate !== "System Generated"
     ? (() => {
@@ -477,12 +530,12 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
               <div className="nf-pv-block-label">पंजीकरण विवरण (Registration Details):</div>
               <table className="nf-pv-t4">
                 <tbody>
-                  <Row4 l1="1. नामांकनकर्ता की श्रेणी" v1={data?.registration?.nominator_category} l2="2. नामांकनकर्ता का पूरा नाम" v2={data?.registration?.full_name} />
-                  <Row4 l1="3. बच्चे से संबंध" v1={data?.registration?.relat_with_child} l2="4. मोबाइल नंबर" v2={data?.registration?.phone} />
-                  <Row4 l1="5. ई-मेल आईडी" v1={data?.registration?.email} l2="6. (नामांकनकर्ता) पहचान पत्र का प्रकार" v2={data?.registration?.id_proof_type} />
-                  <Row4 l1={data?.registration?.id_proof_number_label || "7. पहचान पत्र संख्या"} v1={data?.registration?.id_proof_no} l2="ग्राम/मोहल्ला/घर का पूरा पता" v2={data?.registration?.village} />
-                  <Row4 l1="तहसील" v1={data?.registration?.post_office} l2="विकासखण्ड/नगर निकाय" v2={data?.registration?.project} />
-                  <Row4 l1="जनपद" v1={data?.registration?.district} l2="पिन कोड" v2={data?.registration?.pincode} />
+                  <Row4 l1="1. नामांकनकर्ता की श्रेणी" v1={registration.nominator_category} l2="2. नामांकनकर्ता का पूरा नाम" v2={registration.full_name} />
+                  <Row4 l1="3. बच्चे से संबंध" v1={registration.relat_with_child} l2="4. मोबाइल नंबर" v2={registration.phone} />
+                  <Row4 l1="5. ई-मेल आईडी" v1={registration.email} l2="6. (नामांकनकर्ता) पहचान पत्र का प्रकार" v2={registration.id_proof_type} />
+                  <Row4 l1={registration.id_proof_number_label || "7. पहचान पत्र संख्या"} v1={registration.id_proof_no} l2="ग्राम/मोहल्ला/घर का पूरा पता" v2={registration.village} />
+                  <Row4 l1="तहसील" v1={registration.post_office} l2="विकासखण्ड/नगर निकाय" v2={registration.project} />
+                  <Row4 l1="जनपद" v1={registration.district} l2="पिन कोड" v2={registration.pincode} />
                 </tbody>
               </table>
             </div>
