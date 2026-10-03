@@ -53,7 +53,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
   const userRole = null;
 
  
-  const [openSubmenu, setOpenSubmenu] = useState(null);
+  const [openSubmenu, setOpenSubmenu] = useState(0);
   const toggleSubmenu = (index) => {
     setOpenSubmenu(openSubmenu === index ? null : index);
   };
@@ -65,22 +65,34 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
     }
   }, [location.pathname, isMobile, isTablet, setSidebarOpen]);
 
-  const handleItemClick = (e, path, isActive) => {
+  const handleItemClick = (e, path) => {
+    // Any selection collapses the expanded toggle and the whole sidebar, so the
+    // content gets the full width. The top nav toggle reopens it.
+    setOpenSubmenu(null);
     if (onNavClick) {
       e.preventDefault();
       onNavClick(path);
-    } else if (!isActive) {
-      // Only close sidebar if navigating to a different page
-      setSidebarOpen(false);
     }
+    setSidebarOpen(false);
   };
 
  const menuItems = [
       {
         icon: <FaAward />,
         label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार",
-        path: "/DisDashBoard",
-        active: true,
+        submenu: [
+          {
+            icon: <FaTachometerAlt />,
+            label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार 2026-27",
+            path: "/DisDashBoard",
+          },
+          {
+            icon: <FaTrophy />,
+            label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार 2027-28",
+            path: null,
+            disabled: true,
+          },
+        ],
       },
       {
         icon: <FaTrophy />,
@@ -96,10 +108,105 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         active: false,
         disabled: true,
       },
-      
-      
-      
-     ];
+    ];
+
+  const isSubItemActive = (subItem) =>
+    Boolean(subItem.path) && subItem.path === location.pathname;
+
+  const renderSubItem = (subItem, subIndex, isMobileView = false) => {
+    const textClass = isMobileView ? "nav-text" : "nav-text br-text-sub";
+    const icon = subItem.icon ? (
+      <span className="submenu-icon">{subItem.icon}</span>
+    ) : null;
+
+    if (subItem.disabled) {
+      return (
+        <span
+          key={subIndex}
+          className="submenu-item-user nav-link nav-item-disabled"
+          aria-disabled="true"
+        >
+          {icon}
+          <span className={textClass}>{subItem.label}</span>
+        </span>
+      );
+    }
+
+    return (
+      <Link
+        key={subIndex}
+        to={subItem.path}
+        className={`submenu-item-user nav-link ${isSubItemActive(subItem) ? "active" : ""}`}
+        onClick={(e) => handleItemClick(e, subItem.path)}
+      >
+        {icon}
+        <span className={textClass}>{subItem.label}</span>
+      </Link>
+    );
+  };
+
+  const renderMenuItems = (isMobileView = false) =>
+    menuItems
+      .filter((item) =>
+        item.allowedRoles ? item.allowedRoles.includes(userRole) : true,
+      )
+      .map((item, index) => {
+      const textClass = isMobileView ? "nav-text br-nav-text-mob" : "nav-text";
+
+      if (item.submenu) {
+        const isOpen = openSubmenu === index;
+        const isParentActive = item.submenu.some(isSubItemActive);
+
+        return (
+          <div key={index}>
+            <Nav.Link
+              className={`nav-item ${isParentActive ? "active" : ""}`}
+              onClick={() => toggleSubmenu(index)}
+              aria-expanded={isOpen}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span className={textClass}>{item.label}</span>
+              <span className="submenu-arrow">
+                {isOpen ? <FaChevronDown /> : <FaChevronRight />}
+              </span>
+            </Nav.Link>
+
+            <Collapse in={isOpen}>
+              <div className="submenu-container-user">
+                {item.submenu.map((subItem, subIndex) =>
+                  renderSubItem(subItem, subIndex, isMobileView),
+                )}
+              </div>
+            </Collapse>
+          </div>
+        );
+      }
+
+      if (item.disabled) {
+        return (
+          <span
+            key={index}
+            className="nav-item nav-link nav-item-disabled"
+            aria-disabled="true"
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span className={textClass}>{item.label}</span>
+          </span>
+        );
+      }
+
+      return (
+        <Link
+          key={index}
+          to={item.path}
+          className={`nav-item nav-link ${item.active ? "active" : ""}`}
+          onClick={(e) => handleItemClick(e, item.path)}
+        >
+          <span className="nav-icon">{item.icon}</span>
+          <span className={textClass}>{item.label}</span>
+        </Link>
+      );
+    });
 
   //  Auto-close sidebar when switching to mobile or tablet
 
@@ -143,59 +250,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         {sidebarOpen && renderProfileCard()}
 
         <Nav className="sidebar-nav flex-column">
-          
-         {menuItems
-   .filter((item) => (item.allowedRoles ? item.allowedRoles.includes(userRole) : true))
-   .map((item, index) => (
-    <div key={index}>
-      {item.submenu ? (
-        <Nav.Link
-          className={`nav-item ${item.active ? "active" : ""}`}
-          onClick={() => toggleSubmenu(index)}
-        >
-          <span className="nav-icon">{item.icon}</span>
-          <span className="nav-text">{item.label}</span>
-          <span className="submenu-arrow">
-            {openSubmenu === index ? <FaChevronDown /> : <FaChevronRight />}
-          </span>
-        </Nav.Link>
-      ) : item.disabled ? (
-        <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
-          <span className="nav-icon">{item.icon}</span>
-          <span className="nav-text">{item.label}</span>
-        </span>
-      ) : (
-         <Link
-           to={item.path}
-           className={`nav-item nav-link ${item.active ? "active" : ""}`}
-           onClick={(e) => handleItemClick(e, item.path, item.active)}
-         >
-           <span className="nav-icon">{item.icon}</span>
-           <span className="nav-text">{item.label}</span>
-         </Link>
-      )}
-
-      {/* Submenu */}
-      {item.submenu && (
-        <Collapse in={openSubmenu === index}>
-          <div className="submenu-container-user">
-            {item.submenu.map((subItem, subIndex) => (
-                 <Link
-                   key={subIndex}
-                   to={subItem.path}
-                   className="submenu-item-user nav-link"
-                   onClick={(e) => handleItemClick(e, subItem.path, false)}
-                 >
-                   <span className="submenu-icon">{subItem.icon}</span>
-                   <span className="nav-text br-text-sub">{subItem.label}</span>
-                 </Link>
-            ))}
-          </div>
-        </Collapse>
-      )}
-    </div>
-  ))}
-
+          {renderMenuItems()}
         </Nav>
 
         <div className="sidebar-footer">
@@ -230,53 +285,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
   <Offcanvas.Body className="user-offcanvas-body">
     {renderProfileCard(true)}
     <Nav className="flex-column">
-      {menuItems.map((item, index) => (
-        <div key={index}>
-          {item.submenu ? (
-            <Nav.Link
-              className={`nav-item ${item.active ? "active" : ""}`}
-              onClick={() => toggleSubmenu(index)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-text br-nav-text-mob">{item.label}</span>
-              <span className="submenu-arrow">
-                {openSubmenu === index ? <FaChevronDown /> : <FaChevronRight />}
-              </span>
-            </Nav.Link>
-          ) : item.disabled ? (
-            <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-text br-nav-text-mob">{item.label}</span>
-            </span>
-          ) : (
-             <Link
-               to={item.path}
-               className={`nav-item nav-link ${item.active ? "active" : ""}`}
-               onClick={(e) => handleItemClick(e, item.path, item.active)}
-             >
-               <span className="nav-icon">{item.icon}</span>
-               <span className="nav-text br-nav-text-mob">{item.label}</span>
-             </Link>
-          )}
-
-          {item.submenu && (
-            <Collapse in={openSubmenu === index}>
-              <div className="submenu-container-user">
-                {item.submenu.map((subItem, subIndex) => (
-                   <Link
-                     key={subIndex}
-                     to={subItem.path}
-                     className="submenu-item nav-link"
-                     onClick={(e) => handleItemClick(e, subItem.path, false)}
-                   >
-                     <span className="nav-text">{subItem.label}</span>
-                   </Link>
-                ))}
-              </div>
-            </Collapse>
-          )}
-        </div>
-      ))}
+      {renderMenuItems(true)}
     </Nav>
   </Offcanvas.Body>
 </Offcanvas>

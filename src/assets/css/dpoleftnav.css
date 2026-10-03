@@ -566,11 +566,106 @@
 }
 
 .dpo-left-nav .br-text-sub {
-  margin-left: 12px !important;
-  line-height: 18px;
-  font-size: 14px;
-  color: #fff;
+    margin-left: 12px !important;
+    line-height: 18px;
+    font-size: 14px;
+    color: #fff;
 }
+
+/* Award year options nested under the बाल वीरता पुरस्कार menu */
+.dpo-left-nav.sidebar-closed .submenu-arrow,
+.dpo-left-nav.sidebar-closed .submenu-container-user {
+    display: none;
+}
+
+.dpo-left-nav .submenu-container-user {
+    background: rgba(255, 255, 255, 0.06) !important;
+    padding-left: 0.75rem;
+    padding-right: 0.5rem;
+}
+
+.dpo-left-nav .submenu-container-user .submenu-item-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.45rem 0.5rem;
+    border-left: 3px solid transparent;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    line-height: 1.3;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.dpo-left-nav .submenu-container-user .submenu-item-user .br-text-sub {
+    margin-left: 0 !important;
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: inherit;
+}
+
+.dpo-left-nav .submenu-container-user .submenu-icon {
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+}
+
+.dpo-left-nav .submenu-container-user .submenu-item-user:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.dpo-left-nav .submenu-container-user .submenu-item-user.active {
+    background: rgba(255, 255, 255, 0.14);
+    border-left-color: #fff;
+    color: #fff;
+    font-weight: 600;
+}
+
+.dpo-left-nav .submenu-container-user .submenu-item-user.nav-item-disabled {
+    background: transparent;
+    border-left-color: transparent;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: not-allowed;
+}
+
+.dpo-left-nav .submenu-container-user .submenu-item-user.nav-item-disabled:hover {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Same year options inside the mobile / tablet offcanvas */
+.user-mobile-offcanvas .submenu-container-user {
+    background: rgba(0, 0, 0, 0.25) !important;
+    padding-left: 0.75rem;
+    padding-right: 0.5rem;
+}
+
+.user-mobile-offcanvas .submenu-container-user .submenu-item-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.45rem 0.5rem;
+    border-left: 3px solid transparent;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.user-mobile-offcanvas .submenu-container-user .submenu-item-user.active {
+    background: rgba(255, 255, 255, 0.14);
+    border-left-color: #fff;
+    color: #fff;
+    font-weight: 600;
+}
+
+.user-mobile-offcanvas
+    .submenu-container-user
+    .submenu-item-user.nav-item-disabled {
+    color: rgba(255, 255, 255, 0.4);
+    cursor: not-allowed;
+}
+
 .submenu-item-staff .submenu-item-staff:hover {
   color: #fff;
   background: rgb(100, 146, 25);

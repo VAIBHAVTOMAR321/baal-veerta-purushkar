@@ -1014,6 +1014,43 @@
   color: #94a3b8;
 }
 
+/* ============ Forward To Directorate CTA ============ */
+.dpo-forward-blink {
+  animation: dpoForwardBlink 1.2s ease-in-out infinite;
+}
+
+@keyframes dpoForwardBlink {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.55);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(22, 163, 74, 0);
+    filter: brightness(1.15);
+  }
+}
+
+/* Red blinking reminder beside the forward button */
+.dpo-forward-notice {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #dc2626;
+  animation: dpoForwardNoticeBlink 1.2s ease-in-out infinite;
+}
+
+@keyframes dpoForwardNoticeBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
 @media (max-width: 576px) {
   .dashboard-pagination {
     flex-direction: column;
@@ -1022,5 +1059,12 @@
 
   .dashboard-pagination-controls {
     justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dpo-forward-blink,
+  .dpo-forward-notice {
+    animation: none;
   }
 }

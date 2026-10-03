@@ -20,7 +20,7 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
   const { logout, authFetch } = useAuth();
   const location = useLocation();
 
-  const [openSubmenu, setOpenSubmenu] = useState(null);
+  const [openSubmenu, setOpenSubmenu] = useState(0);
   const toggleSubmenu = (index) => {
     setOpenSubmenu(openSubmenu === index ? null : index);
   };
@@ -82,13 +82,15 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
     }
   }, [location.pathname, isMobile, isTablet, setSidebarOpen]);
 
-  const handleItemClick = (e, path, isActive) => {
+  const handleItemClick = (e, path) => {
+    // Any selection collapses the expanded toggle and the whole sidebar, so the
+    // content gets the full width. The top nav toggle reopens it.
+    setOpenSubmenu(null);
     if (onNavClick) {
       e.preventDefault();
       onNavClick(path);
-    } else if (!isActive) {
-      setSidebarOpen(false);
     }
+    setSidebarOpen(false);
   };
 
   const renderProfileCard = (isMobileView = false) => {
@@ -135,8 +137,19 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
     {
       icon: <FaAward />,
       label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार",
-      path: "/DPODashBoard",
-      active: true,
+      submenu: [
+        {
+          icon: <FaTachometerAlt />,
+          label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार 2026-27",
+          path: "/DPODashBoard",
+        },
+        {
+          icon: <FaTrophy />,
+          label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार 2027-28",
+          path: null,
+          disabled: true,
+        },
+      ],
     },
     {
       icon: <FaTrophy />,
@@ -146,13 +159,107 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
       disabled: true,
     },
     {
-            icon: <FaTrophy />,
-            label: "राज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
-            path: null,
-            active: false,
-            disabled: true,
-          },
+      icon: <FaTrophy />,
+      label: "राराज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
+      path: null,
+      active: false,
+      disabled: true,
+    },
   ];
+
+  const isSubItemActive = (subItem) =>
+    Boolean(subItem.path) && subItem.path === location.pathname;
+
+  const renderSubItem = (subItem, subIndex) => {
+    const label = (
+      <span className="nav-text br-text-sub">{subItem.label}</span>
+    );
+
+    if (subItem.disabled) {
+      return (
+        <span
+          key={subIndex}
+          className="submenu-item-user nav-link nav-item-disabled"
+          aria-disabled="true"
+        >
+          <span className="submenu-icon">{subItem.icon}</span>
+          {label}
+        </span>
+      );
+    }
+
+    return (
+      <Link
+        key={subIndex}
+        to={subItem.path}
+        className={`submenu-item-user nav-link ${isSubItemActive(subItem) ? "active" : ""}`}
+        onClick={(e) => handleItemClick(e, subItem.path)}
+      >
+        <span className="submenu-icon">{subItem.icon}</span>
+        {label}
+      </Link>
+    );
+  };
+
+  const renderMenuItems = (isMobileView = false) =>
+    menuItems.map((item, index) => {
+      const textClass = isMobileView ? "nav-text br-nav-text-mob" : "nav-text";
+
+      if (item.submenu) {
+        const isOpen = openSubmenu === index;
+        const isParentActive = item.submenu.some(isSubItemActive);
+
+        return (
+          <div key={index}>
+            <Nav.Link
+              className={`nav-item ${isParentActive ? "active" : ""}`}
+              onClick={() => toggleSubmenu(index)}
+              aria-expanded={isOpen}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span className={textClass}>{item.label}</span>
+              <span className="submenu-arrow">
+                {isOpen ? <FaChevronDown /> : <FaChevronRight />}
+              </span>
+            </Nav.Link>
+
+            <Collapse in={isOpen}>
+              <div className="submenu-container-user">
+                {item.submenu.map(renderSubItem)}
+              </div>
+            </Collapse>
+          </div>
+        );
+      }
+
+      if (item.disabled) {
+        return (
+          <div key={index}>
+            <span
+              className="nav-item nav-link nav-item-disabled"
+              aria-disabled="true"
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span className={textClass}>{item.label}</span>
+            </span>
+          </div>
+        );
+      }
+
+      const isActive = location.pathname === item.path;
+      return (
+        <div key={index}>
+          <Link
+            to={item.path}
+            className={`nav-item nav-link ${isActive ? "active" : ""}`}
+            onClick={(e) => handleItemClick(e, item.path)}
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span className={textClass}>{item.label}</span>
+          </Link>
+        </div>
+      );
+    });
 
   return (
     <>
@@ -180,27 +287,7 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         {sidebarOpen && renderProfileCard()}
 
         <Nav className="sidebar-nav flex-column">
-          {menuItems.map((item, index) =>
-            item.disabled ? (
-              <div key={index}>
-                <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
-                  <span className="nav-icon">{item.icon}</span>
-                  <span className="nav-text">{item.label}</span>
-                </span>
-              </div>
-            ) : (
-              <div key={index}>
-                <Link
-                  to={item.path}
-                  className={`nav-item nav-link ${location.pathname === item.path ? "active" : ""}`}
-                  onClick={(e) => handleItemClick(e, item.path, location.pathname === item.path)}
-                >
-                  <span className="nav-icon">{item.icon}</span>
-                  <span className="nav-text">{item.label}</span>
-                </Link>
-              </div>
-            )
-          )}
+          {renderMenuItems()}
         </Nav>
 
         <div className="sidebar-footer">
@@ -234,27 +321,7 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         <Offcanvas.Body className="user-offcanvas-body">
           {renderProfileCard(true)}
           <Nav className="flex-column">
-            {menuItems.map((item, index) =>
-              item.disabled ? (
-                <div key={index}>
-                  <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
-                    <span className="nav-icon">{item.icon}</span>
-                    <span className="nav-text br-nav-text-mob">{item.label}</span>
-                  </span>
-                </div>
-              ) : (
-                <div key={index}>
-                  <Link
-                    to={item.path}
-                    className={`nav-item nav-link ${location.pathname === item.path ? "active" : ""}`}
-                    onClick={(e) => handleItemClick(e, item.path, location.pathname === item.path)}
-                  >
-                    <span className="nav-icon">{item.icon}</span>
-                    <span className="nav-text br-nav-text-mob">{item.label}</span>
-                  </Link>
-                </div>
-              )
-            )}
+            {renderMenuItems(true)}
           </Nav>
         </Offcanvas.Body>
       </Offcanvas>

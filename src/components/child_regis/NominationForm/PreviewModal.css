@@ -55,12 +55,30 @@
    PRINT BAR
    ═══════════════════════════════════════════════════ */
 .nf-pv-print-bar {
-  position: absolute;
-  top: 10px;
-  left: 9px;
+  position: relative;
   z-index: 10;
   display: flex;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  background: #eef2f7;
+  border-bottom: 1px solid #cbd5e1;
+  flex-shrink: 0;
+}
+
+.nf-pv-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.nf-pv-x-inbar {
+  position: static;
+  flex-shrink: 0;
 }
 
 .nf-pv-printbtn {
@@ -129,7 +147,7 @@
 .nf-pv-body { flex: 1; padding: 12px 15mm 16px; overflow-y: auto; }
 
 /* ── Block ── */
-.nf-pv-block { margin-bottom: 8px; }
+.nf-pv-block { margin-bottom: 8px; scroll-margin-top: 12px; }
 .nf-pv-block-label { font-weight: 700; margin-top: 22px; text-align: justify; font-size: 0.8rem; color: #000; margin-bottom: 3px; }
 .nf-pv-form-id { font-size: 0.74rem; color: #222; margin-bottom: 4px; font-weight: 600; }
 
@@ -384,7 +402,10 @@
   .nf-pv-empty { display: none; }
 
   .nf-pv-x { top: -10px; right: -6px; width: 28px; height: 28px; font-size: 1.1rem; }
-  .nf-pv-print-bar { top: -10px; left: -6px; }
+  .nf-pv-x-inbar { top: auto; right: auto; }
+  .nf-pv-print-bar { padding: 6px 8px; gap: 6px; }
+  .nf-pv-step-pills { gap: 3px; }
+  .nf-pv-pill { padding: 4px 7px; font-size: 0.68rem; }
 }
 
 @keyframes nfPvIn {

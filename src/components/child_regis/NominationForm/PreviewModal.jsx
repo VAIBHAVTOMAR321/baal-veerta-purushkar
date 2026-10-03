@@ -192,6 +192,12 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
 
   const photoSrc = useMemo(() => getFileSrc(data?.document5), [data?.document5]);
 
+  const goToStep = (step) => {
+    const target = document.getElementById(`nf-pv-${step}`);
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const curAddr = [data?.["currentग्राम/मोहल्ला"], data?.["currentतहसील "], data?.["currentजनपद"], data?.["currentपिन कोड"]].filter(Boolean).join(" / ");
   const perAddr = [data?.["permanentग्राम/मोहल्ला"], data?.["permanentतहसील "], data?.["permanentजनपद"], data?.["permanentपिन कोड"]].filter(Boolean).join(" / ");
 
@@ -427,24 +433,31 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
 
         {/* ── Print Bar ── */}
         <div className="nf-pv-print-bar">
-          <button type="button" className="nf-pv-printbtn" onClick={handlePrint}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 6 2 18 2 18 9" />
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-              <rect x="6" y="14" width="12" height="8" />
-            </svg>
-            <span>Print</span>
-          </button>
-          <div className="nf-pv-step-pills">
-            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step1")?.scrollIntoView({ behavior: "smooth" })}>Step 1</button>
-            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step2")?.scrollIntoView({ behavior: "smooth" })}>Step 2</button>
-            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step3")?.scrollIntoView({ behavior: "smooth" })}>Step 3</button>
-            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step4")?.scrollIntoView({ behavior: "smooth" })}>Step 4</button>
-            <button type="button" className="nf-pv-pill" onClick={() => document.getElementById("nf-pv-step5")?.scrollIntoView({ behavior: "smooth" })}>Step 5</button>
+          <div className="nf-pv-bar-left">
+            <button type="button" className="nf-pv-printbtn" onClick={handlePrint}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              <span>Print</span>
+            </button>
+            <div className="nf-pv-step-pills">
+              {["step1", "step2", "step3", "step4", "step5"].map((s, i) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="nf-pv-pill"
+                  onClick={() => goToStep(s)}
+                >
+                  Step {i + 1}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <button type="button" className="nf-pv-x" onClick={onClose} aria-label="Close">×</button>
+          <button type="button" className="nf-pv-x nf-pv-x-inbar" onClick={onClose} aria-label="Close">×</button>
+        </div>
 
         {/* ── Printable area ── */}
         <div ref={printRef} className="nf-pv-printable">

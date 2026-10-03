@@ -1278,6 +1278,13 @@ const DPODashboard = () => {
       !isForwardedToDirector(app.applicant_id),
   );
 
+  // The directorate forward closes the tab for everyone, so it blinks only while
+  // there is something left to forward and no submit is already running.
+  const isForwardReady =
+    !loading &&
+    !submittingAllRecommendations &&
+    recommendedCandidates.length > 0;
+
   const recommendedCandidatesFiltered = recommendedCandidates.filter((app) => {
     const term = deleteSelectionSearch.trim().toLowerCase();
     if (!term) return true;
@@ -1711,7 +1718,7 @@ const DPODashboard = () => {
                         }}
                       >
                         <FaPaperclip size={13} className="me-1" />{" "}
-                        Recommendation
+                       Add Recommendation
                       </Button>
                       <Button
                         variant="outline-danger"
@@ -1737,7 +1744,9 @@ const DPODashboard = () => {
                           submittingAllRecommendations ||
                           recommendedCandidates.length === 0
                         }
-                        className="d-flex align-items-center"
+                        className={`d-flex align-items-center${
+                          isForwardReady ? " dpo-forward-blink" : ""
+                        }`}
                         style={{
                           borderRadius: "8px",
                           fontSize: "0.8rem",
@@ -1751,8 +1760,15 @@ const DPODashboard = () => {
                         )}
                         {submittingAllRecommendations
                           ? "Submitting..."
-                          : `Final Submit${recommendedCandidates.length ? ` (${recommendedCandidates.length})` : ""}`}
+                          : `Forward To Directorate${recommendedCandidates.length ? ` (${recommendedCandidates.length})` : ""}`}
                       </Button>
+                      {isForwardReady && (
+                        <span className="dpo-forward-notice">
+                          Important: Click &quot;Forward To Directorate&quot; to
+                          send the final recommended list to the Directorate.
+                          This cannot be undone.
+                        </span>
+                      )}
                       {recommendationProgress && (
                         <span
                           className="text-muted"
@@ -2698,7 +2714,7 @@ const DPODashboard = () => {
               className="fw-bold text-dark"
               style={{ fontSize: "1.1rem" }}
             >
-              Confirm Selected Applicants
+              Confirm Applicants Selected For Recommendation
             </Modal.Title>
           </Modal.Header>
           <Modal.Body className="p-4" style={{ background: "#fff" }}>
@@ -2984,7 +3000,7 @@ const DPODashboard = () => {
                       fontWeight: 700,
                     }}
                   >
-                    Selected Applicants ({selectedRecommendationApps.length})
+                     Applicants Selected For Recommendation ({selectedRecommendationApps.length})
                   </h6>
                   <div style={{ maxHeight: "160px", overflowY: "auto" }}>
                     {selectedRecommendationApps.map((app) => (
