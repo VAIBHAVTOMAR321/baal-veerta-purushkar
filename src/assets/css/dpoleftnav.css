@@ -1176,8 +1176,8 @@ border: none !important;
 
  /* Mobile Sidebar */
  .user-mobile-offcanvas {
-     background: linear-gradient(135deg, #383be8, hsl(25, 92%, 47%)) !important;
- }
+     background: linear-gradient(135deg, #0d47a1 0%, #1565c0 60%, #1976d2 100%);
+     color: white;}
  
  .user-mobile-offcanvas .nav-item {
      color: white;
@@ -1208,13 +1208,10 @@ border: none !important;
  }
  
  .user-offcanvas-header {
-     background: linear-gradient(135deg, #383be8, #4246e4) !important;
-     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
- }
+background: linear-gradient(135deg, #03070b 0%, #03070b 60%, #03070b 100%); }
  
  .user-offcanvas-body {
-     background: linear-gradient(135deg, #4246e4, hsl(25, 92%, 47%)) !important;
-     padding: 0 !important;
+background: linear-gradient(135deg, #03070b 0%, #03070b 60%, #03070b 100%);    padding: 0 !important;
  }
  
  /* Fix for close button visibility in mobile offcanvas */

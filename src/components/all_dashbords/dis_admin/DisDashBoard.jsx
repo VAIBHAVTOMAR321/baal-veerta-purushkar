@@ -999,7 +999,7 @@ const DisDashBoard = () => {
       <div className="main-content-dash">
         <DisTopNav toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
 
-        <div fluid className="dashboard-page-content p-4 p-md-5" style={{ background: "#f8fafc", minHeight: "calc(100vh - 60px)" }}>
+        <div fluid className="dashboard-page-content p-2" style={{ background: "#f8fafc", minHeight: "calc(100vh - 60px)" }}>
           {/* Page Header */}
           <div className="dashboard-page-header d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>

@@ -1352,7 +1352,7 @@ const DPODashboard = () => {
 
         <div
           fluid
-          className="dashboard-page-content p-4 p-md-5"
+          className="dashboard-page-content p-4"
           style={{ background: "#f8fafc", minHeight: "calc(100vh - 60px)" }}
         >
           {/* Page Header */}
