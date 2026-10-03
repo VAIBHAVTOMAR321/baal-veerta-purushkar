@@ -38,27 +38,39 @@ export const formatText = (value) => {
 const resolveStepStatus = (stepStatus) =>
   String(stepStatus || "").toLowerCase() === "final submitted" ? "FinalSubmitted" : "InProgress";
 
+// Resolves any spelling variant to the canonical district name used by the
+// report, so callers can match the signed-in officer's district against the
+// value stored on an application.
+export const resolveDistrictName = (value) =>
+  districtAliases.get(normalizeDistrict(value)) || formatText(value) || NOT_AVAILABLE;
+
 /**
  * Builds the district-wise applicant status rows.
  * District name and total count are only written on the first row of each
  * district group, the remaining rows of the group stay blank.
  * Districts that have applicants are listed first (in DISTRICTS order);
  * districts with zero applicants are moved to the last rows.
+ * Passing `districts` limits the report to those districts only, so a
+ * single-district dashboard never lists any other district.
  */
-export const buildReportData = ({ applications = [] } = {}) => {
+export const buildReportData = ({ applications = [], districts } = {}) => {
   const grouped = new Map(DISTRICTS.map((district) => [district, []]));
 
   applications.forEach((application) => {
-    const rawDistrict = formatText(application.district);
-    const district = districtAliases.get(normalizeDistrict(rawDistrict)) || rawDistrict || NOT_AVAILABLE;
+    const district = resolveDistrictName(application.district);
     if (!grouped.has(district)) grouped.set(district, []);
     grouped.get(district).push(application);
   });
+
+  const allowedDistricts = Array.isArray(districts)
+    ? new Set(districts.map((district) => resolveDistrictName(district)))
+    : null;
 
   const withApplicants = [];
   const withoutApplicants = [];
 
   grouped.forEach((applicants, district) => {
+    if (allowedDistricts && !allowedDistricts.has(district)) return;
     if (applicants.length) withApplicants.push([district, applicants]);
     else withoutApplicants.push([district, applicants]);
   });
@@ -123,8 +135,8 @@ const buildPrintHtml = (rows) => {
 </html>`;
 };
 
-export const exportDashboardPdf = async ({ applications } = {}) => {
-  const { rows } = buildReportData({ applications });
+export const exportDashboardPdf = async ({ applications, districts } = {}) => {
+  const { rows } = buildReportData({ applications, districts });
   const html = buildPrintHtml(rows);
 
   // Write to a Blob URL instead of document.write() into an about:blank popup.
@@ -169,9 +181,9 @@ const applyBorder = (cell) => {
 
 const COLUMN_WIDTHS = [22, 13, 28, 16, 30];
 
-export const exportDashboardExcel = async ({ applications } = {}) => {
+export const exportDashboardExcel = async ({ applications, districts } = {}) => {
   const { default: ExcelJS } = await import("exceljs");
-  const { rows } = buildReportData({ applications });
+  const { rows } = buildReportData({ applications, districts });
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "IT Cell Dashboard";

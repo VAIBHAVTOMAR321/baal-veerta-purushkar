@@ -35,8 +35,14 @@ import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
 import {
   exportDashboardExcel,
   exportDashboardPdf,
+  resolveDistrictName,
 } from "../../../../utils/itCellReportExport";
 import "./DPODashboard.css";
+
+// Profile of the signed-in DPO, used to keep the exported report to that
+// district only.
+const DISTRICT_PROFILE_URL =
+  "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/district-profile/";
 
 // Static mapping function (kept for modal structure)
 const mapApiDataToPreviewData = (item) => {
@@ -469,6 +475,11 @@ const DPODashboard = () => {
   // Table shows 50 rows at a time; the page resets whenever the filter set changes.
   const PAGE_SIZE = 50;
   const [currentPage, setCurrentPage] = useState(1);
+
+  // District of the signed-in DPO. Empty until the profile resolves, and left
+  // empty on failure so the export stays closed rather than leaking every
+  // district the status endpoint returns.
+  const [dpoDistrict, setDpoDistrict] = useState("");
 
   useEffect(() => {
     const handleResize = () => {
@@ -986,10 +997,30 @@ const DPODashboard = () => {
     setDeleteSelectionSearch("");
   };
 
+  const fetchDpoDistrict = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const response = await fetch(DISTRICT_PROFILE_URL, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      });
+      if (!response.ok) return "";
+      const result = await response.json();
+      if (!result.success || !result.data) return "";
+      return resolveDistrictName(result.data.district);
+    } catch (err) {
+      console.error("Failed to fetch DPO district:", err);
+      return "";
+    }
+  };
+
   useEffect(() => {
     fetchApplicationsData();
     fetchRecommendedApplications();
     fetchRegisteredApplications();
+    fetchDpoDistrict().then((district) => setDpoDistrict(district));
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -1201,15 +1232,27 @@ const DPODashboard = () => {
           : "Recommended/Verified",
   };
 
+  // The status endpoint answers with every district, so the report is narrowed to
+  // the district of the signed-in DPO: rows from other districts are dropped and
+  // buildReportData only writes that one district, instead of listing the rest of
+  // the state as empty groups. Stays empty while the district is unknown.
+  const exportDistricts = dpoDistrict ? [dpoDistrict] : [];
+  const exportApplications = dpoDistrict
+    ? filteredApplications.filter(
+        (app) => resolveDistrictName(app.district) === dpoDistrict,
+      )
+    : [];
+
   const handleExportPdf = async () => {
-    if (exporting) return;
+    if (exporting || !exportApplications.length) return;
     setExporting("pdf");
     setExportError(null);
     try {
       await exportDashboardPdf({
-        applications: filteredApplications,
+        applications: exportApplications,
         formStatusList,
         filters: reportFilters,
+        districts: exportDistricts,
       });
     } catch (err) {
       setExportError(err.message || "PDF export failed");
@@ -1219,14 +1262,15 @@ const DPODashboard = () => {
   };
 
   const handleExportExcel = async () => {
-    if (exporting) return;
+    if (exporting || !exportApplications.length) return;
     setExporting("excel");
     setExportError(null);
     try {
       await exportDashboardExcel({
-        applications: filteredApplications,
+        applications: exportApplications,
         formStatusList,
         filters: reportFilters,
+        districts: exportDistricts,
       });
     } catch (err) {
       setExportError(err.message || "Excel export failed");
@@ -1505,7 +1549,12 @@ const DPODashboard = () => {
                 size="sm"
                 className="d-flex align-items-center border shadow-sm"
                 onClick={handleExportExcel}
-                disabled={exporting || filteredApplications.length === 0}
+                disabled={Boolean(exporting) || exportApplications.length === 0}
+                title={
+                  dpoDistrict
+                    ? `Export ${dpoDistrict} applications only`
+                    : "District could not be verified. Export unavailable."
+                }
               >
                 {exporting === "excel" ? (
                   <Spinner size="sm" />
@@ -1519,7 +1568,12 @@ const DPODashboard = () => {
                 size="sm"
                 className="d-flex align-items-center border shadow-sm"
                 onClick={handleExportPdf}
-                disabled={exporting || filteredApplications.length === 0}
+                disabled={Boolean(exporting) || exportApplications.length === 0}
+                title={
+                  dpoDistrict
+                    ? `Export ${dpoDistrict} applications only`
+                    : "District could not be verified. Export unavailable."
+                }
               >
                 {exporting === "pdf" ? (
                   <Spinner size="sm" />
@@ -2000,6 +2054,18 @@ const DPODashboard = () => {
                               letterSpacing: "0.5px",
                             }}
                           >
+                            Step Status
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
                             Recommended by District Committee
                           </th>
                           <th
@@ -2034,7 +2100,7 @@ const DPODashboard = () => {
                         {filteredApplications.length === 0 ? (
                           <tr>
                             <td
-                              colSpan="9"
+                              colSpan="10"
                               className="text-center py-5 text-muted"
                               style={{ fontSize: "0.9rem" }}
                             >
@@ -2140,6 +2206,9 @@ const DPODashboard = () => {
                                 title={app.incident_title || ""}
                               >
                                 {app.incident_title || "-"}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                {getStepBadge(app.step_status)}
                               </td>
                               <td style={{ padding: "12px 16px" }}>
                                 {getRecommendationBadge(app.applicant_id)}
