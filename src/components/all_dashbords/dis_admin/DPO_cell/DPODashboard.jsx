@@ -720,6 +720,15 @@ const DPODashboard = () => {
     const targets = recommendedCandidates;
     if (!targets.length || submittingAllRecommendations) return;
 
+    // Forwarding is one-way: the flag closes the recommendation tab for the
+    // whole district, so make the DPO acknowledge it before anything is sent.
+    const isConfirmed = window.confirm(
+      `Forward ${targets.length} recommended application${
+        targets.length === 1 ? "" : "s"
+      } to the Directorate?\n\nOnce forwarded, this action cannot be reverted.`,
+    );
+    if (!isConfirmed) return;
+
     setSubmittingAllRecommendations(true);
     setActionMessage(null);
     const submittedIds = [];
@@ -1351,10 +1360,13 @@ const DPODashboard = () => {
     isForwardedToDirector(app.applicant_id),
   );
 
+  // Applicants that can still receive a recommendation. Anyone who already has
+  // one is left out so the picker only offers new candidates.
   const selectionCandidates = applications.filter((app) => {
     if (
       normalizeStepStatus(app.step_status) !== "Final Submitted" ||
-      isForwardedToDirector(app.applicant_id)
+      isForwardedToDirector(app.applicant_id) ||
+      isRecommended(app.applicant_id)
     )
       return false;
     const term = selectionSearch.trim().toLowerCase();
@@ -2011,7 +2023,7 @@ const DPODashboard = () => {
                               textTransform: "uppercase",
                               letterSpacing: "0.5px",
                               textAlign: "right",
-                              minWidth: "300px",
+                              width: "300px",
                             }}
                           >
                             Actions
@@ -2164,7 +2176,7 @@ const DPODashboard = () => {
                                   textAlign: "right",
                                 }}
                               >
-                                <div className="d-flex flex-nowrap gap-2 justify-content-end">
+                                <div className="d-flex gap-2 justify-content-end">
                                   {activeTab === "completed" && (
                                     <Button
                                       variant="light"

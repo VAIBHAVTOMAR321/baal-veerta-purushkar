@@ -1933,7 +1933,7 @@ const DisDashBoard = () => {
           </Modal.Header>
           <Modal.Body>
             <div className="p-3 mb-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0", maxHeight: "170px", overflowY: "auto" }}>
-              <strong className="d-block mb-2">Selected Applicants ({directorateTargets.length})</strong>
+              <strong className="d-block mb-2"> Applicants Selected For Final List ({directorateTargets.length})</strong>
               {directorateTargets.map((app) => (
                 <div key={app.applicant_id} className="py-1">
                   {app.full_name || "-"} <small className="text-muted">({app.applicant_id})</small>
@@ -1943,7 +1943,7 @@ const DisDashBoard = () => {
             <Form.Group className="mb-3">
               <Form.Label>Recommendation File <span className="text-danger">*</span></Form.Label>
               <Form.Control type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={(event) => setDirectorateFile(event.target.files?.[0] || null)} />
-              <Form.Text muted>One file will be uploaded for all selected applicants.</Form.Text>
+              <Form.Text muted>One file will be uploaded for all Applicants Selected For Final List.</Form.Text>
             </Form.Group>
             <Form.Group>
               <Form.Label>Remark <span className="text-danger">*</span></Form.Label>
