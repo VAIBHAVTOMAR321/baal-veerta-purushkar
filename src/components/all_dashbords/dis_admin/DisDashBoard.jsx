@@ -230,6 +230,55 @@ const normalizeStepStatus = (value) => {
   return known || raw;
 };
 
+// Documents step 4 always asks for. The remaining slots on the form become
+// mandatory only when the step 1/2 answers say they apply, which is why the
+// checks below repeat the step 4 validation from the NominationForm.
+const REQUIRED_STEP4_DOCUMENTS = [
+  "nominator_id_proof",
+  "child_aadhaar_identity",
+  "permanent_residence_certificate",
+  "child_birth_age_certificate",
+  "bravery_incident_description",
+  "child_passport_photo",
+  "bank_detail",
+];
+
+const hasText = (value) => String(value || "").trim() !== "";
+
+const hasWitnessData = (witnesses) => {
+  const rows = Array.isArray(witnesses) ? witnesses : [];
+  return rows.some((row) =>
+    ["name", "mobile", "address", "relation"].some((field) => hasText(row?.[field]))
+  );
+};
+
+// Step 5 mirrors the step 4 uploads, so either record can carry the file path.
+const hasStep4Document = (s4, s5, field) => hasText(s4?.[field] || s5?.[field]);
+
+// True once the applicant has attached every document their answers require,
+// i.e. they have submitted the form and are waiting on the declaration.
+const hasAllStep4Documents = (s1, s2, s4, s5) => {
+  const has = (field) => hasStep4Document(s4, s5, field);
+
+  if (!REQUIRED_STEP4_DOCUMENTS.every(has)) return false;
+
+  // FIR report is required only when the applicant said an FIR was filed.
+  if (String(s2?.fir_status || "").trim() === "हाँ" && !has("fir_police_report")) return false;
+
+  // Witness statements are required only when a witness was described.
+  if (hasWitnessData(s2?.eyewitnesses) && !has("eyewitness_statements")) return false;
+
+  // School certificate is required only for a student with a class on record.
+  if (hasText(s1?.current_class) && !has("school_certificate")) return false;
+
+  // A published incident needs either a media report or a photo/video link.
+  const mediaRequired =
+    String(s2?.media_report_available || "").trim() === "हाँ, प्रकाशित हुई है।";
+  if (mediaRequired && !has("media_report") && !has("incident_photo_video_url")) return false;
+
+  return true;
+};
+
 const mapApiToApp = (item) => {
   if (!item) return null;
   const s1 = item["step-1"] || {};
@@ -266,12 +315,18 @@ const mapApiToApp = (item) => {
     return false;
   });
 
+  // Step 4 saves every file as soon as it is uploaded, so an applicant who has
+  // attached everything their answers require has really submitted the form,
+  // even though the step-4 record is not flagged as completed yet.
+  const reachedStep =
+    lastCompletedStep === 3 && hasAllStep4Documents(s1, s2, s4, s5) ? 4 : lastCompletedStep;
+
   const computeStepStatus = () => {
     // Nothing finished yet: the applicant either has not touched the form or is
     // part-way through step 1.
-    if (lastCompletedStep === 0) return hasAnyStep ? "step-1" : "pending";
-    if (lastCompletedStep === 5) return "Final Submitted";
-    return `step-${lastCompletedStep}`;
+    if (reachedStep === 0) return hasAnyStep ? "step-1" : "pending";
+    if (reachedStep === 5) return "Final Submitted";
+    return `step-${reachedStep}`;
   };
 
   const registrationStatus = String(nomination.status || "").trim().toLowerCase();
@@ -290,11 +345,13 @@ const mapApiToApp = (item) => {
     class_name: s1.current_class || "",
     photo: null,
     district: nomination.district || s1.permanent_district || "",
-    // Step 2 records the type of bravery, the same value the DPO table shows.
-    bravery_type: s2.incident_type || "",
+    // Step 2 records the incident title the applicant picked in the form, which
+    // is what the "Type of Bravery" column shows. Fall back to the stored code
+    // when older applications only have that.
+    bravery_type: s2.incident_title || s2.incident_type || "",
     incident_title: s2.incident_title || "",
     step_status: stepStatus,
-    completed_steps: completedSteps,
+    completed_steps: Math.max(completedSteps, reachedStep),
     dpo_status: dpoStatus,
     dpo_comment: dpoComment,
     nominator_category: nomination.nominator_category || "",
