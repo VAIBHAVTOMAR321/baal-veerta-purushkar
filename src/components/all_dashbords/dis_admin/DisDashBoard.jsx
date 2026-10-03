@@ -290,7 +290,9 @@ const mapApiToApp = (item) => {
     class_name: s1.current_class || "",
     photo: null,
     district: nomination.district || s1.permanent_district || "",
-    incident_title: "",
+    // Step 2 records the type of bravery, the same value the DPO table shows.
+    bravery_type: s2.incident_type || "",
+    incident_title: s2.incident_title || "",
     step_status: stepStatus,
     completed_steps: completedSteps,
     dpo_status: dpoStatus,
@@ -1289,6 +1291,7 @@ const DisDashBoard = () => {
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Name</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Age</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Class</th>
+                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Type of Bravery</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
                             <FaMapMarkerAlt className="me-1" /> District
                           </th>
@@ -1303,7 +1306,7 @@ const DisDashBoard = () => {
                       <tbody>
                         {filteredApplications.length === 0 ? (
                           <tr>
-                            <td colSpan={10} className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
+                            <td colSpan={11} className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
                               No applications found matching your criteria.
                             </td>
                           </tr>
@@ -1328,6 +1331,20 @@ const DisDashBoard = () => {
                               </td>
                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.age || "-"}</td>
                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.class_name || "-"}</td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#475569",
+                                  fontSize: "0.875rem",
+                                  maxWidth: "220px",
+                                  textOverflow: "ellipsis",
+                                  overflow: "hidden",
+                                  whiteSpace: "nowrap",
+                                }}
+                                title={app.bravery_type || ""}
+                              >
+                                {app.bravery_type || "-"}
+                              </td>
                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>
                                 {app.district || "-"}
                                 {app.project && (

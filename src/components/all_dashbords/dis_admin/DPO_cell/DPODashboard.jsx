@@ -651,6 +651,7 @@ const DPODashboard = () => {
       .toLowerCase() === "yes";
 
   const handleFinalSubmitAllRecommendations = async () => {
+    if (activeTab !== "completed") return;
     const targets = recommendedCandidates;
     if (!targets.length || submittingAllRecommendations) return;
 
@@ -734,9 +735,12 @@ const DPODashboard = () => {
 
   const handleSaveRecommendation = async () => {
     const targets = recommendationTargets.filter(
-      (app) => !isForwardedToDirector(app.applicant_id),
+      (app) =>
+        normalizeStepStatus(app.step_status) === "Final Submitted" &&
+        !isForwardedToDirector(app.applicant_id),
     );
-    if (!targets.length || savingRecommendation) return;
+    if (activeTab !== "completed" || !targets.length || savingRecommendation)
+      return;
 
     if (!recommendationFile) {
       setUploadRecommendationError("Please upload a recommendation file.");
@@ -807,10 +811,16 @@ const DPODashboard = () => {
   const deleteRecommendations = async (targets) => {
     const withRecords = targets.filter(
       (app) =>
+        normalizeStepStatus(app.step_status) === "Final Submitted" &&
         getRecommendation(app.applicant_id)?.id &&
         !isForwardedToDirector(app.applicant_id),
     );
-    if (!withRecords.length || deletingRecommendation) return null;
+    if (
+      activeTab !== "completed" ||
+      !withRecords.length ||
+      deletingRecommendation
+    )
+      return null;
 
     const isConfirmed = window.confirm(
       `Are you sure you want to remove the recommendation for ${withRecords.length} applicant${
@@ -860,6 +870,7 @@ const DPODashboard = () => {
   };
 
   const handleOpenDeleteRecommendationModal = () => {
+    if (activeTab !== "completed" || !recommendedCandidates.length) return;
     setDeleteSelectionSearch("");
     setUploadRecommendationError(null);
     setShowDeleteRecommendationModal(true);
@@ -1185,7 +1196,12 @@ const DPODashboard = () => {
   };
 
   const handleOpenRecommendationDetails = (app = selectedApplication) => {
-    if (!app) return;
+    if (
+      !app ||
+      !isRecommended(app.applicant_id) ||
+      (activeTab !== "completed" && activeTab !== "verified")
+    )
+      return;
     setSelectedApplication(app);
     setShowModal(false);
     setRecommendationTargets([app]);
@@ -1206,6 +1222,7 @@ const DPODashboard = () => {
 
   const handleOpenSelectionModal = () => {
     if (
+      activeTab !== "completed" ||
       loading ||
       submittingAllRecommendations ||
       hasFinalisedRecommendations
@@ -1218,8 +1235,11 @@ const DPODashboard = () => {
   };
 
   const handleConfirmSelection = () => {
-    const targets = applications.filter((app) =>
-      selectionIds.includes(String(app.applicant_id || "").trim()),
+    const targets = applications.filter(
+      (app) =>
+        selectionIds.includes(String(app.applicant_id || "").trim()) &&
+        normalizeStepStatus(app.step_status) === "Final Submitted" &&
+        !isForwardedToDirector(app.applicant_id),
     );
     if (!targets.length) {
       setUploadRecommendationError("Please select at least one applicant.");
@@ -1231,6 +1251,16 @@ const DPODashboard = () => {
   };
 
   const handleProceedToRecommendation = () => {
+    if (
+      activeTab !== "completed" ||
+      !recommendationTargets.length ||
+      recommendationTargets.some(
+        (app) =>
+          normalizeStepStatus(app.step_status) !== "Final Submitted" ||
+          isForwardedToDirector(app.applicant_id),
+      )
+    )
+      return;
     setShowConfirmSelectionModal(false);
     setRecommendationFile(null);
     setRecommendationRemark("");
@@ -1257,7 +1287,11 @@ const DPODashboard = () => {
   );
 
   const selectionCandidates = applications.filter((app) => {
-    if (isForwardedToDirector(app.applicant_id)) return false;
+    if (
+      normalizeStepStatus(app.step_status) !== "Final Submitted" ||
+      isForwardedToDirector(app.applicant_id)
+    )
+      return false;
     const term = selectionSearch.trim().toLowerCase();
     if (!term) return true;
     return (
@@ -1274,6 +1308,7 @@ const DPODashboard = () => {
   // Only applicants that already carry a recommendation can be deleted here.
   const recommendedCandidates = applications.filter(
     (app) =>
+      normalizeStepStatus(app.step_status) === "Final Submitted" &&
       isRecommended(app.applicant_id) &&
       !isForwardedToDirector(app.applicant_id),
   );
@@ -1296,7 +1331,13 @@ const DPODashboard = () => {
 
   const handleSaveComment = async () => {
     const applicantId = commentApp?.applicant_id;
-    if (!applicantId || savingComment) return;
+    if (
+      activeTab !== "completed" ||
+      normalizeStepStatus(commentApp?.step_status) !== "Final Submitted" ||
+      !applicantId ||
+      savingComment
+    )
+      return;
     if (!commentText.trim()) return;
 
     setSavingComment(true);
@@ -1322,6 +1363,11 @@ const DPODashboard = () => {
   };
 
   const handleOpenCommentModal = (app) => {
+    if (
+      activeTab !== "completed" ||
+      normalizeStepStatus(app?.step_status) !== "Final Submitted"
+    )
+      return;
     setCommentApp(app);
     setCommentText(app?.dpo_comment || "");
     setCommentError(null);
@@ -1693,7 +1739,7 @@ const DPODashboard = () => {
                     </Row>
                   </div>
 
-                  {activeTab === "verified" && (
+                  {activeTab === "completed" && (
                     <div
                       className="dashboard-filter-actions d-flex flex-wrap align-items-center gap-2 mb-3 p-3 rounded-3"
                       style={{
@@ -2053,23 +2099,27 @@ const DPODashboard = () => {
                                 }}
                               >
                                 <div className="d-flex flex-nowrap gap-2 justify-content-end">
-                                  <Button
-                                    variant="light"
-                                    size="sm"
-                                    onClick={() => handleOpenCommentModal(app)}
-                                    className="d-flex align-items-center justify-content-center border flex-shrink-0"
-                                    style={{
-                                      width: "32px",
-                                      height: "32px",
-                                      padding: 0,
-                                      borderRadius: "8px",
-                                      borderColor: "#e2e8f0",
-                                      color: "#64748b",
-                                    }}
-                                    title="Add / Edit Comment"
-                                  >
-                                    <FaCommentDots size={14} />
-                                  </Button>
+                                  {activeTab === "completed" && (
+                                    <Button
+                                      variant="light"
+                                      size="sm"
+                                      onClick={() =>
+                                        handleOpenCommentModal(app)
+                                      }
+                                      className="d-flex align-items-center justify-content-center border flex-shrink-0"
+                                      style={{
+                                        width: "32px",
+                                        height: "32px",
+                                        padding: 0,
+                                        borderRadius: "8px",
+                                        borderColor: "#e2e8f0",
+                                        color: "#64748b",
+                                      }}
+                                      title="Add / Edit Comment"
+                                    >
+                                      <FaCommentDots size={14} />
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="success"
                                     size="sm"
@@ -2087,7 +2137,8 @@ const DPODashboard = () => {
                                   >
                                     <FaFileAlt className="me-1" /> View Form
                                   </Button>
-                                  {activeTab === "verified" &&
+                                  {(activeTab === "completed" ||
+                                    activeTab === "verified") &&
                                     isRecommended(app.applicant_id) && (
                                       <>
                                         <Button
@@ -2410,8 +2461,8 @@ const DPODashboard = () => {
                   </Col>
                 </Row>
 
-                {(selectedApplication.dpo_status === "approved" ||
-                  isRecommended(selectedApplication.applicant_id)) && (
+                {(activeTab === "completed" || activeTab === "verified") &&
+                  isRecommended(selectedApplication.applicant_id) && (
                   <div
                     className="p-4 rounded-3 mt-3"
                     style={{
@@ -2438,9 +2489,7 @@ const DPODashboard = () => {
                         className="p-0 text-decoration-none fw-bold"
                         style={{ fontSize: "0.8rem" }}
                       >
-                        {isRecommended(selectedApplication.applicant_id)
-                          ? "Edit"
-                          : "Add Recommendation"}
+                        View Recommendation
                       </Button>
                     </div>
                     {(() => {
