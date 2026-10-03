@@ -1142,7 +1142,7 @@ const DisDashBoard = () => {
               <Card className="dashboard-table-card border-0 shadow-sm" style={{ borderRadius: "12px" }}>
                 <Card.Body className="p-4">
                   {/* Filter Bar */}
-                  <div className="mb-4">
+                  <div className="dashboard-filter-bar mb-3">
                     <div className="dashboard-tabs d-flex flex-wrap gap-2 mb-3" style={{ borderBottom: "1px solid #e2e8f0" }}>
                       <button
                         type="button"
@@ -1225,7 +1225,7 @@ const DisDashBoard = () => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="border-start-0"
-                            style={{ borderRadius: "0 8px 8px 0", borderColor: "#cbd5e1", padding: "10px 12px", fontSize: "0.875rem" }}
+                            style={{ borderRadius: "0 6px 6px 0", borderColor: "#cbd5e1" }}
                           />
                         </div>
                       </Col>
@@ -1251,7 +1251,7 @@ const DisDashBoard = () => {
                       )}
                     </Row>
                     {activeTab === "recommended" && (
-                      <div className="d-flex flex-wrap align-items-center gap-2 mt-3">
+                      <div className="dashboard-filter-actions d-flex flex-wrap align-items-center gap-2 mt-3">
                         <Button
                           variant="success"
                           size="sm"

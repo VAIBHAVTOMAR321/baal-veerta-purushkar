@@ -1549,7 +1549,7 @@ const DPODashboard = () => {
               >
                 <Card.Body className="p-4">
                   {/* Filter Bar */}
-                  <div className="mb-4">
+                  <div className="dashboard-filter-bar mb-3">
                     <div
                       className="dashboard-tabs d-flex flex-wrap gap-2 mb-3"
                       style={{ borderBottom: "1px solid #e2e8f0" }}
@@ -1644,10 +1644,8 @@ const DPODashboard = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="border-start-0"
                             style={{
-                              borderRadius: "0 8px 8px 0",
+                              borderRadius: "0 6px 6px 0",
                               borderColor: "#cbd5e1",
-                              padding: "10px 12px",
-                              fontSize: "0.875rem",
                             }}
                           />
                         </div>
@@ -1690,7 +1688,7 @@ const DPODashboard = () => {
 
                   {activeTab === "verified" && (
                     <div
-                      className="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 rounded-3"
+                      className="dashboard-filter-actions d-flex flex-wrap align-items-center gap-2 mb-3 p-3 rounded-3"
                       style={{
                         background: "#f8fafc",
                         border: "1px solid #e2e8f0",
