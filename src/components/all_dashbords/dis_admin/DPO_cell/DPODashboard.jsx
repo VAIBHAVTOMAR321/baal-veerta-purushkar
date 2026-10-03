@@ -213,6 +213,16 @@ const REQUIRED_STEP4_DOCUMENTS = [
 
 const hasText = (value) => String(value || "").trim() !== "";
 
+const PDF_UPLOAD_NOTE = "Note: Only PDF format is allowed for upload.";
+
+const isPdfFile = (file) => {
+  if (!file) return false;
+  const name = String(file.name || "").trim().toLowerCase();
+  if (!name.endsWith(".pdf")) return false;
+  const type = String(file.type || "").trim().toLowerCase();
+  return !type || type === "application/pdf" || type === "application/x-pdf";
+};
+
 const hasWitnessData = (witnesses) => {
   const rows = Array.isArray(witnesses) ? witnesses : [];
   return rows.some((row) =>
@@ -818,6 +828,21 @@ const DPODashboard = () => {
     return { done, failed, emptyMessage };
   };
 
+  const handleRecommendationFileChange = (event) => {
+    const input = event.target;
+    const file = input.files?.[0] || null;
+    if (file && !isPdfFile(file)) {
+      input.value = "";
+      setRecommendationFile(null);
+      setUploadRecommendationError(
+        `Only PDF format is allowed for upload. Received: ${file.name}`,
+      );
+      return;
+    }
+    setUploadRecommendationError(null);
+    setRecommendationFile(file);
+  };
+
   const handleSaveRecommendation = async () => {
     const targets = recommendationTargets.filter(
       (app) =>
@@ -829,6 +854,10 @@ const DPODashboard = () => {
 
     if (!recommendationFile) {
       setUploadRecommendationError("Please upload a recommendation file.");
+      return;
+    }
+    if (!isPdfFile(recommendationFile)) {
+      setUploadRecommendationError("Only PDF format is allowed for upload.");
       return;
     }
     if (!recommendationRemark.trim()) {
@@ -3314,10 +3343,8 @@ const DPODashboard = () => {
                       </Form.Label>
                       <Form.Control
                         type="file"
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        onChange={(e) =>
-                          setRecommendationFile(e.target.files[0])
-                        }
+                        accept=".pdf,application/pdf"
+                        onChange={handleRecommendationFileChange}
                         className="border"
                         style={{
                           borderRadius: "8px",
@@ -3325,6 +3352,12 @@ const DPODashboard = () => {
                           fontSize: "0.85rem",
                         }}
                       />
+                      <div
+                        className="mt-1 text-muted"
+                        style={{ fontSize: "0.75rem" }}
+                      >
+                        {PDF_UPLOAD_NOTE}
+                      </div>
                       <div
                         className="mt-1 text-muted"
                         style={{ fontSize: "0.75rem" }}

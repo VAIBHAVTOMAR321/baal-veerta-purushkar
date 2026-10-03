@@ -469,6 +469,10 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
 
           <div className="nf-pv-body">
 
+            <div className="nf-pv-form-id">
+              Form ID: {applicationNumber} (Final Submitted on {submissionDate})
+            </div>
+
             <div className="nf-pv-block" id="nf-pv-registration">
               <div className="nf-pv-block-label">पंजीकरण विवरण (Registration Details):</div>
               <table className="nf-pv-t4">
@@ -490,9 +494,6 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
             {/* ── 1. आवेदक का विवरण (Step 1) ── */}
             <div className="nf-pv-block" id="nf-pv-step1">
               <div className="nf-pv-block-label">चरण 1 / Step 1: आवेदक का विवरण (Nominee Details):</div>
-              <div className="nf-pv-form-id">
-                Form ID: {applicationNumber} (Final Submitted on {submissionDate})
-              </div>
               <div className="nf-pv-photo-row">
                 <table className="nf-pv-t4">
                   <tbody>

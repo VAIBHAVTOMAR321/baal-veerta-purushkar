@@ -245,6 +245,16 @@ const REQUIRED_STEP4_DOCUMENTS = [
 
 const hasText = (value) => String(value || "").trim() !== "";
 
+const PDF_UPLOAD_NOTE = "Note: Only PDF format is allowed for upload.";
+
+const isPdfFile = (file) => {
+  if (!file) return false;
+  const name = String(file.name || "").trim().toLowerCase();
+  if (!name.endsWith(".pdf")) return false;
+  const type = String(file.type || "").trim().toLowerCase();
+  return !type || type === "application/pdf" || type === "application/x-pdf";
+};
+
 const hasWitnessData = (witnesses) => {
   const rows = Array.isArray(witnesses) ? witnesses : [];
   return rows.some((row) =>
@@ -730,10 +740,27 @@ const DisDashBoard = () => {
     setDirectorateProgress("");
   };
 
+  const handleDirectorateFileChange = (event) => {
+    const input = event.target;
+    const file = input.files?.[0] || null;
+    if (file && !isPdfFile(file)) {
+      input.value = "";
+      setDirectorateFile(null);
+      setDirectorateError(`Only PDF format is allowed for upload. Received: ${file.name}`);
+      return;
+    }
+    setDirectorateError(null);
+    setDirectorateFile(file);
+  };
+
   const handleSaveDirectorateRecommendation = async () => {
     if (!directorateTargets.length || directorateSaving) return;
     if (!directorateFile || !directorateRemark.trim()) {
       setDirectorateError("Please upload a recommendation file and enter a remark.");
+      return;
+    }
+    if (!isPdfFile(directorateFile)) {
+      setDirectorateError("Only PDF format is allowed for upload.");
       return;
     }
 
@@ -1942,7 +1969,8 @@ const DisDashBoard = () => {
             </div>
             <Form.Group className="mb-3">
               <Form.Label>Recommendation File <span className="text-danger">*</span></Form.Label>
-              <Form.Control type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={(event) => setDirectorateFile(event.target.files?.[0] || null)} />
+              <Form.Control type="file" accept=".pdf,application/pdf" onChange={handleDirectorateFileChange} />
+              <Form.Text muted>{PDF_UPLOAD_NOTE}</Form.Text>
               <Form.Text muted>One file will be uploaded for all Applicants Selected For Final List.</Form.Text>
             </Form.Group>
             <Form.Group>
