@@ -14,7 +14,7 @@ const roleConfig = {
     title: "Director Login",
     hindi: "निदेशक लॉगिन",
     subtitle: "निदेशक के रूप में लॉगिन करें",
-    path: "/DisDashboard",
+    path: "/DisDashBoard",
   },
   dpo: {
     title: "DPO Login",

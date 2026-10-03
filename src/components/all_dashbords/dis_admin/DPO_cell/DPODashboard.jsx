@@ -1311,15 +1311,15 @@ const DPODashboard = () => {
         isTablet={isTablet}
       />
       <div className="main-content-dash">
-        <DPOTopNav toggleSidebar={toggleSidebar} />
+        <DPOTopNav toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
 
         <div
           fluid
-          className="p-4 p-md-5"
+          className="dashboard-page-content p-4 p-md-5"
           style={{ background: "#f8fafc", minHeight: "calc(100vh - 60px)" }}
         >
           {/* Page Header */}
-          <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
+          <div className="dashboard-page-header d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>
               <h2
                 className="mb-1 fw-bold text-dark"
@@ -1459,7 +1459,7 @@ const DPODashboard = () => {
                 ].map((stat, idx) => (
                   <Col xs={6} lg={3} key={idx}>
                     <Card
-                      className="border-0 shadow-sm h-100"
+                      className="dashboard-stat-card border-0 shadow-sm h-100"
                       style={{ borderRadius: "12px" }}
                     >
                       <Card.Body className="d-flex align-items-center p-3">
@@ -1507,14 +1507,14 @@ const DPODashboard = () => {
 
               {/* Filters & Table Container */}
               <Card
-                className="border-0 shadow-sm"
+                className="dashboard-table-card border-0 shadow-sm"
                 style={{ borderRadius: "12px" }}
               >
                 <Card.Body className="p-4">
                   {/* Filter Bar */}
                   <div className="mb-4">
                     <div
-                      className="d-flex flex-wrap gap-2 mb-3"
+                      className="dashboard-tabs d-flex flex-wrap gap-2 mb-3"
                       style={{ borderBottom: "1px solid #e2e8f0" }}
                     >
                       <button
@@ -1730,10 +1730,10 @@ const DPODashboard = () => {
                   )}
 
                   {/* Table */}
-                  <div className="table-responsive">
+                  <div className="dashboard-table-wrap verification-table-wrap table-responsive">
                     <Table
                       hover
-                      className="align-items-center"
+                      className="dashboard-table align-items-center"
                       style={{ borderBottom: "1px solid #e2e8f0" }}
                     >
                       <thead>

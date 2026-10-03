@@ -63,11 +63,10 @@ const AppContent = () => {
           <Route path="/ITCellDashBoard" element={<ITCellDashBoard />} />
           <Route path="/ITCellDpoPhoneList" element={<DpoPhoneList />} />
           <Route path="/DPODashBoard" element={<DPODashboard />} />
-          <Route path="/DisDashboard" element={<DisDashBoard />} />
+          <Route path="/DisDashBoard" element={<DisDashBoard />} />
           
 
           {/* Dis Routes */}
-          <Route path="/DisDashboard" element={<DisDashBoard />} />
           
           
           

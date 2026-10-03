@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Container,
   Row,
@@ -15,18 +15,70 @@ import {
 } from "react-icons/fa";
 import { useAuth } from "../../../login/AuthContext";
 
-function DPOTopNav({ toggleSidebar }) {
-  const { logout } = useAuth();
+const DISTRICT_PROFILE_URL =
+  "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/district-profile/";
+
+function DPOTopNav({ toggleSidebar, sidebarOpen }) {
+  const { logout, authFetch } = useAuth();
 
   const [userDetails, setUserDetails] = useState({
     full_name: "",
+    district: "",
+    code: "",
+    phone: "",
     profile_picture: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
 
+  const authFetchRef = useRef(authFetch);
+  authFetchRef.current = authFetch;
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUserDetails = async () => {
+      try {
+        const request = authFetchRef.current
+          ? authFetchRef.current(DISTRICT_PROFILE_URL)
+          : fetch(DISTRICT_PROFILE_URL, {
+              headers: {
+                "Content-Type": "application/json",
+                ...(localStorage.getItem("accessToken")
+                  ? {
+                      Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+                    }
+                  : {}),
+              },
+            });
+
+        const response = await request;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        if (isMounted && result.success && result.data) {
+          setUserDetails((prev) => ({ ...prev, ...result.data }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch DPO profile:", err);
+        if (isMounted) {
+          setError("Profile details unavailable");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchUserDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleImageError = () => {
     setImageError(true);
@@ -63,6 +115,9 @@ function DPOTopNav({ toggleSidebar }) {
           </Col>
 
           <Col>
+            {!sidebarOpen && (
+              <span className="dpo-topnav-title">DPO Panel</span>
+            )}
             {error && (
               <Alert variant="warning" className="mb-0 py-1">
                 <small>{error}</small>
@@ -99,7 +154,7 @@ function DPOTopNav({ toggleSidebar }) {
                     <FaUserCircle style={{ fontSize: 24, color: "rgb(250 93 77)" }} />
                   )}
                   <span style={{ fontWeight: 500, fontSize: "0.85rem" }} className="">
-                    {getDisplayName()}
+                    {isLoading ? "Loading..." : getDisplayName()}
                   </span>
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
