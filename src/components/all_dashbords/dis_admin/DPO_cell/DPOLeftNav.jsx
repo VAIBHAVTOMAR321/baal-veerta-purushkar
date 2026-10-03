@@ -5,6 +5,8 @@ import {
   FaSignOutAlt,
   FaChevronDown,
   FaChevronRight,
+  FaTrophy,
+  FaAward,
   FaUserCircle,
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
@@ -37,11 +39,25 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
 
   const menuItems = [
     {
-      icon: <FaTachometerAlt />,
-      label: "DashBoard",
+      icon: <FaAward />,
+      label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार",
       path: "/DPODashBoard",
       active: true,
     },
+    {
+      icon: <FaTrophy />,
+      label: "राज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
+      path: null,
+      active: false,
+      disabled: true,
+    },
+    {
+            icon: <FaTrophy />,
+            label: "राज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
+            path: null,
+            active: false,
+            disabled: true,
+          },
   ];
 
   return (
@@ -63,8 +79,15 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         </div>
 
         <Nav className="sidebar-nav flex-column">
-          {menuItems
-            .map((item, index) => (
+          {menuItems.map((item, index) =>
+            item.disabled ? (
+              <div key={index}>
+                <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
+                  <span className="nav-icon">{item.icon}</span>
+                  <span className="nav-text">{item.label}</span>
+                </span>
+              </div>
+            ) : (
               <div key={index}>
                 <Link
                   to={item.path}
@@ -75,7 +98,8 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
                   <span className="nav-text">{item.label}</span>
                 </Link>
               </div>
-            ))}
+            )
+          )}
         </Nav>
 
         <div className="sidebar-footer">
@@ -108,18 +132,27 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
 
         <Offcanvas.Body className="user-offcanvas-body">
           <Nav className="flex-column">
-            {menuItems.map((item, index) => (
-              <div key={index}>
-                <Link
-                  to={item.path}
-                  className={`nav-item nav-link ${location.pathname === item.path ? "active" : ""}`}
-                  onClick={(e) => handleItemClick(e, item.path, location.pathname === item.path)}
-                >
-                  <span className="nav-icon">{item.icon}</span>
-                  <span className="nav-text br-nav-text-mob">{item.label}</span>
-                </Link>
-              </div>
-            ))}
+            {menuItems.map((item, index) =>
+              item.disabled ? (
+                <div key={index}>
+                  <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
+                    <span className="nav-icon">{item.icon}</span>
+                    <span className="nav-text br-nav-text-mob">{item.label}</span>
+                  </span>
+                </div>
+              ) : (
+                <div key={index}>
+                  <Link
+                    to={item.path}
+                    className={`nav-item nav-link ${location.pathname === item.path ? "active" : ""}`}
+                    onClick={(e) => handleItemClick(e, item.path, location.pathname === item.path)}
+                  >
+                    <span className="nav-icon">{item.icon}</span>
+                    <span className="nav-text br-nav-text-mob">{item.label}</span>
+                  </Link>
+                </div>
+              )
+            )}
           </Nav>
         </Offcanvas.Body>
       </Offcanvas>

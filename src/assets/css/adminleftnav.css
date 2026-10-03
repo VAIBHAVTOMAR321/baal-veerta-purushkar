@@ -2053,3 +2053,15 @@ img {
 .close-btn-custom:hover {
   background-color: #c82333 !important;
 }
+/* Disabled menu item (no navigation) */
+.nav-item-disabled {
+  cursor: default !important;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.nav-item-disabled:hover,
+.nav-item-disabled:focus {
+  background: transparent !important;
+  color: inherit !important;
+}

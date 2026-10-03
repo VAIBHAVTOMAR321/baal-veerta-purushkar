@@ -27,6 +27,7 @@ import {
   FaBriefcase,
   FaGraduationCap, 
   FaUsersCog, // Added for Our Team icon
+  FaAward,
   FaTasks,
   FaClock
 } from "react-icons/fa";
@@ -76,10 +77,24 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
 
  const menuItems = [
       {
-        icon: <FaTachometerAlt />,
-        label: "DashBoard",
-        path: "/AdminDashBoard",
+        icon: <FaAward />,
+        label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार",
+        path: "/DisDashBoard",
         active: true,
+      },
+      {
+        icon: <FaTrophy />,
+        label: "राज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
+        path: null,
+        active: false,
+        disabled: true,
+      },
+      {
+        icon: <FaTrophy />,
+        label: "राराज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
+        path: null,
+        active: false,
+        disabled: true,
       },
       
       
@@ -110,10 +125,9 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         <Nav className="sidebar-nav flex-column">
           
          {menuItems
-  .filter((item) => (item.allowedRoles ? item.allowedRoles.includes(userRole) : true))
-  .map((item, index) => (
+   .filter((item) => (item.allowedRoles ? item.allowedRoles.includes(userRole) : true))
+   .map((item, index) => (
     <div key={index}>
-      {/* If submenu exists */}
       {item.submenu ? (
         <Nav.Link
           className={`nav-item ${item.active ? "active" : ""}`}
@@ -125,6 +139,11 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
             {openSubmenu === index ? <FaChevronDown /> : <FaChevronRight />}
           </span>
         </Nav.Link>
+      ) : item.disabled ? (
+        <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
+          <span className="nav-icon">{item.icon}</span>
+          <span className="nav-text">{item.label}</span>
+        </span>
       ) : (
          <Link
            to={item.path}
@@ -203,6 +222,11 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
                 {openSubmenu === index ? <FaChevronDown /> : <FaChevronRight />}
               </span>
             </Nav.Link>
+          ) : item.disabled ? (
+            <span className="nav-item nav-link nav-item-disabled" aria-disabled="true">
+              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-text br-nav-text-mob">{item.label}</span>
+            </span>
           ) : (
              <Link
                to={item.path}

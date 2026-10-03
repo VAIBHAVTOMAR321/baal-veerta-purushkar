@@ -38,7 +38,7 @@ const AppContent = () => {
     "/ITCellDashBoard",
     "/ITCellDpoPhoneList",
     "/DPODashBoard",
-    "/DisDashboard",
+    "/DisDashBoard",
   ].some((route) => location.pathname.startsWith(route));
 
   return (
