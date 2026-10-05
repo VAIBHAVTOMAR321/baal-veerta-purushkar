@@ -3,8 +3,14 @@ import { useAuth } from "../../login/AuthContext";
 import { FaEye, FaFileAlt } from "react-icons/fa";
 
 const queryEndpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/applicant/request/";
-const mediaBaseUrl = "http://mahadevaaya.com/balvirtaawardproject/balvirtaawardproject_backend/media";
+const mediaBaseUrl = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/media";
 const MAX_QUERY_FILE_SIZE = 1024 * 1024;
+
+// A raised query always stores its print copy under this name for the applicant.
+const getQueryPrintFileName = (applicantId) => {
+  const id = String(applicantId || "").trim();
+  return id ? `Print_-${id}.pdf` : "";
+};
 
 const getDocumentUrl = (value) => {
   if (!value) return "";
@@ -25,17 +31,24 @@ const getDocumentUrl = (value) => {
     normalizedPath = raw.replace(/^\/+/, "");
   }
 
+  // The value may arrive as a bare file name, a media relative path or a full
+  // URL, and the host folders are not always in the same order.
   const cleanPath = normalizedPath
-    .replace(/^media\//i, "")
-    .replace(/^applicant_requests\//i, "")
-    .replace(/^balvirtaawardproject\//i, "")
-    .replace(/^balvirtaawardproject_backend\//i, "")
-    .replace(/^\/+/, "");
+    .replace(/^\/+/, "")
+    .replace(
+      /^(?:media\/|applicant_requests\/|balvirtaawardproject\/|balvirtaawardproject_backend\/)+/i,
+      "",
+    );
 
   if (!cleanPath) return "";
 
   return `${mediaBaseUrl}/applicant_requests/${cleanPath}`;
 };
+
+// The API row may carry the stored path, but the printed copy of the query is
+// always published as applicant_requests/Print_-<applicant id>.pdf.
+const getQueryFileValue = (query, applicantId) =>
+  String(query?.file || "").trim() || getQueryPrintFileName(applicantId);
 
 const getFileName = (value) => {
   if (!value) return "";
@@ -238,7 +251,9 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
           {mode === "view" && (
             <div className="nf-query-view">
               {queries.length === 0 && <p>कोई क्वेरी उपलब्ध नहीं है।</p>}
-              {queries.map((q, idx) => (
+              {queries.map((q, idx) => {
+                const queryFile = getQueryFileValue(q, q?.applicant_id || applicantId);
+                return (
                 <div key={q?.id || idx} className="nf-query-card">
                   <div className="nf-query-row">
                     <strong>Mobile Number:</strong>
@@ -256,14 +271,14 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
                   </div>
                   <div className="nf-query-row">
                     <strong>File:</strong>
-                    {q?.file ? (
+                    {queryFile ? (
                       <span className="nf-query-file">
                         <FaFileAlt className="pdf-icon" />
-                        <span>{getFileName(q.file)}</span>
+                        <span>{getFileName(queryFile)}</span>
                         <button
                           type="button"
                           className="nf-view-file"
-                          onClick={() => handleViewFile(q.file)}
+                          onClick={() => handleViewFile(queryFile)}
                           title="View Document"
                         >
                           <FaEye />
@@ -278,7 +293,8 @@ const RaiseQueryModal = ({ open, mode = "create", onClose, applicantId, mobileNu
                     <span>{q?.created_at || "-"}</span>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
