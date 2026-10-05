@@ -229,22 +229,22 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
     registration.id_proof_number_label = `7. ${registration.id_proof_type} संख्या`;
   }
 
-  // The `nominator-part5` (documents) row carries the submission time, so the
-  // printed and on-screen preview always carries that recorded value.
-  const submissionTimestamp =
-    data?.submissionTimestamp ||
-    resolveSubmissionTimestampFromSteps({
-      s1: data?.rawStep1,
-      s4: data?.rawStep4,
-      s5: data?.rawStep5,
-    }) ||
-    extractSubmissionTimestamp(data?.rawStep5) ||
-    data?.submissionDate ||
-    "";
-  const submissionDate = formatSubmissionDateTime(
-    submissionTimestamp,
-    isApplicationCompleted ? NOT_SUBMITTED_LABEL : "लंबित (Not Submitted)",
-  );
+  // The `nominator-part5` (documents) row carries the submission time; read it
+  // only after the form has reached its final-submitted status.
+  const submissionTimestamp = isApplicationCompleted
+    ? data?.submissionTimestamp ||
+      resolveSubmissionTimestampFromSteps({
+        s1: data?.rawStep1,
+        s4: data?.rawStep4,
+        s5: data?.rawStep5,
+      }) ||
+      extractSubmissionTimestamp(data?.rawStep5) ||
+      data?.submissionDate ||
+      ""
+    : "";
+  const submissionDate = isApplicationCompleted
+    ? formatSubmissionDateTime(submissionTimestamp, NOT_SUBMITTED_LABEL)
+    : "";
 
   const photoSrc = useMemo(() => getFileSrc(data?.document5), [data?.document5]);
 
@@ -526,7 +526,8 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
           <div className="nf-pv-body">
 
             <div className="nf-pv-form-id">
-              Form ID: {applicationNumber} (Final Submitted on {submissionDate})
+              Form ID: {applicationNumber}
+              {isApplicationCompleted && ` (Final Submitted on ${submissionDate})`}
             </div>
 
             <div className="nf-pv-block" id="nf-pv-registration">

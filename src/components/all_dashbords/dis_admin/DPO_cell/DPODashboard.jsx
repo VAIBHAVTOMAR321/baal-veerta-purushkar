@@ -46,7 +46,7 @@ const DISTRICT_PROFILE_URL =
   "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/district-profile/";
 
 // Static mapping function (kept for modal structure)
-const mapApiDataToPreviewData = (item) => {
+const mapApiDataToPreviewData = (item, isApplicationCompleted = false) => {
   if (!item) return null;
   const s1 = item["step-1"] || {};
   const s2 = item["step-2"] || {};
@@ -115,7 +115,10 @@ const mapApiDataToPreviewData = (item) => {
     district: s1.permanent_district || "",
     // Submission time comes from the `nominator-part5` (documents) row, not the
     // step 5 declaration row.
-    submissionDate: resolveSubmissionTimestampFromSteps({ s1, s4, s5 }),
+    submissionDate: isApplicationCompleted
+      ? resolveSubmissionTimestampFromSteps({ s1, s4, s5 })
+      : "",
+    isApplicationCompleted,
     step1Status: s1.status || "",
     actTitle: s2.incident_title || "",
     incidentType: s2.incident_type || "",
@@ -1336,7 +1339,9 @@ const DPODashboard = () => {
     }
 
     setShowModal(false);
-    const mapped = mapApiDataToPreviewData(foundRecord);
+    const isApplicationCompleted =
+      normalizeStepStatus(app.step_status) === "Final Submitted";
+    const mapped = mapApiDataToPreviewData(foundRecord, isApplicationCompleted);
     setSelectedFormPreviewData(mapped);
     setShowFormPreviewModal(true);
   };
@@ -3581,7 +3586,7 @@ const DPODashboard = () => {
           <PreviewModal
             data={selectedFormPreviewData}
             onClose={() => setShowFormPreviewModal(false)}
-            isApplicationCompleted={true}
+            isApplicationCompleted={selectedFormPreviewData.isApplicationCompleted}
             isDPO={true}
           />
         )}

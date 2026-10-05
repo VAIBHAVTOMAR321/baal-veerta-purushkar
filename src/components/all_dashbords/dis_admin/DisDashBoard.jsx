@@ -94,7 +94,7 @@ const getFileSrc = (file) => {
   return joinMediaPath(trimmed);
 };
 
-const mapApiDataToPreviewData = (item) => {
+const mapApiDataToPreviewData = (item, isApplicationCompleted = false) => {
   if (!item) return null;
   const s1 = item["step-1"] || {};
   const s2 = item["step-2"] || {};
@@ -159,7 +159,10 @@ const mapApiDataToPreviewData = (item) => {
     district: s1.permanent_district || "",
     // Submission time comes from the `nominator-part5` (documents) row, not the
     // step 5 declaration row.
-    submissionDate: resolveSubmissionTimestampFromSteps({ s1, s4, s5 }),
+    submissionDate: isApplicationCompleted
+      ? resolveSubmissionTimestampFromSteps({ s1, s4, s5 })
+      : "",
+    isApplicationCompleted,
     step1Status: s1.status || "",
     actTitle: s2.incident_title || "",
     incidentType: s2.incident_type || "",
@@ -1038,7 +1041,11 @@ const DisDashBoard = () => {
     }
 
     setShowModal(false);
-    setSelectedFormPreviewData(mapApiDataToPreviewData(foundRecord));
+    const isApplicationCompleted =
+      normalizeStepStatus(app.step_status) === "Final Submitted";
+    setSelectedFormPreviewData(
+      mapApiDataToPreviewData(foundRecord, isApplicationCompleted)
+    );
     setShowFormPreviewModal(true);
   };
 
@@ -2052,7 +2059,7 @@ const DisDashBoard = () => {
           <PreviewModal
             data={selectedFormPreviewData}
             onClose={() => setShowFormPreviewModal(false)}
-            isApplicationCompleted={true}
+            isApplicationCompleted={selectedFormPreviewData.isApplicationCompleted}
             isITCell={true}
           />
         )}
