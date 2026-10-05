@@ -15,6 +15,15 @@ const yesNo = (val) =>
     ? "नहीं"
     : val || "-";
 
+const formatRescuedPersonAge = (age) => {
+  if (!age) return "";
+  const parts = String(age).split("/");
+  if (parts.length !== 3 || !parts.every((part) => /^\d+$/.test(part.trim()))) {
+    return age;
+  }
+  return `${parts[0].trim()} वर्ष ${parts[1].trim()} महीने ${parts[2].trim()} दिन`;
+};
+
 const calcAge = (dob) => {
   if (!dob) return "-";
   try {
@@ -605,7 +614,17 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
                       <td className="nf-pv-v4" colSpan="3">
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                           {data.rescuedPersons.map((p, pIdx) => {
-                            const [pName, pMobile, pAge, pRel] = Array.isArray(p) ? p : [p.name, p.mobile, p.age || p.ageYears, p.relation];
+                            const [pName, pMobile, rawAge, pRel] = Array.isArray(p)
+                              ? p
+                              : [
+                                  p.name,
+                                  p.mobile,
+                                  p.age || [p.ageYears, p.ageMonths, p.ageDays]
+                                    .filter((part) => part !== undefined && part !== null && part !== "")
+                                    .join("/"),
+                                  p.relation,
+                                ];
+                            const pAge = formatRescuedPersonAge(rawAge);
                             if (!pName && !pMobile && !pAge && !pRel) return null;
                             return (
                               <span key={pIdx} style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: "4px", fontSize: "0.72rem", border: "1px solid #e2e8f0" }}>
