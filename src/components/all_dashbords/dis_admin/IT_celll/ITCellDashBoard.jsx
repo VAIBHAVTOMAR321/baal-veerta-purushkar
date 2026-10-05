@@ -6,6 +6,7 @@ import ITCellTopNav from "./ITCellTopNav";
 import ITCellLeftNav from "./ITCellLeftNav";
 import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
 import { exportDashboardExcel, exportDashboardPdf } from "../../../../utils/itCellReportExport";
+import { formatSubmissionDateTime, resolveSubmissionTimestampFromSteps } from "../../../../utils/submissionDate";
 
 const RECOMMENDATION_URL =
   "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/recommended-application/";
@@ -112,7 +113,9 @@ const mapApiDataToPreviewData = (item) => {
     "permanentपिन कोड": s1.permanent_pincode || "",
     district: s1.permanent_district || "",
 
-    submissionDate: s1.updated_at || s1.created_at || "",
+    // Submission time comes from the `nominator-part5` (documents) row, not the
+    // step 5 declaration row.
+    submissionDate: resolveSubmissionTimestampFromSteps({ s1, s4, s5 }),
     step1Status: s1.status || "",
 
     // Step 2: Incident Details
@@ -422,14 +425,33 @@ const ITCellDashBoard = () => {
       }
     };
 
+    // The registration list has no step records, so the submission time is looked
+    // up from the form status response that is already loaded.
+    const withSubmissionTimestamp = (app) => {
+      if (!app || app.submissionDate) return app;
+      const record = (formStatusList || []).find(
+        (item) =>
+          String(item.applicant_id || "").trim() ===
+          String(app.applicant_id || "").trim(),
+      );
+      const submissionDate = record
+        ? resolveSubmissionTimestampFromSteps({
+            s1: record["step-1"],
+            s4: record["step-4"],
+            s5: record["step-5"],
+          })
+        : "";
+      return submissionDate ? { ...app, submissionDate } : app;
+    };
+
     const handleViewClick = (app) => {
-      setSelectedApplication(app);
+      setSelectedApplication(withSubmissionTimestamp(app));
       setNoFormDataAlert(false);
       setShowChoiceModal(true);
     };
 
     const handleOpenRegistrationDetails = (app = selectedApplication) => {
-      setSelectedApplication(app);
+      setSelectedApplication(withSubmissionTimestamp(app));
       setShowChoiceModal(false);
       setShowRecommendationModal(false);
       setShowModal(true);
@@ -848,6 +870,14 @@ const ITCellDashBoard = () => {
                           <small style={{ color: "#6b7280", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Created At</small>
                           <p style={{ margin: 0, fontWeight: 500, color: "#374151", fontSize: "0.9rem" }}>
                             {selectedApplication.created_at ? new Date(selectedApplication.created_at).toLocaleString("en-IN") : "-"}
+                          </p>
+                        </div>
+                      </Col>
+                      <Col xs={12} md={6}>
+                        <div style={{ marginBottom: "10px" }}>
+                          <small style={{ color: "#6b7280", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Application Submitted On</small>
+                          <p style={{ margin: 0, fontWeight: 500, color: "#374151", fontSize: "0.9rem" }}>
+                            {formatSubmissionDateTime(selectedApplication.submissionDate, "-")}
                           </p>
                         </div>
                       </Col>

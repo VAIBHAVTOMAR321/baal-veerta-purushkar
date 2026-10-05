@@ -1,6 +1,12 @@
 import React, { useMemo, useState, useRef } from "react";
 import "./PreviewModal.css";
 import { isAgeNotEligible, getAgeIneligibilityMessage } from "./ageEligibility";
+import {
+  NOT_SUBMITTED_LABEL,
+  extractSubmissionTimestamp,
+  formatSubmissionDateTime,
+  resolveSubmissionTimestampFromSteps,
+} from "../../../utils/submissionDate";
 
 const yesNo = (val) =>
   val === "हाँ" || val === "yes" || val === true
@@ -223,25 +229,22 @@ const PreviewModal = ({ data, onClose, topAccepted, onTopAcceptedChange, isAppli
     registration.id_proof_number_label = `7. ${registration.id_proof_type} संख्या`;
   }
 
-  const submissionDate = data?.submissionDate && data.submissionDate !== "System Generated"
-    ? (() => {
-        try {
-          const d = new Date(data.submissionDate);
-          if (!isNaN(d.getTime())) {
-            return d.toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-              year: "numeric", month: "2-digit", day: "2-digit",
-              hour: "2-digit", minute: "2-digit", hour12: true,
-            }).replace(",", "");
-          }
-        } catch {}
-        return data.submissionDate;
-      })()
-    : new Date().toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", hour12: true,
-      }).replace(",", "");
+  // The `nominator-part5` (documents) row carries the submission time, so the
+  // printed and on-screen preview always carries that recorded value.
+  const submissionTimestamp =
+    data?.submissionTimestamp ||
+    resolveSubmissionTimestampFromSteps({
+      s1: data?.rawStep1,
+      s4: data?.rawStep4,
+      s5: data?.rawStep5,
+    }) ||
+    extractSubmissionTimestamp(data?.rawStep5) ||
+    data?.submissionDate ||
+    "";
+  const submissionDate = formatSubmissionDateTime(
+    submissionTimestamp,
+    isApplicationCompleted ? NOT_SUBMITTED_LABEL : "लंबित (Not Submitted)",
+  );
 
   const photoSrc = useMemo(() => getFileSrc(data?.document5), [data?.document5]);
 

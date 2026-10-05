@@ -4,12 +4,18 @@ import { FaEye, FaFileAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import RaiseQueryModal from "./RaiseQueryModal.jsx";
 import { isAgeNotEligible, getAgeIneligibilityMessage } from "./ageEligibility";
+import {
+  NOT_SUBMITTED_LABEL,
+  extractSubmissionTimestamp,
+  formatSubmissionDateTime,
+} from "../../../utils/submissionDate";
 import { SendOTP } from "../../otpsendverify/SendOTP";
 import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 
 const declaration = "मैं/हम यह प्रमाणित करते हैं कि इस ऑनलाइन नामांकन प्रपत्र में मेरे/हमारे द्वारा उपलब्ध कराई गई समस्त जानकारी एवं संलग्न अभिलेख मेरे/हमारे ज्ञान एवं विश्वास के अनुसार सत्य एवं सही हैं। उपरोक्त आवेदन में मेरे/हमारे द्वारा कोई महत्वपूर्ण तथ्य छिपाया नहीं गया है। तथा मुख्यमंत्री राज्य बाल पुरुष्कार हेतु नामांकन योग्य है।";
 const parentDeclaration = "मैं/हम इस बात से सहमत हूँ कि महिला सशक्तिकरण एवं बाल विकास विभाग, उत्तराखण्ड द्वारा उपलब्ध कराई गई जानकारी एवं संलग्न अभिलेखों का संबंधित जिला प्रशासन, पुलिस विभाग एवं अन्य सक्षम प्राधिकारी के माध्यम से सत्यापन कराया जा सकता है। मैं/हम यह भी सहमत हूँ कि गलत अथवा भ्रामक जानकारी पाए जाने की स्थिति में नामांकन निरस्त किया जा सकता है तथा नियमानुसार आवेदन की कार्यवाही की जा सकती है। पुरस्कार हेतु चयन की स्थिति में बच्चे के नाम, फोटो एवं वीरता की घटना से संबंधित विवरण का उपयोग विभाग द्वारा पुरस्कार संबंधी प्रचार-प्रसार एवं आधिकारिक प्रयोजनों के लिए किया जा सकेगा।";
 const endpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/declaration/";
+const documentsEndpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part5/";
 const registrationEndpoint = "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/bravery/nominator-part2/";
 const mediaBaseUrl =
   "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/media";
@@ -81,15 +87,41 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const [hasSubmittedQuery, setHasSubmittedQuery] = useState(false);
   const [otpModal, setOtpModal] = useState(null);
   const [otpMobile, setOtpMobile] = useState("");
+  const [submissionTimestamp, setSubmissionTimestamp] = useState("");
   const [pendingDocuments, setPendingDocuments] = useState({
     declarationDocument: null,
     parentDeclarationDocument: null,
   });
   const registrationFetchStarted = useRef(false);
+  const updateRef = useRef(update);
+  updateRef.current = update;
+  const submissionTimestampRef = useRef({ documents: "", declaration: "" });
   const manualDocumentEditRef = useRef({
     declarationDocument: false,
     parentDeclarationDocument: false,
   });
+
+  // The displayed submission time is the `updated_at` of the `nominator-part5`
+  // (documents) row; the declaration row is only a fallback.
+  const applySubmissionTimestamp = (source, payload) => {
+    const timestamp = extractSubmissionTimestamp(payload);
+    if (!timestamp || submissionTimestampRef.current[source] === timestamp) {
+      return timestamp;
+    }
+    submissionTimestampRef.current = {
+      ...submissionTimestampRef.current,
+      [source]: timestamp,
+    };
+    const effective =
+      submissionTimestampRef.current.documents ||
+      submissionTimestampRef.current.declaration ||
+      timestamp;
+    setSubmissionTimestamp(effective);
+    updateRef.current({
+      target: { name: "submissionDate", value: effective, type: "text" },
+    });
+    return effective;
+  };
 
   const userMobile = data?.mobile_number || data?.mobileNumber || user?.mobile_number || user?.mobile || "";
   const isAgeIneligible = isAgeNotEligible(data?.birthDate, data?.actDate);
@@ -98,16 +130,10 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
   const applicantId = data?.applicant_id || user?.applicant_id || localStorage.getItem("applicantId") || "";
   const applicantMobile = data?.mobile_number || data?.phone_number || data?.childMobile || nominatorPhoneNumber || userMobile;
   const district = data?.["permanentजनपद"] || data?.permanentजनपद || data?.district || "System Generated";
-  const submissionDate = new Date().toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
+  const submissionDate = formatSubmissionDateTime(
+    submissionTimestamp || data?.submissionDate,
+    NOT_SUBMITTED_LABEL,
+  );
 
   useEffect(() => {
     let active = true;
@@ -120,6 +146,7 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
         const record = Array.isArray(responseData) ? responseData[0] : responseData;
         const recordApplicantId = record?.applicant_id;
         if (active && record && (!applicantId || String(recordApplicantId) === String(applicantId))) {
+          applySubmissionTimestamp("declaration", record);
           if (!manualDocumentEditRef.current.declarationDocument && record.declarationDocument) {
             update({ target: { name: "declarationDocument", value: record.declarationDocument, type: "text" } });
           }
@@ -147,6 +174,29 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
     fetchPart6Data();
     return () => { active = false; };
   }, [applicantId, authFetch, onApplicationCompleted]);
+
+  useEffect(() => {
+    let active = true;
+    const fetchDocumentsData = async () => {
+      try {
+        const response = await authFetch(documentsEndpoint);
+        if (!response.ok) return;
+        const result = await response.json();
+        const records = Array.isArray(result?.data) ? result.data : result?.data ? [result.data] : [];
+        const record =
+          records.find((item) => !applicantId || String(item?.applicant_id) === String(applicantId)) ||
+          records[0];
+        if (active && record) {
+          applySubmissionTimestamp("documents", record);
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch nomination documents timestamp:", fetchError);
+      }
+    };
+
+    fetchDocumentsData();
+    return () => { active = false; };
+  }, [applicantId, authFetch]);
 
   useEffect(() => {
     if (registrationFetchStarted.current) return;
@@ -472,6 +522,25 @@ const StepF = ({ data, update, onSave, onPreview, onSubmit, canSubmit, topAccept
         parentDeclarationDocument: false,
       };
       setIsCompleted(true);
+      const storedTimestamp = applySubmissionTimestamp("declaration", result);
+
+      // Some deployments answer the PUT without the saved row, so read it back
+      // from the step 5 endpoint to display the time the server actually saved.
+      if (!storedTimestamp) {
+        try {
+          const savedResponse = await authFetch(endpoint);
+          if (savedResponse.ok) {
+            const savedContentType = savedResponse.headers.get("content-type") || "";
+            const savedResult = savedContentType.includes("application/json")
+              ? await savedResponse.json()
+              : null;
+            applySubmissionTimestamp("declaration", savedResult);
+          }
+        } catch (refreshError) {
+          console.error("Failed to read back the declaration timestamp:", refreshError);
+        }
+      }
+
       onApplicationCompleted?.(result);
       onSubmit?.();
     } catch (error) {

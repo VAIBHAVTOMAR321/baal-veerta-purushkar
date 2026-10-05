@@ -37,6 +37,7 @@ import {
   exportDashboardPdf,
   resolveDistrictName,
 } from "../../../../utils/itCellReportExport";
+import { formatSubmissionDateTime, resolveSubmissionTimestampFromSteps } from "../../../../utils/submissionDate";
 import "./DPODashboard.css";
 
 // Profile of the signed-in DPO, used to keep the exported report to that
@@ -112,7 +113,9 @@ const mapApiDataToPreviewData = (item) => {
     "permanentविकासखण्ड/नगर निकाय": s1.permanent_block_local_body || "",
     "permanentपिन कोड": s1.permanent_pincode || "",
     district: s1.permanent_district || "",
-    submissionDate: s1.updated_at || s1.created_at || "",
+    // Submission time comes from the `nominator-part5` (documents) row, not the
+    // step 5 declaration row.
+    submissionDate: resolveSubmissionTimestampFromSteps({ s1, s4, s5 }),
     step1Status: s1.status || "",
     actTitle: s2.incident_title || "",
     incidentType: s2.incident_type || "",
@@ -353,6 +356,7 @@ const mapApiToApp = (item) => {
     pincode: nomination.pincode || "",
     status: nomination.status || "",
     created_at: nomination.created_at || nomination.updated_at || "",
+    submissionDate: resolveSubmissionTimestampFromSteps({ s1, s4, s5 }),
     email: nomination.email || "",
     phone: nomination.phone || "",
   };
@@ -2620,6 +2624,19 @@ const DPODashboard = () => {
                               selectedApplication.created_at,
                             ).toLocaleString("en-IN")
                           : "-"}
+                      </p>
+                    </div>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <div className="detail-block">
+                      <small className="detail-label">
+                        Application Submitted On
+                      </small>
+                      <p className="detail-value text-dark">
+                        {formatSubmissionDateTime(
+                          selectedApplication.submissionDate,
+                          "-",
+                        )}
                       </p>
                     </div>
                   </Col>
