@@ -1431,10 +1431,6 @@ const DisDashBoard = () => {
                                   padding: "12px 16px",
                                   color: "#475569",
                                   fontSize: "0.875rem",
-                                  maxWidth: "220px",
-                                  textOverflow: "ellipsis",
-                                  overflow: "hidden",
-                                  whiteSpace: "nowrap",
                                 }}
                                 title={app.bravery_type || ""}
                               >
