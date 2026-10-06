@@ -139,13 +139,13 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
       label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार",
       submenu: [
         {
-          icon: <FaTachometerAlt />,
-          label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार 2026-27",
+      
+          label: "वर्ष 2026-27",
           path: "/DPODashBoard",
         },
         {
-          icon: <FaTrophy />,
-          label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार 2027-28",
+         
+          label: "वर्ष 2027-28",
           path: null,
           disabled: true,
         },
@@ -153,14 +153,14 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
     },
     {
       icon: <FaTrophy />,
-      label: "राज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
+      label: "राज्य स्त्री शक्ति तीलू रौतेली पुरस्कार",
       path: null,
       active: false,
       disabled: true,
     },
     {
       icon: <FaTrophy />,
-      label: "राराज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
+      label: "राज्य स्तरीय आंगनवाड़ी कार्यकर्त्री पुरस्कार",
       path: null,
       active: false,
       disabled: true,
