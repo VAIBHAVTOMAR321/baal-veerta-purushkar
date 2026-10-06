@@ -11,7 +11,7 @@ import "../otpsendverify/otp.css";
 
 const roleConfig = {
   director: {
-    title: "Director Login",
+    title: "State Login",
     hindi: "निदेशक लॉगिन",
     subtitle: "निदेशक के रूप में लॉगिन करें",
     path: "/DisDashBoard",

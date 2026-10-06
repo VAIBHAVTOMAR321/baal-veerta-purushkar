@@ -63,7 +63,7 @@ function DisTopNav({ toggleSidebar, sidebarOpen }) {
 
           <Col>
             {!sidebarOpen && (
-              <span className="dis-topnav-title">Directorate Panel</span>
+              <span className="dis-topnav-title">State Login</span>
             )}
             {error && (
               <Alert variant="warning" className="mb-0 py-1">
