@@ -2083,7 +2083,7 @@ const DPODashboard = () => {
                               letterSpacing: "0.5px",
                             }}
                           >
-                            Namankarta
+                            Nominator Full Name
                           </th>
                           <th
                             style={{
@@ -2095,7 +2095,7 @@ const DPODashboard = () => {
                               letterSpacing: "0.5px",
                             }}
                           >
-                            Balak/Balika
+                            Child Full Name
                           </th>
                           <th
                             style={{
@@ -2107,7 +2107,7 @@ const DPODashboard = () => {
                               letterSpacing: "0.5px",
                             }}
                           >
-                            Father Name
+                            Father's Name
                           </th>
                           <th
                             style={{
