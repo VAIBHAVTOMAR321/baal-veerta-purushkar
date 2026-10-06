@@ -333,6 +333,9 @@ const mapApiToApp = (item) => {
   return {
     applicant_id: item.applicant_id || nomination.applicant_id || "",
     full_name: s1.child_full_name || nomination.full_name || "",
+    nominator_name: nomination.full_name || "",
+    child_name: s1.child_full_name || "",
+    father_name: s1.father_name || "",
     age: age || "-",
     class_name: s1.current_class || "",
     photo: getFileSrc(s4.child_passport_photo || s5.child_passport_photo || ""),
@@ -1183,6 +1186,9 @@ const DPODashboard = () => {
       !term ||
       (app.applicant_id || "").toLowerCase().includes(term) ||
       (app.full_name || "").toLowerCase().includes(term) ||
+      (app.nominator_name || "").toLowerCase().includes(term) ||
+      (app.child_name || "").toLowerCase().includes(term) ||
+      (app.father_name || "").toLowerCase().includes(term) ||
       (app.phone || "").toLowerCase().includes(term) ||
       (app.email || "").toLowerCase().includes(term) ||
       (app.village || "").toLowerCase().includes(term);
@@ -1381,7 +1387,8 @@ const DPODashboard = () => {
       activeTab !== "completed" ||
       loading ||
       submittingAllRecommendations ||
-      hasFinalisedRecommendations
+      hasFinalisedRecommendations ||
+      !allCompletedHaveComments
     ) {
       return;
     }
@@ -1442,6 +1449,15 @@ const DPODashboard = () => {
     isForwardedToDirector(app.applicant_id),
   );
 
+  // Recommendations open only after every completed application in the
+  // district carries a DPO comment, so each one is reviewed first.
+  const completedTabApplications = applications.filter(
+    (app) => app.step_status === "Final Submitted",
+  );
+  const allCompletedHaveComments =
+    completedTabApplications.length > 0 &&
+    completedTabApplications.every((app) => hasText(app.dpo_comment));
+
   // Applicants that can still receive a recommendation. Anyone who already has
   // one is left out so the picker only offers new candidates.
   const selectionCandidates = applications.filter((app) => {
@@ -1455,7 +1471,10 @@ const DPODashboard = () => {
     if (!term) return true;
     return (
       (app.applicant_id || "").toLowerCase().includes(term) ||
-      (app.full_name || "").toLowerCase().includes(term)
+      (app.full_name || "").toLowerCase().includes(term) ||
+      (app.nominator_name || "").toLowerCase().includes(term) ||
+      (app.child_name || "").toLowerCase().includes(term) ||
+      (app.father_name || "").toLowerCase().includes(term)
     );
   });
 
@@ -1484,7 +1503,10 @@ const DPODashboard = () => {
     if (!term) return true;
     return (
       (app.applicant_id || "").toLowerCase().includes(term) ||
-      (app.full_name || "").toLowerCase().includes(term)
+      (app.full_name || "").toLowerCase().includes(term) ||
+      (app.nominator_name || "").toLowerCase().includes(term) ||
+      (app.child_name || "").toLowerCase().includes(term) ||
+      (app.father_name || "").toLowerCase().includes(term)
     );
   });
 
@@ -1493,6 +1515,7 @@ const DPODashboard = () => {
     if (
       activeTab !== "completed" ||
       normalizeStepStatus(commentApp?.step_status) !== "Final Submitted" ||
+      isForwardedToDirector(applicantId) ||
       !applicantId ||
       savingComment
     )
@@ -1524,7 +1547,8 @@ const DPODashboard = () => {
   const handleOpenCommentModal = (app) => {
     if (
       activeTab !== "completed" ||
-      normalizeStepStatus(app?.step_status) !== "Final Submitted"
+      normalizeStepStatus(app?.step_status) !== "Final Submitted" ||
+      isForwardedToDirector(app?.applicant_id)
     )
       return;
     setCommentApp(app);
@@ -1923,7 +1947,8 @@ const DPODashboard = () => {
                         disabled={
                           loading ||
                           submittingAllRecommendations ||
-                          hasFinalisedRecommendations
+                          hasFinalisedRecommendations ||
+                          !allCompletedHaveComments
                         }
                         className="d-flex align-items-center"
                         style={{
@@ -1931,10 +1956,24 @@ const DPODashboard = () => {
                           fontSize: "0.8rem",
                           fontWeight: 500,
                         }}
+                        title={
+                          allCompletedHaveComments
+                            ? "Add Recommendation"
+                            : "Add a comment to every completed application first"
+                        }
                       >
                         <FaPaperclip size={13} className="me-1" />{" "}
                        Add Recommendation
                       </Button>
+                      {!allCompletedHaveComments && !hasFinalisedRecommendations && (
+                        <span
+                          className="text-muted"
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          Add a comment to every completed application to
+                          enable recommendations.
+                        </span>
+                      )}
                       <Button
                         variant="outline-danger"
                         size="sm"
@@ -2044,7 +2083,31 @@ const DPODashboard = () => {
                               letterSpacing: "0.5px",
                             }}
                           >
-                            Name
+                            Namankarta
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Balak/Balika
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Father Name
                           </th>
                           <th
                             style={{
@@ -2138,7 +2201,7 @@ const DPODashboard = () => {
                         {filteredApplications.length === 0 ? (
                           <tr>
                             <td
-                              colSpan="10"
+                              colSpan="12"
                               className="text-center py-5 text-muted"
                               style={{ fontSize: "0.9rem" }}
                             >
@@ -2195,6 +2258,9 @@ const DPODashboard = () => {
                                 )}
                               </td>
                               <td style={{ padding: "12px 16px" }}>
+                                {app.nominator_name || "-"}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
                                 <div
                                   style={{
                                     fontWeight: 600,
@@ -2202,7 +2268,7 @@ const DPODashboard = () => {
                                     fontSize: "0.875rem",
                                   }}
                                 >
-                                  {app.full_name}
+                                  {app.child_name || "-"}
                                 </div>
                                 <div
                                   style={{
@@ -2212,6 +2278,15 @@ const DPODashboard = () => {
                                 >
                                   {app.applicant_id}
                                 </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#475569",
+                                  fontSize: "0.875rem",
+                                }}
+                              >
+                                {app.father_name || "-"}
                               </td>
                               <td
                                 style={{
@@ -2300,9 +2375,16 @@ const DPODashboard = () => {
                                         borderColor: "#e2e8f0",
                                         color: "#64748b",
                                       }}
-                                      title="Add / Edit Comment"
-                                    >
-                                      <FaCommentDots size={14} />
+                                       disabled={isForwardedToDirector(
+                                         app.applicant_id,
+                                       )}
+                                       title={
+                                         isForwardedToDirector(app.applicant_id)
+                                           ? "Comment locked: already forwarded to the Directorate"
+                                           : "Add / Edit Comment"
+                                       }
+                                     >
+                                       <FaCommentDots size={14} />
                                     </Button>
                                   )}
                                   <Button
