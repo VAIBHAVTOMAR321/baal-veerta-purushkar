@@ -20,7 +20,7 @@ const DPOLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
   const { logout, authFetch } = useAuth();
   const location = useLocation();
 
-  const [openSubmenu, setOpenSubmenu] = useState(0);
+  const [openSubmenu, setOpenSubmenu] = useState(null);
   const toggleSubmenu = (index) => {
     setOpenSubmenu(openSubmenu === index ? null : index);
   };
