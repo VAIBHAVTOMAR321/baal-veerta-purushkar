@@ -333,6 +333,9 @@ const mapApiToApp = (item) => {
   return {
     applicant_id: item.applicant_id || nomination.applicant_id || "",
     full_name: s1.child_full_name || nomination.full_name || "",
+    nominator_name: nomination.full_name || "",
+    child_name: s1.child_full_name || "",
+    father_name: s1.father_name || "",
     age: age || "-",
     class_name: s1.current_class || "",
     photo: null,
@@ -1183,6 +1186,9 @@ const DPODashboard = () => {
       !term ||
       (app.applicant_id || "").toLowerCase().includes(term) ||
       (app.full_name || "").toLowerCase().includes(term) ||
+      (app.nominator_name || "").toLowerCase().includes(term) ||
+      (app.child_name || "").toLowerCase().includes(term) ||
+      (app.father_name || "").toLowerCase().includes(term) ||
       (app.phone || "").toLowerCase().includes(term) ||
       (app.email || "").toLowerCase().includes(term) ||
       (app.village || "").toLowerCase().includes(term);
@@ -1465,7 +1471,10 @@ const DPODashboard = () => {
     if (!term) return true;
     return (
       (app.applicant_id || "").toLowerCase().includes(term) ||
-      (app.full_name || "").toLowerCase().includes(term)
+      (app.full_name || "").toLowerCase().includes(term) ||
+      (app.nominator_name || "").toLowerCase().includes(term) ||
+      (app.child_name || "").toLowerCase().includes(term) ||
+      (app.father_name || "").toLowerCase().includes(term)
     );
   });
 
@@ -1494,7 +1503,10 @@ const DPODashboard = () => {
     if (!term) return true;
     return (
       (app.applicant_id || "").toLowerCase().includes(term) ||
-      (app.full_name || "").toLowerCase().includes(term)
+      (app.full_name || "").toLowerCase().includes(term) ||
+      (app.nominator_name || "").toLowerCase().includes(term) ||
+      (app.child_name || "").toLowerCase().includes(term) ||
+      (app.father_name || "").toLowerCase().includes(term)
     );
   });
 
@@ -2071,7 +2083,31 @@ const DPODashboard = () => {
                               letterSpacing: "0.5px",
                             }}
                           >
-                            Name
+                            Namankarta
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Balak/Balika
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px 16px",
+                              color: "#64748b",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Father Name
                           </th>
                           <th
                             style={{
@@ -2165,7 +2201,7 @@ const DPODashboard = () => {
                         {filteredApplications.length === 0 ? (
                           <tr>
                             <td
-                              colSpan="10"
+                              colSpan="12"
                               className="text-center py-5 text-muted"
                               style={{ fontSize: "0.9rem" }}
                             >
@@ -2222,6 +2258,9 @@ const DPODashboard = () => {
                                 )}
                               </td>
                               <td style={{ padding: "12px 16px" }}>
+                                {app.nominator_name || "-"}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
                                 <div
                                   style={{
                                     fontWeight: 600,
@@ -2229,7 +2268,7 @@ const DPODashboard = () => {
                                     fontSize: "0.875rem",
                                   }}
                                 >
-                                  {app.full_name}
+                                  {app.child_name || "-"}
                                 </div>
                                 <div
                                   style={{
@@ -2239,6 +2278,15 @@ const DPODashboard = () => {
                                 >
                                   {app.applicant_id}
                                 </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#475569",
+                                  fontSize: "0.875rem",
+                                }}
+                              >
+                                {app.father_name || "-"}
                               </td>
                               <td
                                 style={{
