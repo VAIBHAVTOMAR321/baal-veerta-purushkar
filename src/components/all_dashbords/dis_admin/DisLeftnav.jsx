@@ -53,7 +53,7 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
   const userRole = null;
 
  
-  const [openSubmenu, setOpenSubmenu] = useState(0);
+  const [openSubmenu, setOpenSubmenu] = useState(null);
   const toggleSubmenu = (index) => {
     setOpenSubmenu(openSubmenu === index ? null : index);
   };
@@ -82,12 +82,12 @@ const DisLeftnav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavClic
         label: "मुख्यमंत्री राज्य बाल वीरता पुरस्कार",
         submenu: [
           {
-            icon: <FaTachometerAlt />,
+          
             label: "वर्ष 2026-27",
             path: "/DisDashBoard",
           },
           {
-            icon: <FaTrophy />,
+          
             label: "वर्ष 2027-28",
             path: null,
             disabled: true,
