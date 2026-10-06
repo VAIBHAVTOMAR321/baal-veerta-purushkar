@@ -30,7 +30,7 @@ function DisTopNav({ toggleSidebar, sidebarOpen }) {
   const [imageError, setImageError] = useState(false);
 
   const getDisplayName = () => {
-    return userDetails.full_name || "Directorate";
+    return userDetails.full_name || "State Login";
   };
 
   const getUserPhotoUrl = () => {
