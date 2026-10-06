@@ -1381,7 +1381,8 @@ const DPODashboard = () => {
       activeTab !== "completed" ||
       loading ||
       submittingAllRecommendations ||
-      hasFinalisedRecommendations
+      hasFinalisedRecommendations ||
+      !allCompletedHaveComments
     ) {
       return;
     }
@@ -1442,6 +1443,15 @@ const DPODashboard = () => {
     isForwardedToDirector(app.applicant_id),
   );
 
+  // Recommendations open only after every completed application in the
+  // district carries a DPO comment, so each one is reviewed first.
+  const completedTabApplications = applications.filter(
+    (app) => app.step_status === "Final Submitted",
+  );
+  const allCompletedHaveComments =
+    completedTabApplications.length > 0 &&
+    completedTabApplications.every((app) => hasText(app.dpo_comment));
+
   // Applicants that can still receive a recommendation. Anyone who already has
   // one is left out so the picker only offers new candidates.
   const selectionCandidates = applications.filter((app) => {
@@ -1493,6 +1503,7 @@ const DPODashboard = () => {
     if (
       activeTab !== "completed" ||
       normalizeStepStatus(commentApp?.step_status) !== "Final Submitted" ||
+      isForwardedToDirector(applicantId) ||
       !applicantId ||
       savingComment
     )
@@ -1524,7 +1535,8 @@ const DPODashboard = () => {
   const handleOpenCommentModal = (app) => {
     if (
       activeTab !== "completed" ||
-      normalizeStepStatus(app?.step_status) !== "Final Submitted"
+      normalizeStepStatus(app?.step_status) !== "Final Submitted" ||
+      isForwardedToDirector(app?.applicant_id)
     )
       return;
     setCommentApp(app);
@@ -1923,7 +1935,8 @@ const DPODashboard = () => {
                         disabled={
                           loading ||
                           submittingAllRecommendations ||
-                          hasFinalisedRecommendations
+                          hasFinalisedRecommendations ||
+                          !allCompletedHaveComments
                         }
                         className="d-flex align-items-center"
                         style={{
@@ -1931,10 +1944,24 @@ const DPODashboard = () => {
                           fontSize: "0.8rem",
                           fontWeight: 500,
                         }}
+                        title={
+                          allCompletedHaveComments
+                            ? "Add Recommendation"
+                            : "Add a comment to every completed application first"
+                        }
                       >
                         <FaPaperclip size={13} className="me-1" />{" "}
                        Add Recommendation
                       </Button>
+                      {!allCompletedHaveComments && !hasFinalisedRecommendations && (
+                        <span
+                          className="text-muted"
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          Add a comment to every completed application to
+                          enable recommendations.
+                        </span>
+                      )}
                       <Button
                         variant="outline-danger"
                         size="sm"
@@ -2300,9 +2327,16 @@ const DPODashboard = () => {
                                         borderColor: "#e2e8f0",
                                         color: "#64748b",
                                       }}
-                                      title="Add / Edit Comment"
-                                    >
-                                      <FaCommentDots size={14} />
+                                       disabled={isForwardedToDirector(
+                                         app.applicant_id,
+                                       )}
+                                       title={
+                                         isForwardedToDirector(app.applicant_id)
+                                           ? "Comment locked: already forwarded to the Directorate"
+                                           : "Add / Edit Comment"
+                                       }
+                                     >
+                                       <FaCommentDots size={14} />
                                     </Button>
                                   )}
                                   <Button

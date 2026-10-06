@@ -719,13 +719,13 @@
   border: 1px solid #dce4ef;
   border-radius: 11px;
   background: #fff;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .dashboard-table {
   width: 100%;
-  min-width: 0;
-  table-layout: fixed;
+  min-width: 1230px;
   margin: 0;
   border-collapse: separate;
   border-spacing: 0;
@@ -749,7 +749,7 @@
   text-align: left;
   text-transform: uppercase;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   vertical-align: middle;
 }
 
@@ -762,12 +762,54 @@
   font-size: 0.76rem !important;
   line-height: 1.4;
   vertical-align: middle;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   word-break: normal;
 }
 
-.dashboard-table > thead > tr > th:last-child {
-  min-width: 0 !important;
+/* Column widths so headings wrap on whole words instead of splitting */
+.dashboard-table > thead > tr > th:nth-child(1) {
+  min-width: 45px;
+}
+
+.dashboard-table > thead > tr > th:nth-child(2) {
+  min-width: 60px;
+}
+
+.dashboard-table > thead > tr > th:nth-child(3) {
+  min-width: 150px;
+}
+
+.dashboard-table > thead > tr > th:nth-child(4) {
+  min-width: 55px;
+}
+
+.dashboard-table > thead > tr > th:nth-child(5) {
+  min-width: 70px;
+}
+
+.dashboard-table > thead > tr > th:nth-child(6) {
+  min-width: 170px;
+}
+
+.dashboard-table > thead > tr > th:nth-child(7) {
+  min-width: 110px;
+}
+
+/* Long headings need extra room so they stay on whole words */
+.verification-table-wrap .dashboard-table > thead > tr > th:nth-child(8),
+.verification-table-wrap .dashboard-table > thead > tr > th:nth-child(9),
+.district-table-wrap .dashboard-table > thead > tr > th:nth-child(9),
+.district-table-wrap .dashboard-table > thead > tr > th:nth-child(10) {
+  min-width: 145px;
+}
+
+.verification-table-wrap .dashboard-table > thead > tr > th:nth-child(10),
+.district-table-wrap .dashboard-table > thead > tr > th:nth-child(11) {
+  min-width: 280px;
+}
+
+.district-table-wrap .dashboard-table > thead > tr > th:nth-child(8) {
+  min-width: 110px;
 }
 
 .dashboard-table > tbody > tr > td:last-child > .d-flex {
@@ -850,6 +892,7 @@
   .dashboard-table > tbody {
     display: block;
     width: 100%;
+    min-width: 0;
   }
 
   .dashboard-table > thead {
