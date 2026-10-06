@@ -338,7 +338,7 @@ const mapApiToApp = (item) => {
     father_name: s1.father_name || "",
     age: age || "-",
     class_name: s1.current_class || "",
-    photo: null,
+    photo: getFileSrc(s4.child_passport_photo || s5.child_passport_photo || ""),
     district: nomination.district || s1.permanent_district || "",
     // Step 2 holds the incident title the applicant typed in the form, which is
     // what the "Type of Bravery" column shows.

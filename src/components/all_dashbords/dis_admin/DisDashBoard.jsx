@@ -359,7 +359,7 @@ const mapApiToApp = (item) => {
     full_name: s1.child_full_name || nomination.full_name || "",
     age: age || "-",
     class_name: s1.current_class || "",
-    photo: null,
+    photo: getFileSrc(s4.child_passport_photo || s5.child_passport_photo || ""),
     district: nomination.district || s1.permanent_district || "",
     // Step 2 records the incident title the applicant picked in the form, which
     // is what the "Type of Bravery" column shows. Fall back to the stored code
@@ -1101,7 +1101,7 @@ const DisDashBoard = () => {
           <div className="dashboard-page-header d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>
               <h2 className="mb-1 fw-bold text-dark" style={{ fontSize: "1.5rem" }}>
-                Directorate Dashboard
+                State Dashboard
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: "0.875rem" }}>
                 मुख्यमंत्री राज्य बाल वीरता पुरस्कार - District wise student applications
