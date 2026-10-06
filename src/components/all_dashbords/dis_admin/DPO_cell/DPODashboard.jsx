@@ -1166,7 +1166,7 @@ const DPODashboard = () => {
     if (isForwardedToDirector(applicantId)) {
       return (
         <Badge bg="primary" className="badge-soft">
-          Final Submitted
+          Forwarded to Directorate
         </Badge>
       );
     }
