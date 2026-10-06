@@ -1101,7 +1101,7 @@ const DisDashBoard = () => {
           <div className="dashboard-page-header d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div>
               <h2 className="mb-1 fw-bold text-dark" style={{ fontSize: "1.5rem" }}>
-                Directorate Dashboard
+                State Dashboard
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: "0.875rem" }}>
                 मुख्यमंत्री राज्य बाल वीरता पुरस्कार - District wise student applications
