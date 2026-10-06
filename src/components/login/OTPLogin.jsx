@@ -17,7 +17,7 @@ const roleConfig = {
     path: "/DisDashBoard",
   },
   dpo: {
-    title: "DPO Login",
+    title: "District Level Login",
     hindi: "जिला कार्यक्रम अधिकारी लॉगिन",
     subtitle: "जिला कार्यक्रम अधिकारी के रूप में लॉगिन करें",
     path: "/DPODashBoard",
