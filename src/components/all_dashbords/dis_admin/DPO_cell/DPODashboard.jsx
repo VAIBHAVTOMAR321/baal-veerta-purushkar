@@ -1289,7 +1289,7 @@ const DPODashboard = () => {
         String(app.applicant_id || "").trim(),
     );
 
-    if (!foundRecord || !foundRecord["step-1"]) {
+    if (!foundRecord) {
       setNoFormDataAlert(true);
       return;
     }

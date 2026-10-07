@@ -32,6 +32,7 @@ import DisTopNav from "./DisTopNav";
 import DisLeftnav from "./DisLeftnav";
 import PreviewModal from "../../child_regis/NominationForm/PreviewModal";
 import { exportDashboardExcel, exportDashboardPdf } from "../../../utils/itCellReportExport";
+import { exportDpoTableExcel, exportDpoTablePdf } from "../../../utils/dpoTableExport";
 import { formatSubmissionDateTime, resolveSubmissionTimestampFromSteps } from "../../../utils/submissionDate";
 import "./DPO_cell/DPODashboard.css";
 
@@ -985,16 +986,24 @@ const DisDashBoard = () => {
               : "Final List",
   };
 
+  // Prepare export data similar to DPODashboard - detailed application table
+  const exportApplications = filteredApplications.map((app) => ({
+    ...app,
+    nominator_name: app.full_name || "",
+    child_name: app.full_name || "",
+    father_name: "", // Not available in DisDashBoard mapping
+    step_status: normalizeStepStatus(app.step_status) || "-",
+    recommendation: getDirectorRecommendation(app.applicant_id) ? "Forwarded to Directorate" : !isForwardedToDirector(app.applicant_id) ? "Not Recommended" : "Recommended",
+    dpo_comment: app.dpo_comment || "",
+    incident_title: app.incident_title || app.bravery_type || "",
+  }));
+
   const handleExportPdf = async () => {
-    if (exporting) return;
+    if (exporting || !exportApplications.length) return;
     setExporting("pdf");
     setExportError(null);
     try {
-      await exportDashboardPdf({
-        applications: filteredApplications,
-        formStatusList,
-        filters: reportFilters,
-      });
+      await exportDpoTablePdf(exportApplications);
     } catch (err) {
       setExportError(err.message || "PDF export failed");
     } finally {
@@ -1003,15 +1012,11 @@ const DisDashBoard = () => {
   };
 
   const handleExportExcel = async () => {
-    if (exporting) return;
+    if (exporting || !exportApplications.length) return;
     setExporting("excel");
     setExportError(null);
     try {
-      await exportDashboardExcel({
-        applications: filteredApplications,
-        formStatusList,
-        filters: reportFilters,
-      });
+      await exportDpoTableExcel(exportApplications);
     } catch (err) {
       setExportError(err.message || "Excel export failed");
     } finally {
@@ -1035,7 +1040,7 @@ const DisDashBoard = () => {
       (item) => String(item.applicant_id || "").trim() === String(app.applicant_id || "").trim()
     );
 
-    if (!foundRecord || !foundRecord["step-1"]) {
+    if (!foundRecord) {
       setNoFormDataAlert(true);
       return;
     }
