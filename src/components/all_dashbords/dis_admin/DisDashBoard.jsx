@@ -992,9 +992,9 @@ const DisDashBoard = () => {
   // Prepare export data similar to DPODashboard - detailed application table
   const exportApplications = filteredApplications.map((app) => ({
     ...app,
-    nominator_name: app.full_name || "",
-    child_name: app.full_name || "",
-    father_name: "", // Not available in DisDashBoard mapping
+    nominator_name: app.nominator_name || app.full_name || "",
+    child_name: app.child_name || app.full_name || "",
+    father_name: app.father_name || "",
     step_status: normalizeStepStatus(app.step_status) || "-",
     recommendation: getDirectorRecommendation(app.applicant_id) ? "Forwarded to Directorate" : !isForwardedToDirector(app.applicant_id) ? "Not Recommended" : "Recommended",
     dpo_comment: app.dpo_comment || "",
