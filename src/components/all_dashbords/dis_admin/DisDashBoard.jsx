@@ -358,6 +358,9 @@ const mapApiToApp = (item) => {
   return {
     applicant_id: item.applicant_id || nomination.applicant_id || "",
     full_name: s1.child_full_name || nomination.full_name || "",
+    nominator_name: nomination.full_name || "",
+    child_name: s1.child_full_name || "",
+    father_name: s1.father_name || "",
     age: age || "-",
     class_name: s1.current_class || "",
     photo: getFileSrc(s4.child_passport_photo || s5.child_passport_photo || ""),
@@ -1381,6 +1384,40 @@ const DisDashBoard = () => {
                     )}
                   </div>
 
+                  {/* Export buttons above table */}
+                  <div className="d-flex justify-content-end gap-2 mb-2">
+                    <Button
+                      variant="light"
+                      size="sm"
+                      className="d-flex align-items-center border shadow-sm"
+                      onClick={handleExportExcel}
+                      disabled={Boolean(exporting) || loading || filteredApplications.length === 0}
+                      title="Export all matching table rows to Excel"
+                    >
+                      {exporting === "excel" ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        <FaFileExcel className="me-2 text-success" />
+                      )}
+                      Excel
+                    </Button>
+                    <Button
+                      variant="light"
+                      size="sm"
+                      className="d-flex align-items-center border shadow-sm"
+                      onClick={handleExportPdf}
+                      disabled={Boolean(exporting) || loading || filteredApplications.length === 0}
+                      title="Export all matching table rows to PDF"
+                    >
+                      {exporting === "pdf" ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        <FaFilePdf className="me-2 text-danger" />
+                      )}
+                      PDF
+                    </Button>
+                  </div>
+
                   {/* Table */}
                   <div className="dashboard-table-wrap district-table-wrap table-responsive">
                     <Table hover className="dashboard-table align-items-center" style={{ borderBottom: "1px solid #e2e8f0" }}>
@@ -1388,7 +1425,9 @@ const DisDashBoard = () => {
                         <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", width: "50px" }}>#</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Photo</th>
-                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Name</th>
+                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Nominator Full Name</th>
+                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Child Full Name</th>
+                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Father's Name</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Age</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Class</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Type of Bravery</th>
@@ -1406,7 +1445,7 @@ const DisDashBoard = () => {
                       <tbody>
                         {filteredApplications.length === 0 ? (
                           <tr>
-                            <td colSpan={11} className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
+                            <td colSpan={14} className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
                               No applications found matching your criteria.
                             </td>
                           </tr>
@@ -1426,9 +1465,12 @@ const DisDashBoard = () => {
                                 )}
                               </td>
                               <td style={{ padding: "12px 16px" }}>
-                                <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>{app.full_name}</div>
-                                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{app.applicant_id}</div>
+                                <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>{app.nominator_name || "-"}</div>
                               </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>{app.child_name || "-"}</div>
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.father_name || "-"}</td>
                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.age || "-"}</td>
                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.class_name || "-"}</td>
                               <td
