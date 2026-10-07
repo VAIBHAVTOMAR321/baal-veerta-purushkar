@@ -33,17 +33,11 @@ import DPOTopNav from "./DPOTopNav";
 import DPOLeftNav from "./DPOLeftNav";
 import PreviewModal from "../../../child_regis/NominationForm/PreviewModal";
 import {
-  exportDashboardExcel,
-  exportDashboardPdf,
-  resolveDistrictName,
-} from "../../../../utils/itCellReportExport";
+  exportDpoTableExcel,
+  exportDpoTablePdf,
+} from "../../../../utils/dpoTableExport";
 import { formatSubmissionDateTime, resolveSubmissionTimestampFromSteps } from "../../../../utils/submissionDate";
 import "./DPODashboard.css";
-
-// Profile of the signed-in DPO, used to keep the exported report to that
-// district only.
-const DISTRICT_PROFILE_URL =
-  "https://wecdukaward.in/balvirtaawardproject/balvirtaawardproject_backend/api/district-profile/";
 
 // Static mapping function (kept for modal structure)
 const mapApiDataToPreviewData = (item, isApplicationCompleted = false) => {
@@ -499,7 +493,6 @@ const DPODashboard = () => {
   // District of the signed-in DPO. Empty until the profile resolves, and left
   // empty on failure so the export stays closed rather than leaking every
   // district the status endpoint returns.
-  const [dpoDistrict, setDpoDistrict] = useState("");
 
   useEffect(() => {
     const handleResize = () => {
@@ -1036,30 +1029,10 @@ const DPODashboard = () => {
     setDeleteSelectionSearch("");
   };
 
-  const fetchDpoDistrict = async () => {
-    try {
-      const accessToken = localStorage.getItem("accessToken");
-      const response = await fetch(DISTRICT_PROFILE_URL, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-      });
-      if (!response.ok) return "";
-      const result = await response.json();
-      if (!result.success || !result.data) return "";
-      return resolveDistrictName(result.data.district);
-    } catch (err) {
-      console.error("Failed to fetch DPO district:", err);
-      return "";
-    }
-  };
-
   useEffect(() => {
     fetchApplicationsData();
     fetchRecommendedApplications();
     fetchRegisteredApplications();
-    fetchDpoDistrict().then((district) => setDpoDistrict(district));
   }, []);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -1262,40 +1235,22 @@ const DPODashboard = () => {
     return [...ordered, ...extra];
   })();
 
-  const reportFilters = {
-    Search: searchTerm.trim() || "All",
-    Project: projectFilter || "All",
-    "Step Status": stepStatusFilter || "All",
-    Tab:
-      activeTab === "all"
-        ? "All Forms"
-        : activeTab === "completed"
-          ? "Completed"
-          : "Recommended/Verified",
-  };
-
-  // The status endpoint answers with every district, so the report is narrowed to
-  // the district of the signed-in DPO: rows from other districts are dropped and
-  // buildReportData only writes that one district, instead of listing the rest of
-  // the state as empty groups. Stays empty while the district is unknown.
-  const exportDistricts = dpoDistrict ? [dpoDistrict] : [];
-  const exportApplications = dpoDistrict
-    ? filteredApplications.filter(
-        (app) => resolveDistrictName(app.district) === dpoDistrict,
-      )
-    : [];
+  const exportApplications = filteredApplications.map((app) => ({
+    ...app,
+    step_status: normalizeStepStatus(app.step_status) || "-",
+    recommendation: !isRecommended(app.applicant_id)
+      ? "Not Recommended"
+      : isForwardedToDirector(app.applicant_id)
+        ? "Forwarded to Directorate"
+        : "Recommended",
+  }));
 
   const handleExportPdf = async () => {
     if (exporting || !exportApplications.length) return;
     setExporting("pdf");
     setExportError(null);
     try {
-      await exportDashboardPdf({
-        applications: exportApplications,
-        formStatusList,
-        filters: reportFilters,
-        districts: exportDistricts,
-      });
+      await exportDpoTablePdf(exportApplications);
     } catch (err) {
       setExportError(err.message || "PDF export failed");
     } finally {
@@ -1308,12 +1263,7 @@ const DPODashboard = () => {
     setExporting("excel");
     setExportError(null);
     try {
-      await exportDashboardExcel({
-        applications: exportApplications,
-        formStatusList,
-        filters: reportFilters,
-        districts: exportDistricts,
-      });
+      await exportDpoTableExcel(exportApplications);
     } catch (err) {
       setExportError(err.message || "Excel export failed");
     } finally {
@@ -1598,52 +1548,12 @@ const DPODashboard = () => {
                 className="mb-1 fw-bold text-dark"
                 style={{ fontSize: "1.5rem" }}
               >
-                DPO Verification Dashboard
+                District Level Verification Dashboard
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: "0.875rem" }}>
                 मुख्यमंत्री राज्य बाल वीरता पुरस्कार - Verify student
                 applications
               </p>
-            </div>
-            <div className="d-flex gap-2 mt-3 mt-md-0">
-              <Button
-                variant="light"
-                size="sm"
-                className="d-flex align-items-center border shadow-sm"
-                onClick={handleExportExcel}
-                disabled={Boolean(exporting) || exportApplications.length === 0}
-                title={
-                  dpoDistrict
-                    ? `Export ${dpoDistrict} applications only`
-                    : "District could not be verified. Export unavailable."
-                }
-              >
-                {exporting === "excel" ? (
-                  <Spinner size="sm" />
-                ) : (
-                  <FaFileExcel className="me-2 text-success" />
-                )}
-                Excel
-              </Button>
-              <Button
-                variant="light"
-                size="sm"
-                className="d-flex align-items-center border shadow-sm"
-                onClick={handleExportPdf}
-                disabled={Boolean(exporting) || exportApplications.length === 0}
-                title={
-                  dpoDistrict
-                    ? `Export ${dpoDistrict} applications only`
-                    : "District could not be verified. Export unavailable."
-                }
-              >
-                {exporting === "pdf" ? (
-                  <Spinner size="sm" />
-                ) : (
-                  <FaFilePdf className="me-2 text-danger" />
-                )}
-                PDF
-              </Button>
             </div>
           </div>
 
@@ -2033,6 +1943,39 @@ const DPODashboard = () => {
                       )}
                     </div>
                   )}
+
+                  <div className="d-flex justify-content-end gap-2 mb-2">
+                    <Button
+                      variant="light"
+                      size="sm"
+                      className="d-flex align-items-center border shadow-sm"
+                      onClick={handleExportExcel}
+                      disabled={Boolean(exporting) || exportApplications.length === 0}
+                      title="Export all matching table rows to Excel"
+                    >
+                      {exporting === "excel" ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        <FaFileExcel className="me-2 text-success" />
+                      )}
+                      Excel
+                    </Button>
+                    <Button
+                      variant="light"
+                      size="sm"
+                      className="d-flex align-items-center border shadow-sm"
+                      onClick={handleExportPdf}
+                      disabled={Boolean(exporting) || exportApplications.length === 0}
+                      title="Export all matching table rows to PDF"
+                    >
+                      {exporting === "pdf" ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        <FaFilePdf className="me-2 text-danger" />
+                      )}
+                      PDF
+                    </Button>
+                  </div>
 
                   {/* Table */}
                   <div className="dashboard-table-wrap verification-table-wrap table-responsive">
