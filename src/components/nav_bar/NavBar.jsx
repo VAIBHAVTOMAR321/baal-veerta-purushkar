@@ -60,7 +60,7 @@ function NavBar() {
             </Nav.Link>
               <Nav.Link
               as={NavLink}
-              to="/LoginPortal"
+              to="/"
               end
               className="nav-link-custom"
             >

@@ -28,6 +28,10 @@ import "./UserLogin.css";
 import Rekha from "../../assets/images/rekha.png";
 import CM from "../../assets/images/cm.png";
 
+const APPLICATION_CUTOFF = new Date("2026-09-08T17:00:00+05:30");
+const APPLICATION_CLOSED_MESSAGE =
+  "10 अक्टूबर 2026, सायं 05:00 बजे आवेदन बंद हो गए हैं।";
+
 function Home() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -60,6 +64,7 @@ function Home() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const location = useLocation();
+  const isApplicationClosed = new Date() >= APPLICATION_CUTOFF;
 
   useEffect(() => {
     if (location.state?.registrationSuccess) {
@@ -282,6 +287,7 @@ function Home() {
   };
 
   const openForgotModal = () => {
+    if (isApplicationClosed) return;
     setShowForgotModal(true);
     setForgotStep(1);
     setForgotPhone("");
@@ -735,6 +741,7 @@ function Home() {
                     <h2 className="login-title">लॉगिन</h2>
                   </div>
 
+                  <fieldset className="login-form-fieldset" disabled={isApplicationClosed}>
                   <Form className="login-form" onSubmit={handleLogin}>
                     <Form.Group className="mb-3" controlId="formPhone">
                       <Form.Label className="login-label">
@@ -848,8 +855,17 @@ function Home() {
                       </p>
                     </div>
                   </Form>
+                  </fieldset>
                 </Card.Body>
               </Card>
+              {isApplicationClosed && (
+                <div className="application-closed-overlay" role="alert">
+                  <h3 className="application-closed-title">आवेदन बंद हो गए हैं</h3>
+                  <p className="application-closed-text">
+                    {APPLICATION_CLOSED_MESSAGE}
+                  </p>
+                </div>
+              )}
             </div>
           </Col>
         </Row>

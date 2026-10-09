@@ -6,6 +6,10 @@ import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 import { submitNominatorPart1 } from "../../otpsendverify/api";
 import { getOtpSession } from "../../otpsendverify/otpSession";
 
+const APPLICATION_CUTOFF = new Date("2026-10-08T17:00:00+05:30");
+const APPLICATION_CLOSED_MESSAGE =
+  "10 अक्टूबर 2026, सायं 05:00 बजे आवेदन बंद हो गए हैं।";
+
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
 const idTypes = ["आधार कार्ड", "पैन कार्ड", "ड्राइविंग लाइसेंस", "पहचान पत्र (फोटो के साथ)", "पासपोर्ट", "मतदाता पहचान पत्र"];
 
@@ -19,6 +23,7 @@ const validatePassword = (pwd) => {
 
 const StudentRegistration = () => {
   const navigate = useNavigate();
+  const isApplicationClosed = new Date() >= APPLICATION_CUTOFF;
   const [form, setForm] = useState({
     category: "",
     name: "",
@@ -237,6 +242,8 @@ const StudentRegistration = () => {
   const submit = (event) => {
     event.preventDefault();
 
+    if (isApplicationClosed) return;
+
     // A number that is already registered must never reach the OTP step.
     if (phoneRegistered) {
       setErrors((current) => ({
@@ -422,7 +429,9 @@ const StudentRegistration = () => {
         </div>
       </header>
 
+      <div className="sr-form-wrapper">
       <form className="sr-shell" onSubmit={submit} noValidate>
+        <fieldset className="sr-form-fieldset" disabled={isApplicationClosed}>
         <section className="sr-card">
           <div className="sr-section-title">
             <span className="sr-badge-year">आवेदन वर्ष 2026-27</span>
@@ -626,12 +635,20 @@ const StudentRegistration = () => {
         )}
 
         <div className="sr-actions">
-          <button className="sr-primary" type="submit" disabled={loading || phoneRegistered || checkingPhone}>
-            {loading ? "पंजीकरण हो रहा है..." : phoneRegistered ? "पहले से पंजीकृत नंबर" : checkingPhone ? "जांच हो रही है..." : "रजिस्टर करें"}
+          <button className="sr-primary" type="submit" disabled={loading || phoneRegistered || checkingPhone || isApplicationClosed}>
+            {loading ? "पंजीकरण हो रहा है..." : phoneRegistered ? "पहले से पंजीकृत नंबर" : checkingPhone ? "जांच हो रही है..." : isApplicationClosed ? "आवेदन बंद" : "रजिस्टर करें"}
           </button>
         </div>
+        </fieldset>
 
       </form>
+      {isApplicationClosed && (
+        <div className="application-closed-overlay" role="alert">
+          <h3 className="application-closed-title">आवेदन बंद हो गए हैं</h3>
+          <p className="application-closed-text">{APPLICATION_CLOSED_MESSAGE}</p>
+        </div>
+      )}
+      </div>
 
       <SendOTP
         show={showSendOtp}

@@ -27,7 +27,6 @@ import StudentRegistration from "./components/child_regis/StudentRegistration/St
 import UserDashBoard from "./components/all_dashbords/dis_admin/user_dashboard/UserDashBoard";
 import ITCellDashBoard from "./components/all_dashbords/dis_admin/IT_celll/ITCellDashBoard";
 import DpoPhoneList from "./components/all_dashbords/dis_admin/IT_celll/DpoPhoneList";
-import LoginPortal from "./components/home_layout/LoginPortal";
 import DPODashboard from "./components/all_dashbords/dis_admin/DPO_cell/DPODashboard";
 
 // A wrapper component to conditionally render the NavBar
@@ -48,7 +47,6 @@ const AppContent = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/LoginPortal" element={<LoginPortal />} />
           <Route path="/StepC" element={<StepC />} />
           <Route path="/StudentRegistration" element={<StudentRegistration />} />
           <Route path="/StepB" element={<StepB />} />
