@@ -88,6 +88,12 @@ const ITCellLeftNav = ({ sidebarOpen, setSidebarOpen, isMobile, isTablet, onNavC
         path: "/ITCellDpoPhoneList",
         active: location.pathname === "/ITCellDpoPhoneList",
       },
+      {
+        icon: <FaQuestionCircle />,
+        label: "User Queries",
+        path: "/ITCellApplicantQueries",
+        active: location.pathname === "/ITCellApplicantQueries",
+      },
      ];
 
   //  Auto-close sidebar when switching to mobile or tablet

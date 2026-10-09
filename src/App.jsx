@@ -27,6 +27,7 @@ import StudentRegistration from "./components/child_regis/StudentRegistration/St
 import UserDashBoard from "./components/all_dashbords/dis_admin/user_dashboard/UserDashBoard";
 import ITCellDashBoard from "./components/all_dashbords/dis_admin/IT_celll/ITCellDashBoard";
 import DpoPhoneList from "./components/all_dashbords/dis_admin/IT_celll/DpoPhoneList";
+import ApplicantQueries from "./components/all_dashbords/dis_admin/IT_celll/ApplicantQueries";
 import DPODashboard from "./components/all_dashbords/dis_admin/DPO_cell/DPODashboard";
 
 // A wrapper component to conditionally render the NavBar
@@ -36,6 +37,7 @@ const AppContent = () => {
     "/UserDashBoard",
     "/ITCellDashBoard",
     "/ITCellDpoPhoneList",
+    "/ITCellApplicantQueries",
     "/DPODashBoard",
     "/DisDashBoard",
   ].some((route) => location.pathname.startsWith(route));
@@ -60,6 +62,7 @@ const AppContent = () => {
           <Route path="/UserDashBoard" element={<UserDashBoard />} />
           <Route path="/ITCellDashBoard" element={<ITCellDashBoard />} />
           <Route path="/ITCellDpoPhoneList" element={<DpoPhoneList />} />
+          <Route path="/ITCellApplicantQueries" element={<ApplicantQueries />} />
           <Route path="/DPODashBoard" element={<DPODashboard />} />
           <Route path="/DisDashBoard" element={<DisDashBoard />} />
           
