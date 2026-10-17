@@ -1427,8 +1427,9 @@ const DisDashBoard = () => {
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Photo</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Nominator Full Name</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Child Full Name</th>
-                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Father's Name</th>
-                          <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Age</th>
+                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Father's Name</th>
+                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Mobile No</th>
+                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Age</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Class</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Type of Bravery</th>
                           <th style={{ padding: "12px 16px", color: "#64748b", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
@@ -1445,7 +1446,7 @@ const DisDashBoard = () => {
                       <tbody>
                         {filteredApplications.length === 0 ? (
                           <tr>
-                            <td colSpan={14} className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
+                            <td colSpan={15} className="text-center py-5 text-muted" style={{ fontSize: "0.9rem" }}>
                               No applications found matching your criteria.
                             </td>
                           </tr>
@@ -1470,8 +1471,9 @@ const DisDashBoard = () => {
                               <td style={{ padding: "12px 16px" }}>
                                 <div style={{ fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>{app.child_name || "-"}</div>
                               </td>
-                              <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.father_name || "-"}</td>
-                              <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.age || "-"}</td>
+                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.father_name || "-"}</td>
+                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.phone || "-"}</td>
+                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.age || "-"}</td>
                               <td style={{ padding: "12px 16px", color: "#475569", fontSize: "0.875rem" }}>{app.class_name || "-"}</td>
                               <td
                                 style={{

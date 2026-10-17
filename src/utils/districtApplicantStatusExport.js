@@ -46,7 +46,7 @@ const REPORT_COLUMNS = [
   "InProgress/FinalSubmitted",
 ];
 
-export const buildApplicantStatusRows = (applications = []) => {
+export const buildApplicantStatusRows = (applications = [], districts) => {
   const grouped = new Map(
     DISTRICTS.map((district) => [normalizeDistrict(district), { district, applicants: [] }])
   );
@@ -59,30 +59,43 @@ export const buildApplicantStatusRows = (applications = []) => {
     grouped.get(key).applicants.push(application);
   });
 
+  const allowedDistricts = Array.isArray(districts)
+    ? new Set(districts.map((district) => normalizeDistrict(district)))
+    : null;
+
+  const showEmptyDistricts = !allowedDistricts;
+
   const orderedGroups = Array.from(grouped.values()).sort((left, right) => {
     const leftHasApplicants = left.applicants.length > 0;
     const rightHasApplicants = right.applicants.length > 0;
     return Number(rightHasApplicants) - Number(leftHasApplicants);
   });
 
-  return orderedGroups.map(({ district, applicants }) => {
-    if (!applicants.length) {
-      return [[district, 0, "Data Not Available", "", ""]];
-    }
+  return orderedGroups
+    .filter(({ district }) => {
+      if (!allowedDistricts) return true;
+      return allowedDistricts.has(normalizeDistrict(district));
+    })
+    .map(({ district, applicants }) => {
+      if (!applicants.length) {
+        if (!showEmptyDistricts) return [];
+        return [[district, 0, "Data Not Available", "", ""]];
+      }
 
-    return applicants.map((applicant, index) => [
-      index === 0 ? district : "",
-      index === 0 ? applicants.length : "",
-      applicant.full_name || "Data Not Available",
-      applicant.phone || "",
-      String(applicant.step_status || "").toLowerCase() === "final submitted"
-        ? "FinalSubmitted"
-        : "InProgress",
-    ]);
-  }).flat();
+      return applicants.map((applicant, index) => [
+        index === 0 ? district : "",
+        index === 0 ? applicants.length : "",
+        applicant.full_name || "Data Not Available",
+        applicant.phone || "",
+        String(applicant.step_status || "").toLowerCase() === "final submitted"
+          ? "FinalSubmitted"
+          : "InProgress",
+      ]);
+    })
+    .flat();
 };
 
-export const exportApplicantStatusPdf = async ({ applications = [] }) => {
+export const exportApplicantStatusPdf = async ({ applications = [], districts } = {}) => {
   const previewWindow = window.open("", "_blank");
   const { default: html2pdf } = await import("html2pdf.js");
   const reportDocument = previewWindow?.document || document;
@@ -103,7 +116,7 @@ export const exportApplicantStatusPdf = async ({ applications = [] }) => {
   });
 
   const body = table.createTBody();
-  buildApplicantStatusRows(applications).forEach((row) => {
+  buildApplicantStatusRows(applications, districts).forEach((row) => {
     const tableRow = body.insertRow();
     tableRow.style.pageBreakInside = "avoid";
     row.forEach((value) => {
@@ -145,12 +158,12 @@ export const exportApplicantStatusPdf = async ({ applications = [] }) => {
   }
 };
 
-export const exportApplicantStatusExcel = async ({ applications = [] }) => {
+export const exportApplicantStatusExcel = async ({ applications = [], districts } = {}) => {
   const { default: ExcelJS } = await import("exceljs");
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Applicant Status");
   sheet.addRow(REPORT_COLUMNS);
-  buildApplicantStatusRows(applications).forEach((row) => sheet.addRow(row));
+  buildApplicantStatusRows(applications, districts).forEach((row) => sheet.addRow(row));
 
   [24, 16, 32, 20, 30].forEach((width, index) => {
     sheet.getColumn(index + 1).width = width;

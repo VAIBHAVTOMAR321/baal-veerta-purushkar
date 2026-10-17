@@ -75,7 +75,13 @@ export const buildReportData = ({ applications = [], districts } = {}) => {
     else withoutApplicants.push([district, applicants]);
   });
 
-  const rows = [...withApplicants, ...withoutApplicants]
+  // When a district filter is applied, only show districts that actually have
+  // applicants — don't emit rows full of "Data Not Available" for every other
+  // district. Without a filter, all districts are listed so the user sees the
+  // full picture (including zero-applicant districts).
+  const showEmptyDistricts = !allowedDistricts;
+
+  const rows = [...withApplicants, ...(showEmptyDistricts ? withoutApplicants : [])]
     .map(([district, applicants]) => {
       if (!applicants.length) {
         return [[district, 0, NOT_AVAILABLE, "", ""]];

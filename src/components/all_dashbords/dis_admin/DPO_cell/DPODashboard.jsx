@@ -2050,9 +2050,21 @@ const DPODashboard = () => {
                               letterSpacing: "0.5px",
                             }}
                           >
-                            Father's Name
-                          </th>
-                          <th
+                             Father's Name
+                           </th>
+                           <th
+                             style={{
+                               padding: "12px 16px",
+                               color: "#64748b",
+                               fontSize: "0.75rem",
+                               fontWeight: 600,
+                               textTransform: "uppercase",
+                               letterSpacing: "0.5px",
+                             }}
+                           >
+                             Mobile No
+                           </th>
+                           <th
                             style={{
                               padding: "12px 16px",
                               color: "#64748b",
@@ -2144,7 +2156,7 @@ const DPODashboard = () => {
                         {filteredApplications.length === 0 ? (
                           <tr>
                             <td
-                              colSpan="12"
+                              colSpan="13"
                               className="text-center py-5 text-muted"
                               style={{ fontSize: "0.9rem" }}
                             >
@@ -2230,6 +2242,15 @@ const DPODashboard = () => {
                                 }}
                               >
                                 {app.father_name || "-"}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#475569",
+                                  fontSize: "0.875rem",
+                                }}
+                              >
+                                {app.phone || "-"}
                               </td>
                               <td
                                 style={{

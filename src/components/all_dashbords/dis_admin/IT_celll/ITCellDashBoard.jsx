@@ -399,7 +399,7 @@ const ITCellDashBoard = () => {
       try {
         await exportDashboardPdf({
           applications: filteredApplications,
-          formStatusList,
+          districts: districtFilter ? [districtFilter] : undefined,
           filters: reportFilters,
         });
       } catch (err) {
@@ -417,7 +417,7 @@ const ITCellDashBoard = () => {
       try {
         await exportDashboardExcel({
           applications: filteredApplications,
-          formStatusList,
+          districts: districtFilter ? [districtFilter] : undefined,
           filters: reportFilters,
         });
       } catch (err) {

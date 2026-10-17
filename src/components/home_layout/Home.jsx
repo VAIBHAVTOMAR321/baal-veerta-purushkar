@@ -28,9 +28,9 @@ import "./UserLogin.css";
 import Rekha from "../../assets/images/rekha.png";
 import CM from "../../assets/images/cm.png";
 
-const APPLICATION_CUTOFF = new Date("2026-09-08T17:00:00+05:30");
+const APPLICATION_CUTOFF = new Date("2026-10-17T17:00:00+05:30");
 const APPLICATION_CLOSED_MESSAGE =
-  "10 अक्टूबर 2026, सायं 05:00 बजे आवेदन बंद हो गए हैं।";
+  "17 अक्टूबर 2026, सायं 05:00 बजे आवेदन बंद हो गए हैं।";
 
 function Home() {
   const [phone, setPhone] = useState("");

@@ -6,9 +6,9 @@ import { VerifyOTP } from "../../otpsendverify/VerifyOTP";
 import { submitNominatorPart1 } from "../../otpsendverify/api";
 import { getOtpSession } from "../../otpsendverify/otpSession";
 
-const APPLICATION_CUTOFF = new Date("2026-10-08T17:00:00+05:30");
+const APPLICATION_CUTOFF = new Date("2026-10-17T17:00:00+05:30");
 const APPLICATION_CLOSED_MESSAGE =
-  "10 अक्टूबर 2026, सायं 05:00 बजे आवेदन बंद हो गए हैं।";
+  "17 अक्टूबर 2026, सायं 05:00 बजे आवेदन बंद हो गए हैं।";
 
 const nominatorCategories = ["स्वयं बालक / बालिका", "माता", "पिता", "विधिक अभिभावक", "विद्यालय के प्रधानाचार्य/प्रधानाध्यापक", "जिलाधिकारी"];
 const idTypes = ["आधार कार्ड", "पैन कार्ड", "ड्राइविंग लाइसेंस", "पहचान पत्र (फोटो के साथ)", "पासपोर्ट", "मतदाता पहचान पत्र"];

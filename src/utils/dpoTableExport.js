@@ -4,6 +4,7 @@ const TABLE_COLUMNS = [
   { header: "Nominator Full Name", key: "nominator_name", width: 28 },
   { header: "Child Full Name / Applicant ID", key: "child_name", width: 34 },
   { header: "Father's Name", key: "father_name", width: 26 },
+  { header: "Mobile No", key: "phone", width: 18 },
   { header: "Age", key: "age", width: 10 },
   { header: "Class", key: "class_name", width: 16 },
   { header: "Type of Bravery", key: "incident_title", width: 36 },
